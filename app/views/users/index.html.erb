@@ -1,0 +1,61 @@
+<h1>Listing users</h1>
+
+<table>
+  <tr>
+    <th>Facebook</th>
+    <th>Email</th>
+    <th>First name</th>
+    <th>Last name</th>
+    <th>Full name</th>
+    <th>Gender</th>
+    <th>Birthday</th>
+    <th>Location</th>
+    <th>Hometown</th>
+    <th>Political</th>
+    <th>Religion</th>
+    <th>Relationship status</th>
+    <th>Interested in</th>
+    <th>Significant other</th>
+    <th>Score</th>
+    <th>Wins</th>
+    <th>Losses</th>
+    <th>Win streak</th>
+    <th>Loss streak</th>
+    <th>Friends</th>
+    <th></th>
+    <th></th>
+    <th></th>
+  </tr>
+
+<% @users.each do |user| %>
+  <tr>
+    <td><%= user.facebook_id %></td>
+    <td><%= user.email %></td>
+    <td><%= user.first_name %></td>
+    <td><%= user.last_name %></td>
+    <td><%= user.full_name %></td>
+    <td><%= user.gender %></td>
+    <td><%= user.birthday %></td>
+    <td><%= user.location %></td>
+    <td><%= user.hometown %></td>
+    <td><%= user.political %></td>
+    <td><%= user.religion %></td>
+    <td><%= user.relationship_status %></td>
+    <td><%= user.interested_in %></td>
+    <td><%= user.significant_other_id %></td>
+    <td><%= user.score %></td>
+    <td><%= user.wins %></td>
+    <td><%= user.losses %></td>
+    <td><%= user.win_streak %></td>
+    <td><%= user.loss_streak %></td>
+    <td><%= user.friends %></td>
+    <td><%= link_to 'Show', user %></td>
+    <td><%= link_to 'Edit', edit_user_path(user) %></td>
+    <td><%= link_to 'Destroy', user, :confirm => 'Are you sure?', :method => :delete %></td>
+  </tr>
+<% end %>
+</table>
+
+<br />
+
+<%= link_to 'New User', new_user_path %>

@@ -1,0 +1,45 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  facebook_id: MyString
+  email: MyString
+  first_name: MyString
+  last_name: MyString
+  full_name: MyString
+  gender: MyString
+  birthday: 2010-11-04 02:46:29
+  location: MyString
+  hometown: MyString
+  political: MyString
+  religion: MyString
+  relationship_status: MyString
+  interested_in: MyString
+  significant_other_id: MyString
+  score: 1
+  wins: 1
+  losses: 1
+  win_streak: 1
+  loss_streak: 1
+  friends: MyString
+
+two:
+  facebook_id: MyString
+  email: MyString
+  first_name: MyString
+  last_name: MyString
+  full_name: MyString
+  gender: MyString
+  birthday: 2010-11-04 02:46:29
+  location: MyString
+  hometown: MyString
+  political: MyString
+  religion: MyString
+  relationship_status: MyString
+  interested_in: MyString
+  significant_other_id: MyString
+  score: 1
+  wins: 1
+  losses: 1
+  win_streak: 1
+  loss_streak: 1
+  friends: MyString

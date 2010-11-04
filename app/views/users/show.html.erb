@@ -1,0 +1,105 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <b>Facebook:</b>
+  <%= @user.facebook_id %>
+</p>
+
+<p>
+  <b>Email:</b>
+  <%= @user.email %>
+</p>
+
+<p>
+  <b>First name:</b>
+  <%= @user.first_name %>
+</p>
+
+<p>
+  <b>Last name:</b>
+  <%= @user.last_name %>
+</p>
+
+<p>
+  <b>Full name:</b>
+  <%= @user.full_name %>
+</p>
+
+<p>
+  <b>Gender:</b>
+  <%= @user.gender %>
+</p>
+
+<p>
+  <b>Birthday:</b>
+  <%= @user.birthday %>
+</p>
+
+<p>
+  <b>Location:</b>
+  <%= @user.location %>
+</p>
+
+<p>
+  <b>Hometown:</b>
+  <%= @user.hometown %>
+</p>
+
+<p>
+  <b>Political:</b>
+  <%= @user.political %>
+</p>
+
+<p>
+  <b>Religion:</b>
+  <%= @user.religion %>
+</p>
+
+<p>
+  <b>Relationship status:</b>
+  <%= @user.relationship_status %>
+</p>
+
+<p>
+  <b>Interested in:</b>
+  <%= @user.interested_in %>
+</p>
+
+<p>
+  <b>Significant other:</b>
+  <%= @user.significant_other_id %>
+</p>
+
+<p>
+  <b>Score:</b>
+  <%= @user.score %>
+</p>
+
+<p>
+  <b>Wins:</b>
+  <%= @user.wins %>
+</p>
+
+<p>
+  <b>Losses:</b>
+  <%= @user.losses %>
+</p>
+
+<p>
+  <b>Win streak:</b>
+  <%= @user.win_streak %>
+</p>
+
+<p>
+  <b>Loss streak:</b>
+  <%= @user.loss_streak %>
+</p>
+
+<p>
+  <b>Friends:</b>
+  <%= @user.friends %>
+</p>
+
+
+<%= link_to 'Edit', edit_user_path(@user) %> |
+<%= link_to 'Back', users_path %>

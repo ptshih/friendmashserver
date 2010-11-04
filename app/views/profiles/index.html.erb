@@ -1,0 +1,47 @@
+<h1>Listing profiles</h1>
+
+<table>
+  <tr>
+    <th>Facebook</th>
+    <th>Email</th>
+    <th>First name</th>
+    <th>Last name</th>
+    <th>Full name</th>
+    <th>Birthday</th>
+    <th>Location</th>
+    <th>Hometown</th>
+    <th>Political</th>
+    <th>Religion</th>
+    <th>Relationship status</th>
+    <th>Interested in</th>
+    <th>Significant other</th>
+    <th></th>
+    <th></th>
+    <th></th>
+  </tr>
+
+<% @profiles.each do |profile| %>
+  <tr>
+    <td><%= profile.facebook_id %></td>
+    <td><%= profile.email %></td>
+    <td><%= profile.first_name %></td>
+    <td><%= profile.last_name %></td>
+    <td><%= profile.full_name %></td>
+    <td><%= profile.birthday %></td>
+    <td><%= profile.location %></td>
+    <td><%= profile.hometown %></td>
+    <td><%= profile.political %></td>
+    <td><%= profile.religion %></td>
+    <td><%= profile.relationship_status %></td>
+    <td><%= profile.interested_in %></td>
+    <td><%= profile.significant_other_id %></td>
+    <td><%= link_to 'Show', profile %></td>
+    <td><%= link_to 'Edit', edit_profile_path(profile) %></td>
+    <td><%= link_to 'Destroy', profile, :confirm => 'Are you sure?', :method => :delete %></td>
+  </tr>
+<% end %>
+</table>
+
+<br />
+
+<%= link_to 'New Profile', new_profile_path %>

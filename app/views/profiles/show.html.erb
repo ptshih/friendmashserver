@@ -1,0 +1,70 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <b>Facebook:</b>
+  <%= @profile.facebook_id %>
+</p>
+
+<p>
+  <b>Email:</b>
+  <%= @profile.email %>
+</p>
+
+<p>
+  <b>First name:</b>
+  <%= @profile.first_name %>
+</p>
+
+<p>
+  <b>Last name:</b>
+  <%= @profile.last_name %>
+</p>
+
+<p>
+  <b>Full name:</b>
+  <%= @profile.full_name %>
+</p>
+
+<p>
+  <b>Birthday:</b>
+  <%= @profile.birthday %>
+</p>
+
+<p>
+  <b>Location:</b>
+  <%= @profile.location %>
+</p>
+
+<p>
+  <b>Hometown:</b>
+  <%= @profile.hometown %>
+</p>
+
+<p>
+  <b>Political:</b>
+  <%= @profile.political %>
+</p>
+
+<p>
+  <b>Religion:</b>
+  <%= @profile.religion %>
+</p>
+
+<p>
+  <b>Relationship status:</b>
+  <%= @profile.relationship_status %>
+</p>
+
+<p>
+  <b>Interested in:</b>
+  <%= @profile.interested_in %>
+</p>
+
+<p>
+  <b>Significant other:</b>
+  <%= @profile.significant_other_id %>
+</p>
+
+
+<%= link_to 'Edit', edit_profile_path(@profile) %> |
+<%= link_to 'Back', profiles_path %>
