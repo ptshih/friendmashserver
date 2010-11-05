@@ -1,0 +1,29 @@
+
+--- 
+users: 
+  columns: 
+  - id
+  - facebook_id
+  - full_name
+  - gender
+  - score
+  - wins
+  - losses
+  - win_streak
+  - loss_streak
+  - friends
+  - created_at
+  - updated_at
+  records: 
+  - - 1
+    - "1000"
+    - Peter Shih
+    - m
+    - 1500
+    - 0
+    - 0
+    - 0
+    - 0
+    - 
+    - 
+    - 

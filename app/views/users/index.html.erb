@@ -3,19 +3,8 @@
 <table>
   <tr>
     <th>Facebook</th>
-    <th>Email</th>
-    <th>First name</th>
-    <th>Last name</th>
     <th>Full name</th>
     <th>Gender</th>
-    <th>Birthday</th>
-    <th>Location</th>
-    <th>Hometown</th>
-    <th>Political</th>
-    <th>Religion</th>
-    <th>Relationship status</th>
-    <th>Interested in</th>
-    <th>Significant other</th>
     <th>Score</th>
     <th>Wins</th>
     <th>Losses</th>
@@ -30,19 +19,8 @@
 <% @users.each do |user| %>
   <tr>
     <td><%= user.facebook_id %></td>
-    <td><%= user.email %></td>
-    <td><%= user.first_name %></td>
-    <td><%= user.last_name %></td>
     <td><%= user.full_name %></td>
     <td><%= user.gender %></td>
-    <td><%= user.birthday %></td>
-    <td><%= user.location %></td>
-    <td><%= user.hometown %></td>
-    <td><%= user.political %></td>
-    <td><%= user.religion %></td>
-    <td><%= user.relationship_status %></td>
-    <td><%= user.interested_in %></td>
-    <td><%= user.significant_other_id %></td>
     <td><%= user.score %></td>
     <td><%= user.wins %></td>
     <td><%= user.losses %></td>
