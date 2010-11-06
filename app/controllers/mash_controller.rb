@@ -15,8 +15,8 @@ class MashController < ApplicationController
     params[:_json].each{ |user|
       if User.find_by_facebook_id(user[:id]).nil?
         User.create({
-          :facebook_id => user[:id]
-          :full_name => user[:name]
+          :facebook_id => user[:id],
+          :full_name => user[:name],
           :gender => user[:gender]
         })
       end
