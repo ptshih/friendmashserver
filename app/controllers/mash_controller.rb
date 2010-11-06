@@ -1,10 +1,16 @@
 class MashController < ApplicationController
   def random
+    # Randomly choose a user from the DB with a CSV of excluded IDs
     render :json => User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>'RANDOM()',:limit=>1,:include=>[:profile])[0]
   end
   
   def getMatchForUser
      render :json => User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>'RANDOM()',:limit=>1,:include=>[:profile])[0]
+     
+     # First hit the DB with a CSV of excluded IDs and a match_score +/- match_range
+     # Now server has an array of valid IDs in memory that are +/- match_range
+     # Now perform a binary search on the array around match_score to find the best possible opponent ID
+     # return the single opponent ID to the client from the binary search results
   end 
   
   def postFriends
