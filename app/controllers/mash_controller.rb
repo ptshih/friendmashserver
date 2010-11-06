@@ -4,8 +4,7 @@ class MashController < ApplicationController
   end
   
   def getNewMatchForUser
-    user = User.find(params[:id])
-    score = user.score
+     render :json => User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>'RANDOM()',:limit=>1,:include=>[:profile])[0]
   end 
   
   def postFriends
@@ -46,6 +45,5 @@ class MashController < ApplicationController
     
     loser.update_attributes(:losses => loser[:losses]+1 )
     loser.update_attributes(:score => loser[:score]-15 )
-    
   end  
 end
