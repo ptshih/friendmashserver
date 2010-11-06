@@ -27,7 +27,7 @@ class MashController < ApplicationController
         user.create_profile({
           :relationship_status => user[:relationship_status],
           :birthday => user[:birthday]
-        })
+        }).save()
       end
     }
   end
