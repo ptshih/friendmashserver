@@ -46,10 +46,50 @@ class MashController < ApplicationController
     winner = User.find_by_facebook_id(params[:w].to_s)
     loser  = User.find_by_facebook_id(params[:l].to_s)
     
-    winner.update_attributes(:wins => winner[:wins]+1 )
-    winner.update_attributes(:score => winner[:score]+15 )
+    adjustScoresForUsers(winner, loser)
+  end
+  
+=begin
+  Let's take these ratings as an example:
+  Team A: 1500 points
+  Team B: 1580 points
+
+
+  Wikipedia's formula is:
+  Expected Outcome = 1 / (1 + 10^((Enemy Rating - Your Rating)/400))
+  New Rating = Current Rating + Maximum Possible Change * (Outcome - Expected Outcome)
+  (Outcome is either 0 for a loss, 0.5 for a draw or 1 for a victory.)
+
+  So this becomes:
+  (note: I have found out that the windows calculator doesn't accept "^" for calculating the power. Instead, use an "y" if you want to do this via copy&paste. At least for the German version.)
+
+  Team A:
+  Expected Outcome:
+  1/(1+10y((1580-1500)/400))= 0.387 [38.7% chance of winning]
+
+  Loss:
+  1500+32*(0-0.387)= 1487 [-13]
+
+  Victory:
+  1500+32*(1-0.387)= 1519 [+19]
+
+
+  Team B:
+  Expected Outcome:
+  1/(1+10y((1500-1580)/400))= 0.613 [61.3% chance of winning]
+
+  Loss:
+  1580+32*(0-0.613)= 1560 [-20]
+
+  Victory:
+  1580+32*(1-0.613)= 1592 [+12]
+
+=end
+  def adjustScoresForUsers(winner, loser)
+    winner.update_attributes(:wins => winner[:wins] +1)
+    winner.update_attributes(:score => winner[:score] +15)
     
-    loser.update_attributes(:losses => loser[:losses]+1 )
-    loser.update_attributes(:score => loser[:score]-15 )
-  end  
+    loser.update_attributes(:losses => loser[:losses] +1)
+    loser.update_attributes(:score => loser[:score] -15)
+  end
 end
