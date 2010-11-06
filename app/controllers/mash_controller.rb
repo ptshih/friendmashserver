@@ -11,13 +11,22 @@ class MashController < ApplicationController
   def postFriends
     # upload some users friends to save in the db
     Rails.logger.info request.query_parameters.inspect
-    currentUser = User.find(params[:id])
+    currentUser = User.find_by_facebook_id(params[:id])
     params[:_json].each{ |user|
       if User.find_by_facebook_id(user[:id]).nil?
-        User.create({
+        user = User.create({
           :facebook_id => user[:id],
           :full_name => user[:name],
-          :gender => user[:gender]
+          :gender => user[:gender],
+          :score => 1500,
+          :wins => 0,
+          :losses => 0,
+          :win_streak => 0,
+          :loss_streak => 0
+        })
+        user.create_profile({
+          :relationship_status => user[:relationship_status]
+          :birthday => user[:birthday]
         })
       end
     }
@@ -26,6 +35,5 @@ class MashController < ApplicationController
   def result
     # report a match result to the server
     Rails.logger.info request.query_parameters.inspect
-  end
-  
+  end  
 end
