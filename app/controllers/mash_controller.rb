@@ -1,13 +1,12 @@
 class MashController < ApplicationController
   def random
-    @users = User.all(:order=>'RANDOM()',:limit=>1)
-    
-    respond_to do |format|
-      format.html # index.html.erb
-      format.xml  { render :xml => @users }
-      format.json  { render :json => @users }
-    end
+    render :json => User.all(:order=>'RANDOM()',:limit=>1)[0]
   end
+  
+  def getNewMatchForUser
+    user = User.find(params[:id])
+    score = user.score
+  end 
   
   def postFriends
     # upload some users friends to save in the db
