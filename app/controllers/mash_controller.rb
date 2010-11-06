@@ -13,7 +13,7 @@ class MashController < ApplicationController
     Rails.logger.info request.query_parameters.inspect
     currentUser = User.find_by_facebook_id(params[:id])
     params[:_json].each{ |user|
-      if User.find_by_facebook_id(user[:id]).nil?
+      if User.find_by_facebook_id(user[:id].to_s).nil?
         user = User.create({
           :facebook_id => user[:id],
           :full_name => user[:name],
