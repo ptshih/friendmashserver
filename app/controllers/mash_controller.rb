@@ -3,7 +3,7 @@ class MashController < ApplicationController
     render :json => User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>'RANDOM()',:limit=>1,:include=>[:profile])[0]
   end
   
-  def getNewMatchForUser
+  def getMatchForUser
      render :json => User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>'RANDOM()',:limit=>1,:include=>[:profile])[0]
   end 
   
