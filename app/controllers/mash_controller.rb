@@ -38,8 +38,8 @@ class MashController < ApplicationController
     # report a match result to the server
     Rails.logger.info request.query_parameters.inspect
     
-    winner = User.find_by_facebook_id(params[:w])
-    loser  = User.find_by_facebook_id(params[:l])
+    winner = User.find_by_facebook_id(params[:w].to_s)
+    loser  = User.find_by_facebook_id(params[:l].to_s)
     
     winner.update_attribute(:wins => winner[:wins]+1 )
     winner.update_attribute(:score => winner[:score]+15 )
