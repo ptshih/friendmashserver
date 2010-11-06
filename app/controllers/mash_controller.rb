@@ -34,7 +34,7 @@ class MashController < ApplicationController
   end
   
   def result
-    # report a match result to the server
+    # report a match result to the server 
     Rails.logger.info request.query_parameters.inspect
     
     winner = User.find_by_facebook_id(params[:w].to_s)
