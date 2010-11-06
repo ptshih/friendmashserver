@@ -41,11 +41,11 @@ class MashController < ApplicationController
     winner = User.find_by_facebook_id(params[:w].to_s)
     loser  = User.find_by_facebook_id(params[:l].to_s)
     
-    winner.update_attribute(:wins => winner[:wins]+1 )
-    winner.update_attribute(:score => winner[:score]+15 )
+    winner.update_attributes(:wins => winner[:wins]+1 )
+    winner.update_attributes(:score => winner[:score]+15 )
     
-    loser.update_attribute(:losses => loser[:losses]+1 )
-    loser.update_attribute(:score => loser[:score]-15 )
+    loser.update_attributes(:losses => loser[:losses]+1 )
+    loser.update_attributes(:score => loser[:score]-15 )
     
   end  
 end
