@@ -5,7 +5,7 @@ class User < ActiveRecord::Base
     if User.find_by_facebook_id(user[:id].to_s).nil?
       user = User.create({
         :facebook_id => user[:id],
-        :full_name => user[:name],
+        :full_name => user[:name], 
         :gender => user[:gender],
         :score => 1500,
         :wins => 0,
