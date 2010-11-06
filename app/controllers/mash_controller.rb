@@ -5,25 +5,26 @@ class MashController < ApplicationController
     
     # Randomly choose a user from the DB with a CSV of excluded IDs
     randomUser = User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>'RANDOM()',:limit=>1,:include=>[:profile])[0]
-    opponent = findOpponentForUser(randomUser)
+    opponent = findOpponentForUser(randomUser.score, params[:gender])
     
     response = [randomUser.facebook_id, opponent.facebook_id]
     render :json => response
   end
   
-  def findOpponentForUser(user)
+  def findOpponentForUser(desiredScore, gender)
     # First hit the DB with a CSV of excluded IDs and a match_score +/- match_range
     # Fetch an array of valid IDs from DB who match the +/- range from the current user's score
     # Perform a binary search on the array to find the best possible opponent
     # Return a single opponent
     
     range = 500
-    desiredScore = user[:score]
     
-    bucket = User.where(["score >= :lowScore AND score <= :highScore", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range) }]).select("facebook_id, score")
+    bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender }]).select("facebook_id, score")
     
     opponentIndex = binSearch(bucket, desiredScore)
     opponent = bucket[opponentIndex]
+    
+    # puts opponent
     
     return opponent
   end
@@ -34,17 +35,19 @@ class MashController < ApplicationController
     
     user = User.find_by_facebook_id(params[:id])
     
-    opponent = findOpponentForUser(user)
+    # puts user.score
     
-    puts opponent.facebook_id
+    opponent = findOpponentForUser(user.score, params[:gender])
+    
+    # puts opponent.facebook_id
     render :json => opponent.facebook_id
     # render :json => User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>'RANDOM()',:limit=>1,:include=>[:profile])[0]
   end 
   
-  def postFriends
+  def friends
     # upload some users friends to save in the db
     Rails.logger.info request.query_parameters.inspect
-    
+    # puts params
     currentUser = User.find_by_facebook_id(params[:id])
     params[:_json].each{ |user|
       if User.find_by_facebook_id(user[:id].to_s).nil?
@@ -108,12 +111,12 @@ class MashController < ApplicationController
   def bSearch(arr, elem, low, high)
     mid = low+((high-low)/2).to_i
     if low > high
-      lowDiff = (elem - arr[low].score).abs
+      lowDiff = (elem - arr[low - 1].score).abs
       highDiff = (elem - arr[high].score).abs
       if lowDiff > highDiff
         return high
       else
-        return low
+        return low - 1
       end
     end
     if elem < arr[mid].score
@@ -126,7 +129,7 @@ class MashController < ApplicationController
   end
 
   def binSearch(a, x)
-    return bSearch(a, x, 0, a.length)
+    return bSearch(a, x, 0, a.length - 1)
   end
 
 =begin
