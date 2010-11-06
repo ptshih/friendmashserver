@@ -11,6 +11,13 @@ class MashController < ApplicationController
   def postFriends
     # upload some users friends to save in the db
     Rails.logger.info request.query_parameters.inspect
+    @users.each{ |user|
+      # if User.find(:condition=>'facebook_id = ').nil?
+      #   User.create({
+      #     
+      #   })
+      # end
+    }
   end
   
   def result
