@@ -17,7 +17,7 @@ ActiveRecord::Schema.define(:version => 20101104095829) do
     t.string   "email"
     t.string   "first_name"
     t.string   "last_name"
-    t.datetime "birthday"
+    t.string   "birthday"
     t.string   "location"
     t.string   "hometown"
     t.string   "political"

@@ -24,10 +24,10 @@ class MashController < ApplicationController
           :win_streak => 0,
           :loss_streak => 0
         })
-        user.create_profile({
+        User.find_by_facebook_id(user[:id]).create_profile({
           :relationship_status => user[:relationship_status],
           :birthday => user[:birthday]
-        }).save()
+        })
       end
     }
   end
