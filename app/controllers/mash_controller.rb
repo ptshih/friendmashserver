@@ -47,6 +47,8 @@ class MashController < ApplicationController
     loser  = User.find_by_facebook_id(params[:l].to_s)
     
     adjustScoresForUsers(winner, loser)
+    
+    render:text => {:success=>true}.to_json
   end
   
 =begin
@@ -108,6 +110,10 @@ class MashController < ApplicationController
     @winnerExpected = expectedOutcome(winner, loser)
     @loserExpected = expectedOutcome(loser, winner)
     
+    # puts "Expected outcomes"
+    # puts @winnerExpected
+    # puts @loserExpected
+    
     # Adjust the winner score
     winner.update_attributes(:wins => winner[:wins] + 1)
     winner.update_attributes(:win_streak => winner[:win_streak] + 1)
@@ -118,13 +124,13 @@ class MashController < ApplicationController
     loser.update_attributes(:losses => loser[:losses] + 1)
     loser.update_attributes(:loss_streak => loser[:loss_streak] + 1)
     loser.update_attributes(:win_streak => 0)
-    loser.update_attributes(:score => loser[:score] - (32 * (0 - @loserExpected)))
+    loser.update_attributes(:score => loser[:score] + (32 * (0 - @loserExpected)))
   end
   
   def expectedOutcome(user, opponent)
     # Calculate the expected outcomes
-    @exponent = 10 ** ((opponent[:score] - user[:score]) / 400)
-    @expected = 1 / (1 + @exponent)
+    @exponent = 10.0 ** ((opponent[:score] - user[:score]) / 400.0)
+    @expected = 1.0 / (1.0 + @exponent)
     return @expected
   end
 end
