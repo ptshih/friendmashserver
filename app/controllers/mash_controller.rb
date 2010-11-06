@@ -86,10 +86,45 @@ class MashController < ApplicationController
 
 =end
   def adjustScoresForUsers(winner, loser)
-    winner.update_attributes(:wins => winner[:wins] +1)
-    winner.update_attributes(:score => winner[:score] +15)
+=begin
+  //calculate the expected outcomes
+  double winnerExpected = this.expectedOutcome(winner, loser);
+  double loserExpected = this.expectedOutcome(loser, winner);
+
+  //adjust the winner score
+  double winnerScore = winner.getScore()+(32*(1-winnerExpected));
+  winner.setScore(winnerScore);
+  winner.setWinStreak(winner.getWinStreak() + 1);
+  winner.setWins(winner.getWins() + 1);
+  winner.setLossStreak(new Long(0));
+
+  //adjust the loser score
+  double loserScore = loser.getScore()+(32*(0-loserExpected));
+  loser.setScore(loserScore);
+  loser.setLosses(loser.getLosses()+ 1);
+  loser.setLossStreak(loser.getLossStreak() + 1);
+  loser.setWinStreak(new Long(0));
+=end
+    @winnerExpected = expectedOutcome(winner, loser)
+    @loserExpected = expectedOutcome(loser, winner)
     
-    loser.update_attributes(:losses => loser[:losses] +1)
-    loser.update_attributes(:score => loser[:score] -15)
+    # Adjust the winner score
+    winner.update_attributes(:wins => winner[:wins] + 1)
+    winner.update_attributes(:win_streak => winner[:win_streak] + 1)
+    winner.update_attributes(:loss_streak => 0)
+    winner.update_attributes(:score => winner[:score] + (32 * (1 - @winnerExpected)))
+    
+    # Adjust the loser score
+    loser.update_attributes(:losses => loser[:losses] + 1)
+    loser.update_attributes(:loss_streak => loser[:loss_streak] + 1)
+    loser.update_attributes(:win_streak => 0)
+    loser.update_attributes(:score => loser[:score] - (32 * (0 - @loserExpected)))
+  end
+  
+  def expectedOutcome(user, opponent)
+    # Calculate the expected outcomes
+    @exponent = 10 ** ((opponent[:score] - user[:score]) / 400)
+    @expected = 1 / (1 + @exponent)
+    return @expected
   end
 end
