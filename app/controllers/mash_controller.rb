@@ -31,10 +31,17 @@ class MashController < ApplicationController
         })
       end
     }
+    render:text => {:success=>true}.to_json
   end
   
   def result
     # report a match result to the server
     Rails.logger.info request.query_parameters.inspect
+    
+    winner = User.find_by_facebook_id(params[:w])
+    loser  = User.find_by_facebook_id(params[:l])
+    
+    
+    
   end  
 end
