@@ -1,21 +1,50 @@
 class MashController < ApplicationController
   def random
+    # Find two random people who have similar scores
+    Rails.logger.info request.query_parameters.inspect
+    
     # Randomly choose a user from the DB with a CSV of excluded IDs
-    render :json => User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>'RANDOM()',:limit=>1,:include=>[:profile])[0]
+    randomUser = User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>'RANDOM()',:limit=>1,:include=>[:profile])[0]
+    opponent = findOpponentForUser(randomUser)
+    
+    response = [randomUser.facebook_id, opponent.facebook_id]
+    render :json => response
   end
   
-  def getMatchForUser
-     render :json => User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>'RANDOM()',:limit=>1,:include=>[:profile])[0]
-     
-     # First hit the DB with a CSV of excluded IDs and a match_score +/- match_range
-     # Now server has an array of valid IDs in memory that are +/- match_range
-     # Now perform a binary search on the array around match_score to find the best possible opponent ID
-     # return the single opponent ID to the client from the binary search results
+  def findOpponentForUser(user)
+    # First hit the DB with a CSV of excluded IDs and a match_score +/- match_range
+    # Fetch an array of valid IDs from DB who match the +/- range from the current user's score
+    # Perform a binary search on the array to find the best possible opponent
+    # Return a single opponent
+    
+    range = 500
+    desiredScore = user[:score]
+    
+    bucket = User.where(["score >= :lowScore AND score <= :highScore", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range) }]).select("facebook_id, score")
+    
+    opponentIndex = binSearch(bucket, desiredScore)
+    opponent = bucket[opponentIndex]
+    
+    return opponent
+  end
+  
+  def match
+    # Find an opponent for the user provided in params
+    Rails.logger.info request.query_parameters.inspect
+    
+    user = User.find_by_facebook_id(params[:id])
+    
+    opponent = findOpponentForUser(user)
+    
+    puts opponent.facebook_id
+    render :json => opponent.facebook_id
+    # render :json => User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>'RANDOM()',:limit=>1,:include=>[:profile])[0]
   end 
   
   def postFriends
     # upload some users friends to save in the db
     Rails.logger.info request.query_parameters.inspect
+    
     currentUser = User.find_by_facebook_id(params[:id])
     params[:_json].each{ |user|
       if User.find_by_facebook_id(user[:id].to_s).nil?
@@ -50,7 +79,56 @@ class MashController < ApplicationController
     
     render:text => {:success=>true}.to_json
   end
+
+  def adjustScoresForUsers(winner, loser)
+    winnerExpected = expectedOutcome(winner, loser)
+    loserExpected = expectedOutcome(loser, winner)
+    
+    # Adjust the winner score
+    winner.update_attributes(:wins => winner[:wins] + 1)
+    winner.update_attributes(:win_streak => winner[:win_streak] + 1)
+    winner.update_attributes(:loss_streak => 0)
+    winner.update_attributes(:score => winner[:score] + (32 * (1 - winnerExpected)))
+    
+    # Adjust the loser score
+    loser.update_attributes(:losses => loser[:losses] + 1)
+    loser.update_attributes(:loss_streak => loser[:loss_streak] + 1)
+    loser.update_attributes(:win_streak => 0)
+    loser.update_attributes(:score => loser[:score] + (32 * (0 - loserExpected)))
+  end
   
+  def expectedOutcome(user, opponent)
+    # Calculate the expected outcomes
+    exponent = 10.0 ** ((opponent[:score] - user[:score]) / 400.0)
+    expected = 1.0 / (1.0 + exponent)
+    return expected
+  end
+  
+  # If bSearch can't find an exact match, it'll return the closest neighbor based on score
+  def bSearch(arr, elem, low, high)
+    mid = low+((high-low)/2).to_i
+    if low > high
+      lowDiff = (elem - arr[low].score).abs
+      highDiff = (elem - arr[high].score).abs
+      if lowDiff > highDiff
+        return high
+      else
+        return low
+      end
+    end
+    if elem < arr[mid].score
+      return bSearch(arr, elem, low, mid-1)
+    elsif elem > arr[mid].score
+      return bSearch(arr, elem, mid+1, high)
+    else
+      return mid
+    end
+  end
+
+  def binSearch(a, x)
+    return bSearch(a, x, 0, a.length)
+  end
+
 =begin
   Let's take these ratings as an example:
   Team A: 1500 points
@@ -87,50 +165,5 @@ class MashController < ApplicationController
   1580+32*(1-0.613)= 1592 [+12]
 
 =end
-  def adjustScoresForUsers(winner, loser)
-=begin
-  //calculate the expected outcomes
-  double winnerExpected = this.expectedOutcome(winner, loser);
-  double loserExpected = this.expectedOutcome(loser, winner);
-
-  //adjust the winner score
-  double winnerScore = winner.getScore()+(32*(1-winnerExpected));
-  winner.setScore(winnerScore);
-  winner.setWinStreak(winner.getWinStreak() + 1);
-  winner.setWins(winner.getWins() + 1);
-  winner.setLossStreak(new Long(0));
-
-  //adjust the loser score
-  double loserScore = loser.getScore()+(32*(0-loserExpected));
-  loser.setScore(loserScore);
-  loser.setLosses(loser.getLosses()+ 1);
-  loser.setLossStreak(loser.getLossStreak() + 1);
-  loser.setWinStreak(new Long(0));
-=end
-    @winnerExpected = expectedOutcome(winner, loser)
-    @loserExpected = expectedOutcome(loser, winner)
-    
-    # puts "Expected outcomes"
-    # puts @winnerExpected
-    # puts @loserExpected
-    
-    # Adjust the winner score
-    winner.update_attributes(:wins => winner[:wins] + 1)
-    winner.update_attributes(:win_streak => winner[:win_streak] + 1)
-    winner.update_attributes(:loss_streak => 0)
-    winner.update_attributes(:score => winner[:score] + (32 * (1 - @winnerExpected)))
-    
-    # Adjust the loser score
-    loser.update_attributes(:losses => loser[:losses] + 1)
-    loser.update_attributes(:loss_streak => loser[:loss_streak] + 1)
-    loser.update_attributes(:win_streak => 0)
-    loser.update_attributes(:score => loser[:score] + (32 * (0 - @loserExpected)))
-  end
   
-  def expectedOutcome(user, opponent)
-    # Calculate the expected outcomes
-    @exponent = 10.0 ** ((opponent[:score] - user[:score]) / 400.0)
-    @expected = 1.0 / (1.0 + @exponent)
-    return @expected
-  end
 end
