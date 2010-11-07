@@ -10,7 +10,7 @@ class MashController < ApplicationController
       recentIds = nil
       randomUser = User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>'RANDOM()',:limit=>1,:include=>[:profile])[0]
     else
-      recentIds = '"'+params[:recents].split(',').join('","')+'"'
+      recentIds = '\''+params[:recents].split(',').join('","')+'\''
       randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id NOT IN (#{recentIds})",:order=>'RANDOM()',:limit=>1,:include=>[:profile])[0]
     end
     
@@ -52,7 +52,7 @@ class MashController < ApplicationController
     
     # puts user.score
     
-    recentIds = '"'+params[:recents].split(',').join('","')+'"'
+    recentIds = '\''+params[:recents].split(',').join('","')+'\''
     
     opponent = findOpponentForUser(user.score, params[:gender], recentIds, params[:id])
     
