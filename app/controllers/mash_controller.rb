@@ -4,14 +4,15 @@ class MashController < ApplicationController
     Rails.logger.info request.query_parameters.inspect
     
     # Randomly choose a user from the DB with a CSV of excluded IDs
-    randomUser = User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>'RANDOM()',:limit=>1,:include=>[:profile])[0]
-    opponent = findOpponentForUser(randomUser.score, params[:gender])
+    recentIds = '"'+params[:recents].split(',').join('","')+'"'
+    randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id NOT IN (#{recentIds})",:order=>'RANDOM()',:limit=>1,:include=>[:profile])[0]
+    opponent = findOpponentForUser(randomUser.score, params[:gender], recentIds, randomUser.facebook_id)
     
     response = [randomUser.facebook_id, opponent.facebook_id]
     render :json => response
   end
   
-  def findOpponentForUser(desiredScore, gender)
+  def findOpponentForUser(desiredScore, gender, recentIds = nil, currentId = nil)
     # First hit the DB with a CSV of excluded IDs and a match_score +/- match_range
     # Fetch an array of valid IDs from DB who match the +/- range from the current user's score
     # Perform a binary search on the array to find the best possible opponent
@@ -19,7 +20,10 @@ class MashController < ApplicationController
     
     range = 500
     
-    bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender }]).select("facebook_id, score")
+    bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id NOT IN (#{recentIds}) AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score")
+    
+    puts bucket
+    puts recentIds
     
     opponentIndex = binSearch(bucket, desiredScore)
     opponent = bucket[opponentIndex]
@@ -37,7 +41,9 @@ class MashController < ApplicationController
     
     # puts user.score
     
-    opponent = findOpponentForUser(user.score, params[:gender])
+    recentIds = '"'+params[:recents].split(',').join('","')+'"'
+    
+    opponent = findOpponentForUser(user.score, params[:gender], recentIds, params[:id])
     
     # puts opponent.facebook_id
     render :json => opponent.facebook_id
@@ -47,7 +53,7 @@ class MashController < ApplicationController
   def friends
     # upload some users friends to save in the db
     Rails.logger.info request.query_parameters.inspect
-    # puts params
+    puts params
     currentUser = User.find_by_facebook_id(params[:id])
     params[:_json].each{ |user|
       if User.find_by_facebook_id(user[:id].to_s).nil?
