@@ -8,10 +8,10 @@ class MashController < ApplicationController
     # Randomly choose a user from the DB with a CSV of excluded IDs
     if params[:recents].length == 0
       recentIds = nil
-      randomUser = User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>'RANDOM()',:limit=>1,:include=>[:profile])[0]
+      randomUser = User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>'RAND()',:limit=>1,:include=>[:profile])[0]
     else
       recentIds = '\''+params[:recents].split(',').join('\',\'')+'\''
-      randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id NOT IN (#{recentIds})",:order=>'RANDOM()',:limit=>1,:include=>[:profile])[0]
+      randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id NOT IN (#{recentIds})",:order=>'RAND()',:limit=>1,:include=>[:profile])[0]
     end
     
     opponent = findOpponentForUser(randomUser.score, params[:gender], recentIds, randomUser.facebook_id)
@@ -58,7 +58,7 @@ class MashController < ApplicationController
     
     # puts opponent.facebook_id
     render :json => opponent.facebook_id
-    # render :json => User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>'RANDOM()',:limit=>1,:include=>[:profile])[0]
+    # render :json => User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>'RAND()',:limit=>1,:include=>[:profile])[0]
   end 
   
   def friends
