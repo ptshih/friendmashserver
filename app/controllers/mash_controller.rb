@@ -147,6 +147,13 @@ class MashController < ApplicationController
     min + rand(max-min)
   end
   
+  def calculateRange(score)
+    # Pass in a desired score in which we want to find approximately 100~1000 people who are within +/- range
+    # Calculate optimal +/- range based on SQL table stats assuming our scores are of normal distribution
+    # We might have to perform a SQL table stats query every now and then to update the distribution
+    # This will restrict the number of results that come back to optimize the binarySearch on the result set
+  end
+  
 =begin
   Let's take these ratings as an example:
   Team A: 1500 points
