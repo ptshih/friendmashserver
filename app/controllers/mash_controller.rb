@@ -36,7 +36,7 @@ class MashController < ApplicationController
     # puts bucket
     puts recentIds
     
-    opponentIndex = binSearch(bucket, desiredScore)
+    opponentIndex = binarySearch(bucket, desiredScore, 0, bucket.length - 1)
     opponent = bucket[opponentIndex]
     
     # puts opponent
@@ -123,32 +123,30 @@ class MashController < ApplicationController
     expected = 1.0 / (1.0 + exponent)
     return expected
   end
-  
-  # If bSearch can't find an exact match, it'll return the closest neighbor based on score
-  def bSearch(arr, elem, low, high)
-    mid = low+((high-low)/2).to_i
-    if low > high
-      lowDiff = (elem - arr[low - 1].score).abs
-      highDiff = (elem - arr[high].score).abs
-      if lowDiff > highDiff
-        return high
-      else
-        return low - 1
-      end
+     
+  def binarySearch(array, value, low, high)
+    if high < low
+      return -1 # not found
     end
-    if elem < arr[mid].score
-      return bSearch(arr, elem, low, mid-1)
-    elsif elem > arr[mid].score
-      return bSearch(arr, elem, mid+1, high)
+    
+    mid = low + ((high - low) / 2).to_i
+    
+    if array[low].score == array[high].score
+      puts rand(range_rand(low,high)).to_i
+      return rand(range_rand(low,high)).to_i
+    elsif array[mid].score > value
+      return binarySearch(array, value, low, mid - 1)
+    elsif array[mid].score < value
+      return binarySearch(array, value, mid + 1, high)
     else
       return mid
     end
   end
-
-  def binSearch(a, x)
-    return bSearch(a, x, 0, a.length - 1)
+  
+  def range_rand(min,max)
+    min + rand(max-min)
   end
-
+  
 =begin
   Let's take these ratings as an example:
   Team A: 1500 points
