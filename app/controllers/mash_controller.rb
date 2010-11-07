@@ -3,8 +3,14 @@ class MashController < ApplicationController
     # Find two random people who have similar scores
     Rails.logger.info request.query_parameters.inspect
     
+    puts params[:recents].length
+    
     # Randomly choose a user from the DB with a CSV of excluded IDs
-    recentIds = '"'+params[:recents].split(',').join('","')+'"'
+    if params[:recents].length == 0
+      recentIds = nil
+    else
+      recentIds = '"'+params[:recents].split(',').join('","')+'"'
+    end
     randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id NOT IN (#{recentIds})",:order=>'RANDOM()',:limit=>1,:include=>[:profile])[0]
     opponent = findOpponentForUser(randomUser.score, params[:gender], recentIds, randomUser.facebook_id)
     
@@ -22,7 +28,7 @@ class MashController < ApplicationController
     
     bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id NOT IN (#{recentIds}) AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score")
     
-    puts bucket
+    # puts bucket
     puts recentIds
     
     opponentIndex = binSearch(bucket, desiredScore)
