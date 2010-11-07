@@ -8,12 +8,13 @@ class MashController < ApplicationController
     # Randomly choose a user from the DB with a CSV of excluded IDs
     if params[:recents].length == 0
       recentIds = nil
+      randomUser = User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>'RANDOM()',:limit=>1,:include=>[:profile])[0]
     else
       recentIds = '"'+params[:recents].split(',').join('","')+'"'
+      randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id NOT IN (#{recentIds})",:order=>'RANDOM()',:limit=>1,:include=>[:profile])[0]
     end
-    randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id NOT IN (#{recentIds})",:order=>'RANDOM()',:limit=>1,:include=>[:profile])[0]
-    opponent = findOpponentForUser(randomUser.score, params[:gender], recentIds, randomUser.facebook_id)
     
+    opponent = findOpponentForUser(randomUser.score, params[:gender], recentIds, randomUser.facebook_id)
     response = [randomUser.facebook_id, opponent.facebook_id]
     render :json => response
   end
@@ -26,7 +27,11 @@ class MashController < ApplicationController
     
     range = 500
     
-    bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id NOT IN (#{recentIds}) AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score")
+    if recentIds.nil?
+      bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score")
+    else
+      bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id NOT IN (#{recentIds}) AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score")
+    end
     
     # puts bucket
     puts recentIds
