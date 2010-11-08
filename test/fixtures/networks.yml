@@ -1,0 +1,11 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  facebook_id: MyString
+  friend_id: MyString
+  degree: 1
+
+two:
+  facebook_id: MyString
+  friend_id: MyString
+  degree: 1

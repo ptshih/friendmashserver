@@ -1,0 +1,20 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <b>Facebook:</b>
+  <%= @network.facebook_id %>
+</p>
+
+<p>
+  <b>Friend:</b>
+  <%= @network.friend_id %>
+</p>
+
+<p>
+  <b>Degree:</b>
+  <%= @network.degree %>
+</p>
+
+
+<%= link_to 'Edit', edit_network_path(@network) %> |
+<%= link_to 'Back', networks_path %>

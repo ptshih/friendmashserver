@@ -1,0 +1,78 @@
+module NetworksHelper
+  
+  def generateFirstDegreeNetworkForUser(facebookId, friendIdArray)
+    friendIdArray = ["1217270","1217767","1209924"]
+    puts "Generate 1st degree network link table for user with id: #{facebookId}"
+    
+    friendIdArray.each do |friendId|
+      if Network.find_by_facebook_id(friendId.to_s).nil?
+        Network.create({
+          :facebook_id => facebookId,
+          :friend_id => friendId, 
+          :degree => 1
+        })
+      end
+    end
+  end
+  
+  def generateSecondDegreeNetworkForUser(facebookId)
+    puts "Generate 2nd degree network link table for user with id: #{facebookId}"
+    
+    firstDegree = Network.where(["facebook_id = :facebook_id AND degree = 1", { :facebook_id => facebookId } ])
+    
+#    firstDegree = User.all(:conditions => "facebook_id = '{facebookId}'")
+    
+    firstHash = {}
+    secondHash = {}
+    
+    firstDegree.each do |firstDegreeFriend|
+      firstHash.store(firstDegreeFriend.friend_id, 1)
+    end
+    
+    firstDegree.each do |firstDegreeFriend|
+      secondDegree = Network.where(["facebook_id = :first_id AND degree = 1", { :first_id => firstDegreeFriend.friend_id } ])
+      
+      secondDegree.each do |secondDegreeFriend|
+        if not firstHash.has_key?(secondDegreeFriend.friend_id)
+          secondHash.store(secondDegreeFriend.friend_id, 2)
+        end
+        
+        # puts secondDegreeFriend.friend_id
+      end
+    end
+    
+    secondHash.each { |key, value|
+      puts "#{key} - #{value}"
+      
+      if Network.where(["facebook_id = :facebook_id AND friend_id = :friend_id", { :facebook_id => facebookId, :friend_id => key }]).empty?
+        Network.create({
+          :facebook_id => facebookId,
+          :friend_id => key, 
+          :degree => value
+        })
+      end
+      
+    }
+    
+    p secondHash
+    
+    return nil
+    
+=begin
+  How to map-reduce to get a user's 1st and 2nd degree network
+
+  Create a link table between a facebook_id to a friend_id and a degree
+
+  Data Model:
+  | facebook_id | friend_id | degree |
+  | 12345678901 | 123121412 | 1      |
+  | 12345678901 | 235144319 | 2      |
+
+  hash map of all my friends, mark the value as one (keyed of userid)
+  traverse every friend and try to insert into hash map
+  if a 2nd degree friend already exists in hash map, ignore
+  if a 2nd degree friend does not exist, insert into hash map with a value of 2
+=end
+
+  end
+end
