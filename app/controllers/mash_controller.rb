@@ -33,6 +33,8 @@ class MashController < ApplicationController
     # Perform a binary search on the array to find the best possible opponent
     # Return a single opponent
     
+    # In the future range should be dynamically calculated based on normal distribution of desired score
+    # range = calculateRange(desiredScore)
     range = 500
     
     if recentIds.nil?
@@ -42,7 +44,7 @@ class MashController < ApplicationController
     end
     
     # puts bucket
-    puts recentIds
+    # puts recentIds
     
     opponentIndex = binarySearch(bucket, desiredScore, 0, bucket.length - 1)
     opponent = bucket[opponentIndex]
@@ -73,6 +75,9 @@ class MashController < ApplicationController
     # upload some users friends to save in the db
     Rails.logger.info request.query_parameters.inspect
     puts params
+    
+    friendIdArray = []
+    
     currentUser = User.find_by_facebook_id(params[:id])
     params[:_json].each{ |user|
       if User.find_by_facebook_id(user[:id].to_s).nil?
@@ -92,7 +97,19 @@ class MashController < ApplicationController
           :birthday => user[:birthday]
         })
       end
+      
+      # Insert friend into friendIdArray
+      if not params[:id] == user[:id]
+        friendIdArray << user[:id]
+      end
     }
+    
+    # Generate first degree network for this user
+    Network.generateFirstDegreeNetworkForUser(params[:id], friendIdArray)
+    Network.generateSecondDegreeNetworkForUser(params[:id])
+    
+    # p friendIdArray
+    
     render:text => {:success=>true}.to_json
   end
   

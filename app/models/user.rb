@@ -4,4 +4,6 @@ class User < ActiveRecord::Base
   def createWithHash(user)
 
   end
+  
+  
 end

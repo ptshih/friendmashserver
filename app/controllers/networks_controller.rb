@@ -1,4 +1,5 @@
 class NetworksController < ApplicationController
+  
   # GET /networks
   # GET /networks.xml
   def index
