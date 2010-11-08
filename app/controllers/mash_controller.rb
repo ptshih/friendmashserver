@@ -8,10 +8,18 @@ class MashController < ApplicationController
     # Randomly choose a user from the DB with a CSV of excluded IDs
     if params[:recents].length == 0
       recentIds = nil
-      randomUser = User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>'RAND()',:limit=>1,:include=>[:profile])[0]
+      if Rails.env == "production" # MySQL uses RAND, SQLLite uses RANDOM
+        randomUser = User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>'RAND()',:limit=>1,:include=>[:profile])[0]
+      else
+        randomUser = User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>'RANDOM()',:limit=>1,:include=>[:profile])[0]
+      end
     else
       recentIds = '\''+params[:recents].split(',').join('\',\'')+'\''
-      randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id NOT IN (#{recentIds})",:order=>'RAND()',:limit=>1,:include=>[:profile])[0]
+      if Rails.env == "production" # MySQL uses RAND, SQLLite uses RANDOM
+        randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id NOT IN (#{recentIds})",:order=>'RAND()',:limit=>1,:include=>[:profile])[0]
+      else
+        randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id NOT IN (#{recentIds})",:order=>'RANDOM()',:limit=>1,:include=>[:profile])[0]
+      end
     end
     
     opponent = findOpponentForUser(randomUser.score, params[:gender], recentIds, randomUser.facebook_id)
@@ -153,7 +161,7 @@ class MashController < ApplicationController
     # We might have to perform a SQL table stats query every now and then to update the distribution
     # This will restrict the number of results that come back to optimize the binarySearch on the result set
   end
-  
+
 =begin
   Let's take these ratings as an example:
   Team A: 1500 points
