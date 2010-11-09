@@ -79,6 +79,20 @@ class MashController < ApplicationController
     friendIdArray = []
     
     currentUser = User.find_by_facebook_id(params[:id])
+    
+    # ActiveRecord::Base.execute("REPLACE INTO 'token' SET 'facebook_id' = ")
+    token = Token.find_by_facebook_id(params[:id])
+    if token.nil?
+      token = Token.create({
+        :facebook_id => params[:id],
+        :access_token => params[:access_token]
+      })
+    else
+      token.update_attribute('access_token', params[:access_token])
+    end
+    
+    token.reload
+    
     params[:_json].each{ |user|
       if User.find_by_facebook_id(user[:id].to_s).nil?
         user = User.create({

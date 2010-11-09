@@ -1,0 +1,15 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <b>Facebook:</b>
+  <%= @token.facebook_id %>
+</p>
+
+<p>
+  <b>Access token:</b>
+  <%= @token.access_token %>
+</p>
+
+
+<%= link_to 'Edit', edit_token_path(@token) %> |
+<%= link_to 'Back', tokens_path %>

@@ -1,4 +1,6 @@
 Facemash::Application.routes.draw do
+  resources :tokens
+
   resources :networks
 
   resources :profiles
