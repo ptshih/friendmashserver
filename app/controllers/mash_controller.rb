@@ -342,7 +342,6 @@ class MashController < ApplicationController
     firstDegree = Network.where(["facebook_id = :facebook_id AND degree = 1", { :facebook_id => facebookId } ])
 
     # p firstDegree
-
 #    firstDegree = User.all(:conditions => "facebook_id = '{facebookId}'")
 
     firstHash = {}
@@ -364,8 +363,8 @@ class MashController < ApplicationController
       end
     end
 
-    secondHash.each { |key, value|
-      puts "#{key} - #{value}"
+    secondHash.each do |key, value|
+      # puts "#{key} - #{value}"
 
       if Network.where(["facebook_id = :facebook_id AND friend_id = :friend_id", { :facebook_id => facebookId, :friend_id => key }]).empty?
         network = Network.create(
@@ -374,11 +373,8 @@ class MashController < ApplicationController
           :degree => value
         )
       end
-
-    }
-
+    end
     # p secondHash
-
     return nil
   end
   
