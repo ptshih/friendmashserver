@@ -1,8 +1,4 @@
 class Network < ActiveRecord::Base
-  def self.lol
-    puts "lol"
-  end
-  
   def self.generateFirstDegreeNetworkForUser(facebookId, friendIdArray)
 #    friendIdArray = ["1217270","1217767","1209924"]
     # This method generates a network link table of user -> friend with degree = 1
@@ -10,13 +6,16 @@ class Network < ActiveRecord::Base
 
     friendIdArray.each do |friendId|
       if Network.where(["facebook_id = :facebook_id AND friend_id = :friend_id", { :facebook_id => facebookId, :friend_id => friendId }]).empty?
-        Network.create({
+        newNetwork = {
           :facebook_id => facebookId,
           :friend_id => friendId, 
           :degree => 1
-        })
+        }
+        Network.new(newNetwork).save
       end
     end
+    
+    return nil
   end
 
   def self.generateSecondDegreeNetworkForUser(facebookId)
