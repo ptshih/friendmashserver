@@ -2,7 +2,13 @@ class UsersController < ApplicationController
   # GET /users
   # GET /users.xml
   def index
-    @users = User.all
+    if params[:sort].nil?
+      @users = User.all
+    else
+      if params[:sort] == "score"
+        @users = User.all(:order => "score desc")
+      end
+    end
 
     respond_to do |format|
       format.html # index.html.erb

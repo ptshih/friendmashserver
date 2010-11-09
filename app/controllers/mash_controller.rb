@@ -9,7 +9,7 @@ class MashController < ApplicationController
     # 0 - ALL
     # 1 - NETWORK
     
-    if params[:mode] == 0
+    if params[:mode] == "0"
       networkIds = nil
     else
       networkIds = []
