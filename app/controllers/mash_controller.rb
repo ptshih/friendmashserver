@@ -108,7 +108,6 @@ class MashController < ApplicationController
   def friends
     # upload some users friends to save in the db
     Rails.logger.info request.query_parameters.inspect
-    puts params
     
     friendIdArray = []
     
@@ -117,40 +116,63 @@ class MashController < ApplicationController
     # ActiveRecord::Base.execute("REPLACE INTO 'token' SET 'facebook_id' = ")
     token = Token.find_by_facebook_id(params[:id])
     if token.nil?
-      token = Token.create({
+      token = Token.create(
         :facebook_id => params[:id],
         :access_token => params[:access_token]
-      })
+      )
     else
       token.update_attribute('access_token', params[:access_token])
     end
     
-    token.reload
-    
-    params[:_json].each{ |user|
+    params[:_json].each do |user|
       if User.find_by_facebook_id(user[:id].to_s).nil?
-        user = User.create({
-          :facebook_id => user[:id],
-          :full_name => user[:name], 
-          :gender => user[:gender],
-          :score => 1500,
-          :wins => 0,
-          :losses => 0,
-          :win_streak => 0,
-          :loss_streak => 0
-        })
-        user.reload
-        user.create_profile({
-          :relationship_status => user[:relationship_status],
-          :birthday => user[:birthday]
-        })
+        User.new do |u|
+          u.facebook_id = user[:id]
+          u.gender = user[:gender]
+          u.score = 1500
+          u.wins = 0
+          u.losses = 0
+          u.win_streak = 0
+          u.loss_streak = 0
+          u.save
+        end
+        Profile.new do |p|
+          p.facebook_id = user[:id]
+          p.first_name = user[:first_name]
+          p.middle_name = user[:middle_name].nil? ? nil : user[:middle_name]
+          p.last_name = user[:last_name]
+          p.full_name = user[:name]
+          p.birthday = user[:birthday].nil? ? nil : user[:birthday]
+          p.relationship_status = user[:relationship_status].nil? ? nil : user[:relationship_status]
+          p.location = user[:location].nil? ? nil : user[:location][:name]
+          p.hometown = user[:hometown].nil? ? nil : user[:hometown][:name]
+          p.save
+        end
+
+        user[:education].each do |education|
+          School.new do |s|
+            s.facebook_id = user[:id]
+            s.school_id = education[:school][:id]
+            s.school_name = education[:school][:name]
+            s.save
+          end
+        end if not user[:education].nil?
+          
+        user[:work].each do |work|
+          Employer.new do |e|
+            e.facebook_id = user[:id]
+            e.employer_id = work[:employer][:id]
+            e.employer_name = work[:employer][:name]
+            e.save
+          end
+        end if not user[:work].nil?
       end
       
       # Insert friend into friendIdArray
       if not params[:id] == user[:id]
         friendIdArray << user[:id]
       end
-    }
+    end
     
     # Generate first degree network for this user
     generateFirstDegreeNetworkForUser(params[:id], friendIdArray)
@@ -271,12 +293,11 @@ class MashController < ApplicationController
 
     friendIdArray.each do |friendId|
       if Network.where(["facebook_id = :facebook_id AND friend_id = :friend_id", { :facebook_id => facebookId, :friend_id => friendId }]).empty?
-        network = Network.create({
+        network = Network.create(
           :facebook_id => facebookId,
           :friend_id => friendId, 
           :degree => 1
-        })
-        network.reload
+        )
       end
     end
     
@@ -335,12 +356,11 @@ class MashController < ApplicationController
       puts "#{key} - #{value}"
 
       if Network.where(["facebook_id = :facebook_id AND friend_id = :friend_id", { :facebook_id => facebookId, :friend_id => key }]).empty?
-        network = Network.create({
+        network = Network.create(
           :facebook_id => facebookId,
           :friend_id => key, 
           :degree => value
-        })
-        network.reload
+        )
       end
 
     }

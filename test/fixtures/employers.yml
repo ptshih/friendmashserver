@@ -1,0 +1,11 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  facebook_id: MyString
+  employer_id: MyString
+  employer_name: MyString
+
+two:
+  facebook_id: MyString
+  employer_id: MyString
+  employer_name: MyString

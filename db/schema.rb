@@ -10,7 +10,15 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20101109081745) do
+ActiveRecord::Schema.define(:version => 20101109131838) do
+
+  create_table "employers", :force => true do |t|
+    t.string   "facebook_id"
+    t.string   "employer_id"
+    t.string   "employer_name"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
 
   create_table "networks", :force => true do |t|
     t.string   "facebook_id"
@@ -22,17 +30,24 @@ ActiveRecord::Schema.define(:version => 20101109081745) do
 
   create_table "profiles", :force => true do |t|
     t.string   "facebook_id"
-    t.string   "email"
     t.string   "first_name"
     t.string   "last_name"
     t.datetime "birthday"
     t.string   "location"
     t.string   "hometown"
-    t.string   "political"
-    t.string   "religion"
     t.string   "relationship_status"
-    t.string   "interested_in"
-    t.string   "significant_other_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.integer  "votes"
+    t.integer  "votes_network"
+    t.string   "full_name"
+    t.string   "middle_name"
+  end
+
+  create_table "schools", :force => true do |t|
+    t.string   "facebook_id"
+    t.string   "school_id"
+    t.string   "school_name"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -46,7 +61,6 @@ ActiveRecord::Schema.define(:version => 20101109081745) do
 
   create_table "users", :force => true do |t|
     t.string   "facebook_id"
-    t.string   "full_name"
     t.string   "gender"
     t.integer  "score"
     t.integer  "wins"
