@@ -125,7 +125,7 @@ class MashController < ApplicationController
     end
     
     params[:_json].each do |user|
-      if User.find_by_facebook_id(user[:id].to_s).nil?
+      if User.find_by_facebook_id(user[:id]).nil?
         User.new do |u|
           u.facebook_id = user[:id]
           u.gender = user[:gender]
@@ -166,6 +166,18 @@ class MashController < ApplicationController
             e.save
           end
         end if not user[:work].nil?
+      else        
+        profile = Profile.find_by_facebook_id(user[:id])
+        profile.update_attributes(
+          :first_name => user[:first_name],
+          :middle_name => user[:middle_name].nil? ? nil : user[:middle_name],
+          :last_name => user[:last_name],
+          :full_name => user[:name],
+          :birthday => user[:birthday].nil? ? nil : user[:birthday],
+          :relationship_status => user[:relationship_status].nil? ? nil : user[:relationship_status],
+          :location => user[:location].nil? ? nil : user[:location][:name],
+          :hometown => user[:hometown].nil? ? nil : user[:hometown][:name]
+        )
       end
       
       # Insert friend into friendIdArray

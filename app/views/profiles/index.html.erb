@@ -10,11 +10,9 @@
     <th>Birthday</th>
     <th>Location</th>
     <th>Hometown</th>
-    <th>Political</th>
-    <th>Religion</th>
     <th>Relationship status</th>
-    <th>Interested in</th>
-    <th>Significant other</th>
+    <th>Votes</th>
+    <th>Votes in network</th>
     <th></th>
     <th></th>
     <th></th>
@@ -30,11 +28,9 @@
     <td><%= profile.birthday %></td>
     <td><%= profile.location %></td>
     <td><%= profile.hometown %></td>
-    <td><%= profile.political %></td>
-    <td><%= profile.religion %></td>
     <td><%= profile.relationship_status %></td>
-    <td><%= profile.interested_in %></td>
-    <td><%= profile.significant_other_id %></td>
+    <td><%= profile.votes %></td>
+    <td><%= profile.votes_network %></td>
     <td><%= link_to 'Show', profile %></td>
     <td><%= link_to 'Edit', edit_profile_path(profile) %></td>
     <td><%= link_to 'Destroy', profile, :confirm => 'Are you sure?', :method => :delete %></td>
