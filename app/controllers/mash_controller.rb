@@ -3,31 +3,56 @@ class MashController < ApplicationController
     # Find two random people who have similar scores
     Rails.logger.info request.query_parameters.inspect
     
-    puts params[:recents].length
+    # puts params[:recents].length
+    
+    # params[:mode]
+    # 0 - ALL
+    # 1 - NETWORK
+    if params[:mode] == 1
+      networkIds = nil
+    else
+      networkIds = []
+      Network.where("facebook_id = '#{params[:id]}'").each do |network|
+        networkIds << network.friend_id
+      end
+      p networkIds
+      if networkIds.empty?
+        networkIds = nil
+      else
+        networkIds = '\'' + networkIds.split(',').join('\',\'')+'\'' 
+      end
+    end
+    
+    # MySQL uses RAND, SQLLite uses RANDOM
+    if Rails.env == "production"
+      randQuery = 'RAND()'
+    else
+      randQuery = 'RANDOM()'
+    end
     
     # Randomly choose a user from the DB with a CSV of excluded IDs
     if params[:recents].length == 0
       recentIds = nil
-      if Rails.env == "production" # MySQL uses RAND, SQLLite uses RANDOM
-        randomUser = User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>'RAND()',:limit=>1,:include=>[:profile])[0]
+      if networkIds.nil?
+        randomUser = User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>randQuery,:limit=>1,:include=>[:profile])[0]
       else
-        randomUser = User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>'RANDOM()',:limit=>1,:include=>[:profile])[0]
+        randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id IN (#{networkIds})",:order=>randQuery,:limit=>1,:include=>[:profile])[0]
       end
     else
-      recentIds = '\''+params[:recents].split(',').join('\',\'')+'\''
-      if Rails.env == "production" # MySQL uses RAND, SQLLite uses RANDOM
-        randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id NOT IN (#{recentIds})",:order=>'RAND()',:limit=>1,:include=>[:profile])[0]
+      recentIds = '\'' + params[:recents].split(',').join('\',\'')+'\'' 
+      if networkIds.nil?
+        randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id NOT IN (#{recentIds})",:order=>randQuery,:limit=>1,:include=>[:profile])[0]
       else
-        randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id NOT IN (#{recentIds})",:order=>'RANDOM()',:limit=>1,:include=>[:profile])[0]
+        randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id NOT IN (#{recentIds}) AND facebook_id IN (#{networkIds})",:order=>randQuery,:limit=>1,:include=>[:profile])[0]
       end
     end
     
-    opponent = findOpponentForUser(randomUser.score, params[:gender], recentIds, randomUser.facebook_id)
+    opponent = findOpponentForUser(randomUser.score, params[:gender], randomUser.facebook_id, recentIds, networkIds)
     response = [randomUser.facebook_id, opponent.facebook_id]
     render :json => response
   end
   
-  def findOpponentForUser(desiredScore, gender, recentIds = nil, currentId = nil)
+  def findOpponentForUser(desiredScore, gender, currentId = nil, recentIds = nil, networkIds = nil)
     # First hit the DB with a CSV of excluded IDs and a match_score +/- match_range
     # Fetch an array of valid IDs from DB who match the +/- range from the current user's score
     # Perform a binary search on the array to find the best possible opponent
@@ -38,9 +63,17 @@ class MashController < ApplicationController
     range = 500
     
     if recentIds.nil?
-      bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score")
+      if networkIds.nil?
+        bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score")
+      else
+        bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id != :currentId AND facebook_id NOT IN (#{networkIds})", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score")
+      end
     else
-      bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id NOT IN (#{recentIds}) AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score")
+      if networkIds.nil?
+        bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id NOT IN (#{recentIds}) AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score")
+      else
+        bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id NOT IN (#{recentIds}) AND facebook_id NOT IN (#{networkIds}) AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score")
+      end
     end
     
     # puts bucket
@@ -64,7 +97,7 @@ class MashController < ApplicationController
     
     recentIds = '\''+params[:recents].split(',').join('\',\'')+'\''
     
-    opponent = findOpponentForUser(user.score, params[:gender], recentIds, params[:id])
+    opponent = findOpponentForUser(user.score, params[:gender], params[:id], recentIds, nil)
     
     # puts opponent.facebook_id
     render :json => opponent.facebook_id

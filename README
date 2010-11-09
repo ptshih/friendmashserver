@@ -1,8 +1,12 @@
 == Notes for Facemash
+
+== First/Second degree network mode
 hash map of all my friends, mark the value as one (keyed of userid)
 traverse every friend and try to insert into hash map
 if a 2nd degree friend already exists in hash map, ignore
 if a 2nd degree friend does not exist, insert into hash map with a value of 2
+
+The generation of 2nd degree friends needs to be done on a worker/background job every now and then
 
 == Pre-cache the next mashup
 - On first load, we have nothing in cache, so we load one set, and then background load a second set
@@ -77,3 +81,51 @@ want to get people to see their progress (percentage complete), achievements
 - 4 person mode
 - Elimination round (mortal combat)
 - Bachelorette mode
+
+
+
+== Scraping people's profile album
+https://api.facebook.com/method/fql.query?access_token=
+
+
+SELECT aid FROM album WHERE owner = '102167' AND type = 'profile'
+
+
+SELECT src FROM photo WHERE aid = '438803926060737'
+
+
+Null album response:
+[]
+
+Valid album response:
+[
+  {
+    "aid": "438803926060737"
+  }
+]
+
+
+Valid photos response:
+[
+  {
+    "src": "http://photos-b.ak.fbcdn.net/hphotos-ak-snc1/hs261.snc1/8821_660692634502_102167_38355097_1953449_s.jpg"
+  },
+  {
+    "src": "http://photos-e.ak.fbcdn.net/hphotos-ak-snc1/hs148.snc1/5520_649907522952_102167_37901692_5534508_s.jpg"
+  },
+  {
+    "src": "http://photos-d.ak.fbcdn.net/photos-ak-ash1/v104/118/47/102167/s102167_32768806_8429.jpg"
+  },
+  {
+    "src": "http://photos-d.ak.fbcdn.net/photos-ak-ash1/v104/118/47/102167/s102167_32768819_4381.jpg"
+  },
+  {
+    "src": "http://photos-d.ak.fbcdn.net/photos-ak-ash1/v65/118/47/102167/s102167_31823972_1101.jpg"
+  },
+  {
+    "src": "http://photos-c.ak.fbcdn.net/photos-ak-sf2p/v65/118/47/102167/s102167_31823997_4009.jpg"
+  },
+  {
+    "src": "http://photos-f.ak.fbcdn.net/photos-ak-ash1/v55/118/47/102167/s102167_31447787_9172.jpg"
+  }
+]
