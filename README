@@ -1,36 +1,22 @@
-== Notes for Facemash
+== TODO ==
+Add a security HTTP-HEADER to all requests to protect API
 
-== First/Second degree network mode
-hash map of all my friends, mark the value as one (keyed of userid)
-traverse every friend and try to insert into hash map
-if a 2nd degree friend already exists in hash map, ignore
-if a 2nd degree friend does not exist, insert into hash map with a value of 2
+Fix routes.rb
 
-The generation of 2nd degree friends needs to be done on a worker/background job every now and then
+each name will link to touch.facebook.com/friendId in webview
 
-== Pre-cache the next mashup
+Pre-cache the next mashup
 - On first load, we have nothing in cache, so we load one set, and then background load a second set
 - When the user makes a decision, the pre-cached set gets displayed and we background load a new set
 
-Remove game-mode that keeps a user around
-
-Add a Rematch/Remash button
-
-If a network request fails, automatically call Remash
-
-Cancel all network requests when leaving facemashviewcontroller (back to launcher)
-
-
-== Pass metrics data in HTTP HEADERS
+Pass metrics data in HTTP HEADERS
 - current user id
 - current app version
 - current device uuid
+- send in HTTP HEADERS how long it took a user to make a decision
 
-
-== Segmentation by age, relative hotness level
-
-== Leaderboards for In Network
-== Compatibility rating
+Leaderboards for In Network
+Compatibility rating
 - member of the same groups
 - interests, musics, likes, relationship status
 
@@ -43,19 +29,15 @@ a user needs to have his own table for how many times he voted for a specific pe
 then we have a top leaderboards of who he likes, and vice versa
 - vote number (integer)
 
-each name will just like to touch.facebook.com/friendId
-
-
 percentage of friend network voted on out of personal social network
 the more you play the more chances of completion
 but when friends or friends of friends add new friends, the percentage gets smaller
 
-== percentage of total users voted on
+percentage of total users voted on
 - shows that this thing is huge and growing
 
-== show statistics for like how many votes/likes
-  how many times you won
-
+show statistics for like how many votes/likes
+how many times you won
 - your ranking
 - your score
 - your wins
@@ -67,22 +49,36 @@ but when friends or friends of friends add new friends, the percentage gets smal
 - how many battles have you played
 - average decision time
 
-want to allow people to feel like they accomplished something by playing
-want to get people to come back and play more
-want to get people to see their progress (percentage complete), achievements
+== DONE ==
+hash map of all my friends, mark the value as one (keyed of userid)
+traverse every friend and try to insert into hash map
+if a 2nd degree friend already exists in hash map, ignore
+if a 2nd degree friend does not exist, insert into hash map with a value of 2
 
+Add work history and school history
 
+Remove game-mode that keeps a user around
 
-== send in HTTP HEADERS how long it took a user to make a decision
+Add a Rematch/Remash button
 
+If a network request fails, automatically call Remash
 
+Cancel all network requests when leaving facemashviewcontroller (back to launcher)
 
-== Game Type:
+== Ver. 2 ==
+Segmentation by age, relative hotness level
+
+in the future we can do a work network and school network mash
+
+New Game Types:
 - 4 person mode
 - Elimination round (mortal combat)
 - Bachelorette mode
 
-
+== Notes ==
+want to allow people to feel like they accomplished something by playing
+want to get people to come back and play more
+want to get people to see their progress (percentage complete), achievements
 
 == Scraping people's profile album
 https://api.facebook.com/method/fql.query?access_token=
