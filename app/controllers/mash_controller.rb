@@ -206,6 +206,35 @@ class MashController < ApplicationController
     
     render:text => {:success=>true}.to_json
   end
+  
+  def rankings
+    # return a list of top 25 in each category
+    # expects parameters
+    # gender
+    # mode (all,network)
+    
+    Rails.logger.info request.query_parameters.inspect
+    users = User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>"score desc",:limit=>25,:include=>:profile)
+    
+    top = []
+    i = 1
+    users.each do |user|
+      topHash = {
+        :facebook_id => user[:facebook_id],
+        :full_name => user.profile[:full_name],
+        :score => user[:score],
+        :wins => user[:wins],
+        :losses => user[:losses],
+        :rank => i
+      }
+      top << topHash
+      i += 1
+    end
+
+    render:text => top.to_json
+  end
+  
+  # Calculations
 
   def adjustScoresForUsers(winner, loser)
     winnerExpected = expectedOutcome(winner, loser)
