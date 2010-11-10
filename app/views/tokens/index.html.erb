@@ -4,6 +4,7 @@
   <tr>
     <th>Facebook</th>
     <th>Access token</th>
+	<th>UDID</th>
     <th></th>
     <th></th>
     <th></th>
@@ -13,6 +14,7 @@
   <tr>
     <td><%= token.facebook_id %></td>
     <td><%= token.access_token %></td>
+	<td><%= token.udid %></td>
     <td><%= link_to 'Show', token %></td>
     <td><%= link_to 'Edit', edit_token_path(token) %></td>
     <td><%= link_to 'Destroy', token, :confirm => 'Are you sure?', :method => :delete %></td>
