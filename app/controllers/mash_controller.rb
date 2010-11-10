@@ -232,6 +232,16 @@ class MashController < ApplicationController
     
     adjustScoresForUsers(winner, loser)
     
+    # Insert a NEW record into Result table to keep track of the fight
+    # If left is true, that means left side was DISCARDED
+    Result.new do |r|
+      r.facebook_id = params[:id],
+      r.winner_id = params[:w],
+      r.loser_id = params[:l]
+      r.left = params[:left]
+      r.save
+    end
+    
     render:text => {:success => "true"}.to_json
   end
   

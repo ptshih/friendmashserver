@@ -10,7 +10,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20101110124031) do
+ActiveRecord::Schema.define(:version => 20101110191855) do
 
   create_table "employers", :force => true do |t|
     t.string    "facebook_id"
@@ -42,6 +42,15 @@ ActiveRecord::Schema.define(:version => 20101110124031) do
     t.integer   "votes_network"
     t.string    "full_name"
     t.string    "middle_name"
+  end
+
+  create_table "results", :force => true do |t|
+    t.string   "facebook_id"
+    t.string   "winner_id"
+    t.string   "loser_id"
+    t.boolean  "left"
+    t.datetime "created_at"
+    t.datetime "updated_at"
   end
 
   create_table "schools", :force => true do |t|

@@ -1,0 +1,13 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  facebook_id: MyString
+  left_id: MyString
+  right_id: MyString
+  winner_id: MyString
+
+two:
+  facebook_id: MyString
+  left_id: MyString
+  right_id: MyString
+  winner_id: MyString
