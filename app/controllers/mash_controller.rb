@@ -3,6 +3,11 @@ class MashController < ApplicationController
     # Find two random people who have similar scores
     Rails.logger.info request.query_parameters.inspect
     
+    if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
+      render:text => {:error => "access denied"}.to_json
+      return nil
+    end
+    
     # puts params[:recents].length
     
     # params[:mode]
@@ -92,6 +97,11 @@ class MashController < ApplicationController
     # Find an opponent for the user provided in params
     Rails.logger.info request.query_parameters.inspect
     
+    if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
+      render:text => {:error => "access denied"}.to_json
+      return nil
+    end
+    
     user = User.find_by_facebook_id(params[:id])
     
     # puts user.score
@@ -109,6 +119,11 @@ class MashController < ApplicationController
     # upload some users friends to save in the db
     Rails.logger.info request.query_parameters.inspect
     
+    if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
+      render:text => {:error => "access denied"}.to_json
+      return nil
+    end
+    
     friendIdArray = []
     
     currentUser = User.find_by_facebook_id(params[:id])
@@ -118,10 +133,15 @@ class MashController < ApplicationController
     if token.nil?
       token = Token.create(
         :facebook_id => params[:id],
-        :access_token => params[:access_token]
+        :access_token => params[:access_token],
+        :udid => request.env["HTTP_X_UDID"]
       )
     else
-      token.update_attribute('access_token', params[:access_token])
+      # token.update_attribute('access_token', params[:access_token])
+      token.update_attributes(
+        :access_token => params[:access_token],
+        :udid => request.env["HTTP_X_UDID"]
+      )
     end
     
     params[:_json].each do |user|
@@ -192,19 +212,27 @@ class MashController < ApplicationController
     
     # p friendIdArray
     
-    render:text => {:success=>true}.to_json
+    render:text => {:success => "true"}.to_json
   end
   
   def result
     # report a match result to the server 
     Rails.logger.info request.query_parameters.inspect
     
+    if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
+      render:text => {:error => "access denied"}.to_json
+      return nil
+    end
+    
+    puts request.env["HTTP_X_USER_ID"]
+    puts request.env["HTTP_X_UDID"]
+    
     winner = User.find_by_facebook_id(params[:w].to_s)
     loser  = User.find_by_facebook_id(params[:l].to_s)
     
     adjustScoresForUsers(winner, loser)
     
-    render:text => {:success=>true}.to_json
+    render:text => {:success => "true"}.to_json
   end
   
   def rankings
@@ -214,12 +242,19 @@ class MashController < ApplicationController
     # mode (all,network)
     
     Rails.logger.info request.query_parameters.inspect
+    # Rails.logger.info request.env.inspect
+    
+    if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
+      render:text => {:error => "access denied"}.to_json
+      return nil
+    end
+    
     users = User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>"score desc",:limit=>25,:include=>:profile)
     
-    top = []
+    rankings = []
     i = 1
     users.each do |user|
-      topHash = {
+      rankingsHash = {
         :facebook_id => user[:facebook_id],
         :full_name => user.profile[:full_name],
         :score => user[:score],
@@ -227,11 +262,11 @@ class MashController < ApplicationController
         :losses => user[:losses],
         :rank => i
       }
-      top << topHash
+      rankings << rankingsHash
       i += 1
     end
 
-    render:text => top.to_json
+    render:text => rankings.to_json
   end
   
   # Calculations
