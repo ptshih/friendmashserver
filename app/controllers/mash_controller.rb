@@ -252,18 +252,17 @@ class MashController < ApplicationController
     users = User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>"score desc",:limit=>25,:include=>:profile)
     
     rankings = []
-    i = 1
-    users.each do |user|
+    
+    users.each_with_index do |user,rank|
       rankingsHash = {
         :facebook_id => user[:facebook_id],
         :full_name => user.profile[:full_name],
         :score => user[:score],
         :wins => user[:wins],
         :losses => user[:losses],
-        :rank => i
+        :rank => rank + 1
       }
       rankings << rankingsHash
-      i += 1
     end
 
     render:text => rankings.to_json
@@ -324,43 +323,6 @@ class MashController < ApplicationController
     # We might have to perform a SQL table stats query every now and then to update the distribution
     # This will restrict the number of results that come back to optimize the binarySearch on the result set
   end
-
-=begin
-  Let's take these ratings as an example:
-  Team A: 1500 points
-  Team B: 1580 points
-
-
-  Wikipedia's formula is:
-  Expected Outcome = 1 / (1 + 10^((Enemy Rating - Your Rating)/400))
-  New Rating = Current Rating + Maximum Possible Change * (Outcome - Expected Outcome)
-  (Outcome is either 0 for a loss, 0.5 for a draw or 1 for a victory.)
-
-  So this becomes:
-  (note: I have found out that the windows calculator doesn't accept "^" for calculating the power. Instead, use an "y" if you want to do this via copy&paste. At least for the German version.)
-
-  Team A:
-  Expected Outcome:
-  1/(1+10y((1580-1500)/400))= 0.387 [38.7% chance of winning]
-
-  Loss:
-  1500+32*(0-0.387)= 1487 [-13]
-
-  Victory:
-  1500+32*(1-0.387)= 1519 [+19]
-
-
-  Team B:
-  Expected Outcome:
-  1/(1+10y((1500-1580)/400))= 0.613 [61.3% chance of winning]
-
-  Loss:
-  1580+32*(0-0.613)= 1560 [-20]
-
-  Victory:
-  1580+32*(1-0.613)= 1592 [+12]
-
-=end
 
   def generateFirstDegreeNetworkForUser(facebookId, friendIdArray)
 #    friendIdArray = ["1217270","1217767","1209924"]
@@ -441,5 +403,4 @@ class MashController < ApplicationController
     # p secondHash
     return nil
   end
-  
 end
