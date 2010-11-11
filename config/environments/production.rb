@@ -49,5 +49,5 @@ Facemash::Application.configure do
   
   config.action_controller.logger = Logger.new(STDOUT)
   
-  config.gem 'delayed_job'
+  # config.gem 'delayed_job'
 end

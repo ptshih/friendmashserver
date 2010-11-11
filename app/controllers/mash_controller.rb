@@ -208,7 +208,7 @@ class MashController < ApplicationController
     
     # Generate first degree network for this user
     generateFirstDegreeNetworkForUser(params[:id], friendIdArray)
-    generateSecondDegreeNetworkForUser(params[:id])
+    self.delay.generateSecondDegreeNetworkForUser(params[:id])
     
     # p friendIdArray
     
