@@ -31,7 +31,7 @@ class MashController < ApplicationController
     
     # MySQL uses RAND, SQLLite uses RANDOM
     if Rails.env == "production"
-      randQuery = 'RAND()'
+      randQuery = 'RANDOM()'
     else
       randQuery = 'RANDOM()'
     end
