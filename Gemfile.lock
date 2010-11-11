@@ -32,7 +32,8 @@ GEM
       activesupport (~> 3.0.0)
     builder (2.1.2)
     daemons (1.1.0)
-    delayed_job (2.0.3)
+    delayed_job (2.1.0.pre2)
+      activesupport (~> 3.0)
       daemons
     erubis (2.6.6)
       abstract (>= 1.0.0)
@@ -73,6 +74,6 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  delayed_job (= 2.0.3)
+  delayed_job (= 2.1.0.pre2)
   rails (= 3.0.1)
   sqlite3-ruby

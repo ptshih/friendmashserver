@@ -48,6 +48,5 @@ Facemash::Application.configure do
   config.active_support.deprecation = :notify
   
   config.action_controller.logger = Logger.new(STDOUT)
-  
-  config.gem 'delayed_job'
+
 end
