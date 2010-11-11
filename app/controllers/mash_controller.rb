@@ -30,6 +30,7 @@ class MashController < ApplicationController
     end
     
     # MySQL uses RAND, SQLLite uses RANDOM
+    # Apparently MySQL-RDS has to use RAND() but PostgreSQL and SQLite use RANDOM()
     if Rails.env == "production"
       randQuery = 'RANDOM()'
     else
@@ -208,7 +209,7 @@ class MashController < ApplicationController
     
     # Generate first degree network for this user
     generateFirstDegreeNetworkForUser(params[:id], friendIdArray)
-    enqueue generateSecondDegreeNetworkForUser(params[:id])
+    Delayed::Job.enqueue generateSecondDegreeNetworkForUser(params[:id])
     
     # p friendIdArray
     
