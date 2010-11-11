@@ -4,6 +4,7 @@ gem 'rails', '3.0.1'
 
 group :production do
   gem 'mysql', '2.8.1'
+  gem 'delayed_job', '2.0.3'
 end
 
 # Bundle edge Rails instead:
