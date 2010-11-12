@@ -22,7 +22,7 @@ class MashController < ApplicationController
       Network.where("facebook_id = '#{params[:id]}'").each do |network|
         networkIds << network.friend_id
       end
-      p networkIds
+      # p networkIds
       if networkIds.empty?
         networkIds = nil
       else
@@ -160,10 +160,10 @@ class MashController < ApplicationController
 
     # puts "json = #{json.inspect}"
     json.each do |user|
-      if User.find_by_facebook_id(user[:id]).nil?
+      if User.find_by_facebook_id(user['id']).nil?
         User.new do |u|
-          u.facebook_id = user[:id]
-          u.gender = user[:gender]
+          u.facebook_id = user['id']
+          u.gender = user['gender']
           u.score = 1500
           u.wins = 0
           u.losses = 0
@@ -172,61 +172,66 @@ class MashController < ApplicationController
           u.save
         end
         Profile.new do |p|
-          p.facebook_id = user[:id]
-          p.first_name = user[:first_name]
-          p.middle_name = user[:middle_name].nil? ? nil : user[:middle_name]
-          p.last_name = user[:last_name]
-          p.full_name = user[:name]
-          p.birthday = user[:birthday].nil? ? nil : user[:birthday]
-          p.relationship_status = user[:relationship_status].nil? ? nil : user[:relationship_status]
-          p.location = user[:location].nil? ? nil : user[:location][:name]
-          p.hometown = user[:hometown].nil? ? nil : user[:hometown][:name]
+          p.facebook_id = user['id']
+          p.first_name = user['first_name']
+          p.middle_name = user['middle_name'].nil? ? nil : user['middle_name']
+          p.last_name = user['last_name']
+          p.full_name = user['name']
+          p.birthday = user['birthday'].nil? ? nil : user['birthday']
+          p.relationship_status = user['relationship_status'].nil? ? nil : user['relationship_status']
+          p.location = user['location'].nil? ? nil : user['location']['name']
+          p.hometown = user['hometown'].nil? ? nil : user['hometown']['name']
           p.save
         end
 
-        user[:education].each do |education|
+        user['education'].each do |education|
           School.new do |s|
-            s.facebook_id = user[:id]
-            s.school_id = education[:school][:id]
-            s.school_name = education[:school][:name]
+            s.facebook_id = user['id']
+            s.school_id = education['school']['id']
+            s.school_name = education['school']['name']
             s.save
           end
-        end if not user[:education].nil?
+        end if not user['education'].nil?
           
-        user[:work].each do |work|
+        user['work'].each do |work|
           Employer.new do |e|
-            e.facebook_id = user[:id]
-            e.employer_id = work[:employer][:id]
-            e.employer_name = work[:employer][:name]
+            e.facebook_id = user['id']
+            e.employer_id = work['employer']['id']
+            e.employer_name = work['employer']['name']
             e.save
           end
-        end if not user[:work].nil?
+        end if not user['work'].nil?
       else        
-        profile = Profile.find_by_facebook_id(user[:id])
+        profile = Profile.find_by_facebook_id(user['id'])
         profile.update_attributes(
-          :first_name => user[:first_name],
-          :middle_name => user[:middle_name].nil? ? nil : user[:middle_name],
-          :last_name => user[:last_name],
-          :full_name => user[:name],
-          :birthday => user[:birthday].nil? ? nil : user[:birthday],
-          :relationship_status => user[:relationship_status].nil? ? nil : user[:relationship_status],
-          :location => user[:location].nil? ? nil : user[:location][:name],
-          :hometown => user[:hometown].nil? ? nil : user[:hometown][:name]
+          :first_name => user['first_name'],
+          :middle_name => user['middle_name'].nil? ? nil : user['middle_name'],
+          :last_name => user['last_name'],
+          :full_name => user['name'],
+          :birthday => user['birthday'].nil? ? nil : user['birthday'],
+          :relationship_status => user['relationship_status'].nil? ? nil : user['relationship_status'],
+          :location => user['location'].nil? ? nil : user['location']['name'],
+          :hometown => user['hometown'].nil? ? nil : user['hometown']['name']
         )
       end
       
       # Insert friend into friendIdArray
-      if not params[:id] == user[:id]
-        friendIdArray << user[:id]
+      if not params[:id] == user['id']
+        friendIdArray << user['id']
       end
     end
+    
+    puts "LOL FRIEND"
+    p friendIdArray
     
     # Generate first degree network for this user
     generateFirstDegree(params[:id], friendIdArray)
     # self.send_later(:generateSecondDegreeNetworkForUser, params[:id])
 
+    
+    
     Delayed::Job.enqueue GenerateSecondDegree.new(params[:id])
-    # p friendIdArray
+    
     
     render:text => {:success => "true"}.to_json
   end
@@ -268,14 +273,33 @@ class MashController < ApplicationController
     # mode (all,network)
     
     Rails.logger.info request.query_parameters.inspect
-    # Rails.logger.info request.env.inspect
+    Rails.logger.info request.env.inspect
     
     if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
       render:text => {:error => "access denied"}.to_json
       return nil
     end
     
-    users = User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>"score desc",:limit=>25,:include=>:profile)
+    if params[:mode] == "0"
+      networkIds = nil
+    else
+      networkIds = []
+      Network.where("facebook_id = '#{params[:id]}'").each do |network|
+        networkIds << network.friend_id
+      end
+      # p networkIds
+      if networkIds.empty?
+        networkIds = nil
+      else
+        networkIds = '\'' + networkIds.split(',').join('\',\'')+'\'' 
+      end
+    end
+    
+    if networkIds.nil?
+      users = User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>"score desc",:limit=>25,:include=>:profile)
+    else
+      users = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id IN (#{networkIds})",:order=>"score desc",:limit=>25,:include=>:profile)
+    end
     
     rankings = []
     
