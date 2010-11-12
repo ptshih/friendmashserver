@@ -129,7 +129,7 @@ class MashController < ApplicationController
   def friends
     # upload some users friends to save in the db
     
-    Rails.logger.info request.query_parameters.inspect
+    # Rails.logger.info request.query_parameters.inspect
     
     if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
       render:text => {:error => "access denied"}.to_json
@@ -157,7 +157,7 @@ class MashController < ApplicationController
     end
     
     json = params[:_json] || JSON.parse(Zlib::GzipReader.new(StringIO.new(request.raw_post.to_s)).read)
-    # puts "json = #{json.inspect}"
+    puts "json = #{json.inspect}"
     json.each do |user|
       if User.find_by_facebook_id(user[:id]).nil?
         User.new do |u|
