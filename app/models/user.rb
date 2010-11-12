@@ -7,17 +7,21 @@ class User < ActiveRecord::Base
   has_many :result, :foreign_key => 'facebook_id', :primary_key => 'facebook_id'
   
   def reloadMyGender
-    return if self.profile.nil? || self.profile[:first_name].nil?
-    firstname = self.profile[:first_name].split(' ')[0]
-    html = HTTPClient.new.get_content("http://www.gpeters.com/names/baby-names.php?name=#{firstname}&button=Go")
-    if html.include?("It's a boy")
-      puts "found a boy! #{firstname}"
-      self.update_attribute('gender','male')
-    elsif html.include?("It's a girl")
-      puts "found a girl! #{firstname}"
-      self.update_attribute('gender','female')
-    else
-      puts "could not detect gender for #{firstname}"
+    # return if self.profile.nil? || self.profile[:first_name].nil?
+    begin
+      firstname = self.profile[:first_name].split(' ')[0]
+      html = HTTPClient.new.get_content("http://www.gpeters.com/names/baby-names.php?name=#{firstname}&button=Go")
+      if html.include?("It's a boy")
+        puts "found a boy! #{firstname}"
+        self.update_attribute('gender','male')
+      elsif html.include?("It's a girl")
+        puts "found a girl! #{firstname}"
+        self.update_attribute('gender','female')
+      else
+        puts "could not detect gender for #{firstname}"
+      end
+    rescue
+      puts 'nope, didnt work'
     end
   end
   
