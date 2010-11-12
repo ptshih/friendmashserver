@@ -7,7 +7,7 @@ class User < ActiveRecord::Base
   has_many :result, :foreign_key => 'facebook_id', :primary_key => 'facebook_id'
   
   def reloadMyGender
-    firstname = self.profile[:first_name]
+    firstname = self.profile[:first_name].split(' ')[0]
     html = HTTPClient.new.get_content("http://www.gpeters.com/names/baby-names.php?name=#{firstname}&button=Go")
     if html.include?("It's a boy")
       puts "found a boy! #{firstname}"
