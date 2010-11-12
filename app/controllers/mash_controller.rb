@@ -117,8 +117,23 @@ class MashController < ApplicationController
     # render :json => User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>'RAND()',:limit=>1,:include=>[:profile])[0]
   end 
   
+  # takes a gzipped string and deflates it
+  def inflate(string)
+    zstream = Zlib::Inflate.new(-Zlib::MAX_WBITS)
+    buf = zstream.inflate(string)
+    zstream.finish
+    zstream.close
+    buf
+  end
+  
   def friends
     # upload some users friends to save in the db
+    
+    gz = Zlib::GzipReader.new(StringIO.new(request.raw_post.to_s))
+
+    json = params[:_json] || JSON.parse(gz.read)
+    # puts "json = #{json.inspect}"
+    
     Rails.logger.info request.query_parameters.inspect
     
     if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
@@ -146,7 +161,9 @@ class MashController < ApplicationController
       )
     end
     
-    params[:_json].each do |user|
+    json = params[:_json] || JSON.parse(inflate(request.raw_post))
+    puts "json = #{json.inspect}"
+    json.each do |user|
       if User.find_by_facebook_id(user[:id]).nil?
         User.new do |u|
           u.facebook_id = user[:id]
