@@ -156,7 +156,8 @@ class MashController < ApplicationController
       )
     end
     
-    json = JSON.parse(Zlib::GzipReader.new(StringIO.new(request.raw_post.to_s)).read)
+    # json = JSON.parse(Zlib::GzipReader.new(StringIO.new(request.raw_post.to_s)).read)
+    json = Zlib::GzipReader.new(StringIO.new(response_body)).read
     puts "start"
     p json
     puts "end"
