@@ -5,7 +5,11 @@ class MashController < ApplicationController
     Rails.logger.info request.query_parameters.inspect
     
     if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
-      render:text => {:error => "access denied"}.to_json
+      respond_to do |format|
+        format.html # index.html.erb
+        format.xml  { render :xml => {:error => "access denied"} }
+        format.json  { render :json => {:error => "access denied"} }
+      end
       return nil
     end
     
@@ -57,7 +61,11 @@ class MashController < ApplicationController
     
     opponent = findOpponentForUser(randomUser.score, params[:gender], randomUser.facebook_id, recentIds, networkIds)
     response = [randomUser.facebook_id, opponent.facebook_id]
-    render :json => response
+    respond_to do |format|
+      format.html # index.html.erb
+      format.xml  { render :xml => response }
+      format.json  { render :json => response }
+    end
   end
   
   def findOpponentForUser(desiredScore, gender, currentId = nil, recentIds = nil, networkIds = nil)
@@ -97,10 +105,15 @@ class MashController < ApplicationController
   
   def match
     # Find an opponent for the user provided in params
+    # CURRENTLY UNUSED, GAME MODE DISABLED
     Rails.logger.info request.query_parameters.inspect
     
     if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
-      render:text => {:error => "access denied"}.to_json
+      respond_to do |format|
+        format.html # index.html.erb
+        format.xml  { render :xml => {:error => "access denied"} }
+        format.json  { render :json => {:error => "access denied"} }
+      end
       return nil
     end
     
@@ -113,8 +126,11 @@ class MashController < ApplicationController
     opponent = findOpponentForUser(user.score, params[:gender], params[:id], recentIds, nil)
     
     # puts opponent.facebook_id
-    render :json => opponent.facebook_id
-    # render :json => User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>'RAND()',:limit=>1,:include=>[:profile])[0]
+    respond_to do |format|
+      format.html # index.html.erb
+      format.xml  { render :xml => opponent.facebook_id }
+      format.json  { render :json => opponent.facebook_id }
+    end
   end 
   
   # takes a gzipped string and deflates it
@@ -132,7 +148,11 @@ class MashController < ApplicationController
     # Rails.logger.info request.query_parameters.inspect
     
     if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
-      render:text => {:error => "access denied"}.to_json
+      respond_to do |format|
+        format.html # index.html.erb
+        format.xml  { render :xml => {:error => "access denied"} }
+        format.json  { render :json => {:error => "access denied"} }
+      end
       return nil
     end
     
@@ -156,7 +176,7 @@ class MashController < ApplicationController
       )
     end
     
-    json = JSON.parse(Zlib::GzipReader.new(StringIO.new(request.raw_post.to_s)).read)
+    json = params[:_json] || JSON.parse(Zlib::GzipReader.new(StringIO.new(request.raw_post.to_s)).read)
 
     # puts "json = #{json.inspect}"
     json.each do |user|
@@ -221,19 +241,17 @@ class MashController < ApplicationController
       end
     end
     
-    puts "LOL FRIEND"
-    p friendIdArray
-    
     # Generate first degree network for this user
     generateFirstDegree(params[:id], friendIdArray)
     # self.send_later(:generateSecondDegreeNetworkForUser, params[:id])
-
     
+    Delayed::Job.enqueue GenerateSecondDegree.new(params[:id])  
     
-    Delayed::Job.enqueue GenerateSecondDegree.new(params[:id])
-    
-    
-    render:text => {:success => "true"}.to_json
+    respond_to do |format|
+      format.html # index.html.erb
+      format.xml  { render :xml => {:success => "true"} }
+      format.json  { render :json => {:success => "true"} }
+    end
   end
   
   def result
@@ -241,7 +259,11 @@ class MashController < ApplicationController
     Rails.logger.info request.query_parameters.inspect
     
     if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
-      render:text => {:error => "access denied"}.to_json
+      respond_to do |format|
+        format.html # index.html.erb
+        format.xml  { render :xml => {:error => "access denied"} }
+        format.json  { render :json => {:error => "access denied"} }
+      end
       return nil
     end
     
@@ -263,7 +285,11 @@ class MashController < ApplicationController
       r.save
     end
     
-    render:text => {:success => "true"}.to_json
+    respond_to do |format|
+      format.html # index.html.erb
+      format.xml  { render :xml => {:success => "true"} }
+      format.json  { render :json => {:success => "true"} }
+    end
   end
   
   def rankings
@@ -276,7 +302,11 @@ class MashController < ApplicationController
     Rails.logger.info request.env.inspect
     
     if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
-      render:text => {:error => "access denied"}.to_json
+      respond_to do |format|
+        format.html # index.html.erb
+        format.xml  { render :xml => {:error => "access denied"} }
+        format.json  { render :json => {:error => "access denied"} }
+      end
       return nil
     end
     
@@ -315,7 +345,11 @@ class MashController < ApplicationController
       rankings << rankingsHash
     end
 
-    render:text => rankings.to_json
+    respond_to do |format|
+      format.html # index.html.erb
+      format.xml  { render :xml => rankings }
+      format.json  { render :json => rankings }
+    end
   end
   
   # Calculations
