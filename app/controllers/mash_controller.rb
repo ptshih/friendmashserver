@@ -176,6 +176,8 @@ class MashController < ApplicationController
       )
     end
     
+    # We should always be expecting a GZIP postData here
+    # params[:_json] || 
     json = JSON.parse(Zlib::GzipReader.new(StringIO.new(request.raw_post.to_s)).read)
 
     # puts "json = #{json.inspect}"
