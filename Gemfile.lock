@@ -39,6 +39,7 @@ GEM
       abstract (>= 1.0.0)
     httpclient (2.1.5.2)
     i18n (0.4.2)
+    json (1.4.6)
     mail (2.2.9)
       activesupport (>= 2.3.6)
       i18n (~> 0.4.1)
@@ -77,5 +78,6 @@ PLATFORMS
 DEPENDENCIES
   delayed_job (= 2.1.0.pre2)
   httpclient
+  json
   rails (= 3.0.1)
   sqlite3-ruby

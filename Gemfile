@@ -6,6 +6,8 @@ gem 'delayed_job', '2.1.0.pre2'
 
 gem 'httpclient'
 
+gem 'json'
+
 # group :production do
 #   gem 'mysql', '2.8.1'
 # end

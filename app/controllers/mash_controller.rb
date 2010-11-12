@@ -129,11 +129,6 @@ class MashController < ApplicationController
   def friends
     # upload some users friends to save in the db
     
-    gz = Zlib::GzipReader.new(StringIO.new(request.raw_post.to_s))
-
-    json = params[:_json] || JSON.parse(gz.read)
-    # puts "json = #{json.inspect}"
-    
     Rails.logger.info request.query_parameters.inspect
     
     if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
@@ -161,8 +156,8 @@ class MashController < ApplicationController
       )
     end
     
-    json = params[:_json] || JSON.parse(inflate(request.raw_post))
-    puts "json = #{json.inspect}"
+    json = params[:_json] || JSON.parse(Zlib::GzipReader.new(StringIO.new(request.raw_post.to_s)).read)
+    # puts "json = #{json.inspect}"
     json.each do |user|
       if User.find_by_facebook_id(user[:id]).nil?
         User.new do |u|
