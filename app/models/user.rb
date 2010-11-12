@@ -8,7 +8,7 @@ class User < ActiveRecord::Base
   
   def reloadMyGender
     firstname = self.profile[:first_name]
-    html = HTTPClient.new.get_content("http://www.gpeters.com/names/baby-names.php?name=#{name}&button=Go")
+    html = HTTPClient.new.get_content("http://www.gpeters.com/names/baby-names.php?name=#{firstname}&button=Go")
     if html.include?("It's a boy")
       puts "found a boy! #{firstname}"
       self.set_attribute('gender','male')
