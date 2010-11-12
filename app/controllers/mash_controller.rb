@@ -245,8 +245,8 @@ class MashController < ApplicationController
       return nil
     end
     
-    puts request.env["HTTP_X_USER_ID"]
-    puts request.env["HTTP_X_UDID"]
+    # puts request.env["HTTP_X_USER_ID"]
+    # puts request.env["HTTP_X_UDID"]
     
     winner = User.find_by_facebook_id(params[:w].to_s)
     loser  = User.find_by_facebook_id(params[:l].to_s)
@@ -256,8 +256,8 @@ class MashController < ApplicationController
     # Insert a NEW record into Result table to keep track of the fight
     # If left is true, that means left side was DISCARDED
     Result.new do |r|
-      r.facebook_id = params[:id],
-      r.winner_id = params[:w],
+      r.facebook_id = params[:id]
+      r.winner_id = params[:w]
       r.loser_id = params[:l]
       r.left = params[:left]
       r.save
