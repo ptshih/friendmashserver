@@ -5,3 +5,4 @@ tmp/**/*
 
 # textmate
 *.tmproj
+.logworm
