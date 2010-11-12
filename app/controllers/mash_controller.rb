@@ -1,3 +1,9 @@
+# Achievement icon/badges go into profile page
+# special rankings, maybe chevrons, wow pvp ranking badges
+# win streak crown
+# location based: mayor of location
+
+
 class MashController < ApplicationController
   require 'generate_second_degree' 
   def random
@@ -59,12 +65,31 @@ class MashController < ApplicationController
       end
     end
     
-    opponent = findOpponentForUser(randomUser.score, params[:gender], randomUser.facebook_id, recentIds, networkIds)
-    response = [randomUser.facebook_id, opponent.facebook_id]
-    respond_to do |format|
-      format.html # index.html.erb
-      format.xml  { render :xml => response }
-      format.json  { render :json => response }
+    # puts "LOL"
+    # p randomUser
+    if not randomUser.nil?
+      opponent = findOpponentForUser(randomUser.score, params[:gender], randomUser.facebook_id, recentIds, networkIds)
+      
+      if not opponent.nil?
+        response = [randomUser.facebook_id, opponent.facebook_id]
+        respond_to do |format|
+          format.xml  { render :xml => response }
+          format.json  { render :json => response }
+        end
+      else
+        response = {:error => "no opponent found"} # did not find an opponent
+        respond_to do |format|
+          format.xml  { render :xml => response, :status => :no_content }
+          format.json  { render :json => response, :status => :no_content }
+        end
+      end
+    else
+      # ran out of opponents!!!
+      response = {:error => "no opponent found"}
+      respond_to do |format|
+        format.xml  { render :xml => response, :status => :no_content }
+        format.json  { render :json => response, :status => :no_content }
+      end
     end
   end
   
@@ -92,11 +117,12 @@ class MashController < ApplicationController
       end
     end
     
-    # puts bucket
-    # puts recentIds
-    
-    opponentIndex = binarySearch(bucket, desiredScore, 0, bucket.length - 1)
-    opponent = bucket[opponentIndex]
+    if bucket.length > 0
+      opponentIndex = binarySearch(bucket, desiredScore, 0, bucket.length - 1)
+      opponent = bucket[opponentIndex]
+    else
+      return nil # no opponent found
+    end
     
     # puts opponent
     
