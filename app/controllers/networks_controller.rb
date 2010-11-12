@@ -8,6 +8,7 @@ class NetworksController < ApplicationController
     respond_to do |format|
       format.html # index.html.erb
       format.xml  { render :xml => @networks }
+      format.json  { render :json => @networks }
     end
   end
 
@@ -19,6 +20,7 @@ class NetworksController < ApplicationController
     respond_to do |format|
       format.html # show.html.erb
       format.xml  { render :xml => @network }
+      format.json  { render :json => @network }
     end
   end
 

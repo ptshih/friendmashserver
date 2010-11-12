@@ -7,6 +7,7 @@ class TokensController < ApplicationController
     respond_to do |format|
       format.html # index.html.erb
       format.xml  { render :xml => @tokens }
+      format.json  { render :json => @tokens }
     end
   end
 
@@ -18,6 +19,7 @@ class TokensController < ApplicationController
     respond_to do |format|
       format.html # show.html.erb
       format.xml  { render :xml => @token }
+      format.json  { render :json => @token }
     end
   end
 
