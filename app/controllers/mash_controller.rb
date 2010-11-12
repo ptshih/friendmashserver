@@ -349,6 +349,8 @@ class MashController < ApplicationController
       end
     end
     
+    # Active Record Join Alternative
+    # users = User.select('*').all(:conditions=>"gender = '#{params[:gender]}'",:order=>"score desc",:limit=>count,:joins=>:profile)
     if networkIds.nil?
       users = User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>"score desc",:limit=>count,:include=>:profile)
     else
