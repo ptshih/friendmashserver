@@ -79,16 +79,16 @@ class MashController < ApplicationController
       else
         response = {:error => "no opponent found"} # did not find an opponent
         respond_to do |format|
-          format.xml  { render :xml => response, :status => :no_content }
-          format.json  { render :json => response, :status => :no_content }
+          format.xml  { render :xml => response, :status => :not_implemented }
+          format.json  { render :json => response, :status => :not_implemented }
         end
       end
     else
       # ran out of opponents!!!
       response = {:error => "no opponent found"}
       respond_to do |format|
-        format.xml  { render :xml => response, :status => :no_content }
-        format.json  { render :json => response, :status => :no_content }
+        format.xml  { render :xml => response, :status => :not_implemented }
+        format.json  { render :json => response, :status => :not_implemented }
       end
     end
   end
