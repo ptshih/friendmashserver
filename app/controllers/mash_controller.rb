@@ -201,6 +201,8 @@ class MashController < ApplicationController
           p.relationship_status = user['relationship_status'].nil? ? nil : user['relationship_status']
           p.location = user['location'].nil? ? nil : user['location']['name']
           p.hometown = user['hometown'].nil? ? nil : user['hometown']['name']
+          p.votes = 0
+          p.votes_network = 0
           p.save
         end
 
@@ -292,6 +294,22 @@ class MashController < ApplicationController
     end
   end
   
+  def profile
+    # given a parameter facebookId
+    # return a hash of a given user's profile
+    
+    Rails.logger.info request.query_parameters.inspect
+    
+    profile = User.select('*').where('facebook_id' => params[:id]).joins(:profile)
+    
+    # send response
+    respond_to do |format|
+      format.html # index.html.erb
+      format.xml  { render :xml => profile }
+      format.json  { render :json => profile }
+    end
+  end
+  
   def rankings
     # return a list of top 25 in each category
     # expects parameters
@@ -299,7 +317,7 @@ class MashController < ApplicationController
     # mode (all,network)
     
     Rails.logger.info request.query_parameters.inspect
-    Rails.logger.info request.env.inspect
+    # Rails.logger.info request.env.inspect
     
     if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
       respond_to do |format|
@@ -308,6 +326,12 @@ class MashController < ApplicationController
         format.json  { render :json => {:error => "access denied"} }
       end
       return nil
+    end
+    
+    if params[:count].nil?
+      count = 25
+    else
+      count = params[:count]
     end
     
     if params[:mode] == "0"
@@ -326,7 +350,7 @@ class MashController < ApplicationController
     end
     
     if networkIds.nil?
-      users = User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>"score desc",:limit=>25,:include=>:profile)
+      users = User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>"score desc",:limit=>count,:include=>:profile)
     else
       users = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id IN (#{networkIds})",:order=>"score desc",:limit=>25,:include=>:profile)
     end
@@ -340,6 +364,8 @@ class MashController < ApplicationController
         :score => user[:score],
         :wins => user[:wins],
         :losses => user[:losses],
+        :win_streak => user[:win_streak],
+        :loss_streak => user[:loss_streak],
         :rank => rank + 1
       }
       rankings << rankingsHash
