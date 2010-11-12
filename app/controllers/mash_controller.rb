@@ -176,7 +176,7 @@ class MashController < ApplicationController
       )
     end
     
-    json = params[:_json] || JSON.parse(Zlib::GzipReader.new(StringIO.new(request.raw_post.to_s)).read)
+    json = JSON.parse(Zlib::GzipReader.new(StringIO.new(request.raw_post.to_s)).read)
 
     # puts "json = #{json.inspect}"
     json.each do |user|
@@ -300,7 +300,7 @@ class MashController < ApplicationController
     
     Rails.logger.info request.query_parameters.inspect
     
-    profile = User.select('*').where('facebook_id' => params[:id]).joins(:profile)
+    profile = User.select('*').where('facebook_id' => params[:id]).joins(:profile).first
     
     # send response
     respond_to do |format|
