@@ -38,7 +38,7 @@ ActiveRecord::Schema.define(:version => 20101111094804) do
   create_table "networks", :force => true do |t|
     t.string    "facebook_id"
     t.string    "friend_id"
-    t.integer   "degree"
+    t.integer   "degree",         :default => 0
     t.timestamp "created_at"
     t.timestamp "updated_at"
   end
@@ -53,8 +53,8 @@ ActiveRecord::Schema.define(:version => 20101111094804) do
     t.string    "relationship_status"
     t.timestamp "created_at"
     t.timestamp "updated_at"
-    t.integer   "votes"
-    t.integer   "votes_network"
+    t.integer   "votes",              :default => 0
+    t.integer   "votes_network",      :default => 0
     t.string    "full_name"
     t.string    "middle_name"
   end
@@ -63,7 +63,7 @@ ActiveRecord::Schema.define(:version => 20101111094804) do
     t.string    "facebook_id"
     t.string    "winner_id"
     t.string    "loser_id"
-    t.boolean   "left"
+    t.boolean   "left",               :default => false
     t.timestamp "created_at"
     t.timestamp "updated_at"
   end
@@ -87,11 +87,11 @@ ActiveRecord::Schema.define(:version => 20101111094804) do
   create_table "users", :force => true do |t|
     t.string    "facebook_id"
     t.string    "gender"
-    t.integer   "score"
-    t.integer   "wins"
-    t.integer   "losses"
-    t.integer   "win_streak"
-    t.integer   "loss_streak"
+    t.integer   "score",        :default => 1500
+    t.integer   "wins",         :default => 0
+    t.integer   "losses",       :default => 0
+    t.integer   "win_streak",   :default => 0
+    t.integer   "loss_streak",  :default => 0
     t.timestamp "created_at"
     t.timestamp "updated_at"
   end
