@@ -4,6 +4,8 @@ gem 'rails', '3.0.1'
 
 gem 'delayed_job', '2.1.0.pre2'
 
+gem 'httpclient'
+
 # group :production do
 #   gem 'mysql', '2.8.1'
 # end
