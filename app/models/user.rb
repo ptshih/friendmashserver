@@ -11,10 +11,12 @@ class User < ActiveRecord::Base
     html = HTTPClient.new.get_content("http://www.gpeters.com/names/baby-names.php?name=#{firstname}&button=Go")
     if html.include?("It's a boy")
       puts "found a boy! #{firstname}"
-      self.set_attribute('gender','male')
+      self.update_attribute('gender','male')
     elsif html.include?("It's a girl")
       puts "found a girl! #{firstname}"
-      self.set_attribute('gender','female')
+      self.update_attribute('gender','female')
+    else
+      puts "could not detect gender for #{firstname}"
     end
   end
   
