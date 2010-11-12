@@ -157,8 +157,7 @@ class MashController < ApplicationController
     end
     
     json = JSON.parse(Zlib::GzipReader.new(StringIO.new(request.raw_post.to_s)).read)
-    puts "LOL"
-    puts json.inspect
+
     # puts "json = #{json.inspect}"
     json.each do |user|
       if User.find_by_facebook_id(user[:id]).nil?
