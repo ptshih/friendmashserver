@@ -8,6 +8,8 @@ gem 'httpclient'
 
 gem 'json'
 
+gem 'logworm_client'
+
 # group :production do
 #   gem 'mysql', '2.8.1'
 # end
