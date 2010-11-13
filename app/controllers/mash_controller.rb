@@ -77,7 +77,7 @@ class MashController < ApplicationController
           format.json  { render :json => response }
         end
       else
-        response = {:error => "no opponent found"} # did not find an opponent
+        response = {:error => "second opponent not found"} # did not find an opponent
         respond_to do |format|
           format.xml  { render :xml => response, :status => :not_implemented }
           format.json  { render :json => response, :status => :not_implemented }
@@ -85,7 +85,7 @@ class MashController < ApplicationController
       end
     else
       # ran out of opponents!!!
-      response = {:error => "no opponent found"}
+      response = {:error => "first opponent not found"}
       respond_to do |format|
         format.xml  { render :xml => response, :status => :not_implemented }
         format.json  { render :json => response, :status => :not_implemented }
@@ -107,13 +107,13 @@ class MashController < ApplicationController
       if networkIds.nil?
         bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score")
       else
-        bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id != :currentId AND facebook_id NOT IN (#{networkIds})", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score")
+        bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id != :currentId AND facebook_id IN (#{networkIds})", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score")
       end
     else
       if networkIds.nil?
         bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id NOT IN (#{recentIds}) AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score")
       else
-        bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id NOT IN (#{recentIds}) AND facebook_id NOT IN (#{networkIds}) AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score")
+        bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id NOT IN (#{recentIds}) AND facebook_id IN (#{networkIds}) AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score")
       end
     end
     
