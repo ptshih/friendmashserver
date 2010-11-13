@@ -159,6 +159,36 @@ class MashController < ApplicationController
     end
   end 
   
+  def token
+    Rails.logger.info request.query_parameters.inspect
+    
+    # Store the user's access token
+    token = Token.find_by_facebook_id(params[:id])
+    if token.nil?
+      token = Token.create(
+        :facebook_id => params[:id],
+        :access_token => params[:access_token],
+        :udid => request.env["HTTP_X_UDID"]
+      )
+    else
+      # token.update_attribute('access_token', params[:access_token])
+      token.update_attributes(
+        :access_token => params[:access_token],
+        :udid => request.env["HTTP_X_UDID"]
+      )
+    end
+    
+    # Fire off a FBConnect friends request using the user's token
+    #
+    # Insert the results into the DB
+    
+    respond_to do |format|
+      format.html # index.html.erb
+      format.xml  { render :xml => {:success => "true"} }
+      format.json  { render :json => {:success => "true"} }
+    end
+  end
+  
   # takes a gzipped string and deflates it
   def inflate(string)
     zstream = Zlib::Inflate.new(-Zlib::MAX_WBITS)
