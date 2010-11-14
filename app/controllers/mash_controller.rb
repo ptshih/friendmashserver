@@ -492,6 +492,11 @@ class MashController < ApplicationController
     
     profile = User.select('*').where('facebook_id' => params[:id]).joins(:profile).first
     
+    # figure out rank
+    # Gene says - zomg this is an n squared time query
+    rank = ActiveRecord::Base.connection.execute("SELECT facebook_id from Users where gender = '#{profile['gender']}' order by score DESC").to_a.index({"facebook_id"=>profile['facebook_id']})
+    profile['rank'] = rank
+    
     # send response
     respond_to do |format|
       format.html # index.html.erb
