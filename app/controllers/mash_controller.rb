@@ -482,7 +482,7 @@ class MashController < ApplicationController
     profile['votes'] = profile['votes'].to_i
     profile['votes_network'] = profile['votes_network'].to_i
     
-    profile['total'] = User.count.to_i
+    profile['total'] = User.count(:conditions=>"gender = '#{profile['gender']}'").to_i
     
     # send response
     respond_to do |format|
