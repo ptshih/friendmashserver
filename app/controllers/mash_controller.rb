@@ -195,11 +195,9 @@ class MashController < ApplicationController
   
   # don't call this directly, call it thru token
   def get_fb_friends(facebook_id, access_token)
-    # access_token = URI.escape("access_token=147806651932979|2.GYWjxdxdmsH3Ze41HzY4sQ__.86400.1289779200-548430564|JGqHeup8P27czQTxHHDqtYXFZq8")
-    
     fields = Hash.new
     fields["access_token"] = access_token
-    fields["fields"] = "id,first_name,last_name,name,email,gender,birthday,relationship_status,location,hometown,education,work"
+    fields["fields"] = "id,first_name,last_name,name,gender,education,work,locale"
     
     friends = fb_get("#{facebook_id}/friends", fields)
 
@@ -265,13 +263,8 @@ class MashController < ApplicationController
         Profile.new do |p|
           p.facebook_id = user['id']
           p.first_name = user['first_name']
-          p.middle_name = user['middle_name'].nil? ? nil : user['middle_name']
           p.last_name = user['last_name']
           p.full_name = user['name']
-          p.birthday = user['birthday'].nil? ? nil : user['birthday']
-          p.relationship_status = user['relationship_status'].nil? ? nil : user['relationship_status']
-          p.location = user['location'].nil? ? nil : user['location']['name']
-          p.hometown = user['hometown'].nil? ? nil : user['hometown']['name']
           p.votes = 0
           p.votes_network = 0
           p.save
@@ -294,18 +287,17 @@ class MashController < ApplicationController
             e.save
           end
         end if not user['work'].nil?
-      else        
-        profile = Profile.find_by_facebook_id(user['id'])
-        profile.update_attributes(
-          :first_name => user['first_name'],
-          :middle_name => user['middle_name'].nil? ? nil : user['middle_name'],
-          :last_name => user['last_name'],
-          :full_name => user['name'],
-          :birthday => user['birthday'].nil? ? nil : user['birthday'],
-          :relationship_status => user['relationship_status'].nil? ? nil : user['relationship_status'],
-          :location => user['location'].nil? ? nil : user['location']['name'],
-          :hometown => user['hometown'].nil? ? nil : user['hometown']['name']
-        )
+      else
+        # Nothing inside profile actually needs to be updated, save the db hit
+        #
+        # profile = Profile.find_by_facebook_id(user['id'])
+        # profile.update_attributes(
+        #   :first_name => user['first_name'],
+        #   :last_name => user['last_name'],
+        #   :full_name => user['name']
+        # )
+
+        # In the future we can update School and Employer, but for now I'm too lazy
       end
       
       # Insert friend into friendIdArray
@@ -376,13 +368,8 @@ class MashController < ApplicationController
         Profile.new do |p|
           p.facebook_id = user['id']
           p.first_name = user['first_name']
-          p.middle_name = user['middle_name'].nil? ? nil : user['middle_name']
           p.last_name = user['last_name']
           p.full_name = user['name']
-          p.birthday = user['birthday'].nil? ? nil : user['birthday']
-          p.relationship_status = user['relationship_status'].nil? ? nil : user['relationship_status']
-          p.location = user['location'].nil? ? nil : user['location']['name']
-          p.hometown = user['hometown'].nil? ? nil : user['hometown']['name']
           p.votes = 0
           p.votes_network = 0
           p.save
@@ -406,17 +393,12 @@ class MashController < ApplicationController
           end
         end if not user['work'].nil?
       else        
-        profile = Profile.find_by_facebook_id(user['id'])
-        profile.update_attributes(
-          :first_name => user['first_name'],
-          :middle_name => user['middle_name'].nil? ? nil : user['middle_name'],
-          :last_name => user['last_name'],
-          :full_name => user['name'],
-          :birthday => user['birthday'].nil? ? nil : user['birthday'],
-          :relationship_status => user['relationship_status'].nil? ? nil : user['relationship_status'],
-          :location => user['location'].nil? ? nil : user['location']['name'],
-          :hometown => user['hometown'].nil? ? nil : user['hometown']['name']
-        )
+        # profile = Profile.find_by_facebook_id(user['id'])
+        # profile.update_attributes(
+        #   :first_name => user['first_name'],
+        #   :last_name => user['last_name'],
+        #   :full_name => user['name']
+        # )
       end
       
       # Insert friend into friendIdArray
@@ -474,6 +456,7 @@ class MashController < ApplicationController
       r.winner_id = params[:w]
       r.loser_id = params[:l]
       r.left = params[:left]
+      r.mode = params[:mode]
       r.save
     end
     

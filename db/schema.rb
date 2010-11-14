@@ -10,19 +10,19 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20101111094804) do
+ActiveRecord::Schema.define(:version => 20101114083029) do
 
   create_table "delayed_jobs", :force => true do |t|
-    t.integer  "priority",   :default => 0
-    t.integer  "attempts",   :default => 0
-    t.text     "handler"
-    t.text     "last_error"
-    t.datetime "run_at"
-    t.datetime "locked_at"
-    t.datetime "failed_at"
-    t.string   "locked_by"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.integer   "priority",   :default => 0
+    t.integer   "attempts",   :default => 0
+    t.text      "handler"
+    t.text      "last_error"
+    t.timestamp "run_at"
+    t.timestamp "locked_at"
+    t.timestamp "failed_at"
+    t.string    "locked_by"
+    t.timestamp "created_at"
+    t.timestamp "updated_at"
   end
 
   add_index "delayed_jobs", ["priority", "run_at"], :name => "delayed_jobs_priority"
@@ -38,34 +38,30 @@ ActiveRecord::Schema.define(:version => 20101111094804) do
   create_table "networks", :force => true do |t|
     t.string    "facebook_id"
     t.string    "friend_id"
-    t.integer   "degree",         :default => 0
+    t.integer   "degree",      :default => 0
     t.timestamp "created_at"
     t.timestamp "updated_at"
   end
 
   create_table "profiles", :force => true do |t|
-    t.string    "facebook_id"
-    t.string    "first_name"
-    t.string    "last_name"
-    t.string    "birthday"
-    t.string    "location"
-    t.string    "hometown"
-    t.string    "relationship_status"
-    t.timestamp "created_at"
-    t.timestamp "updated_at"
-    t.integer   "votes",              :default => 0
-    t.integer   "votes_network",      :default => 0
-    t.string    "full_name"
-    t.string    "middle_name"
+    t.string   "facebook_id"
+    t.string   "first_name"
+    t.string   "last_name"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.integer  "votes",         :default => 0
+    t.integer  "votes_network", :default => 0
+    t.string   "full_name"
   end
 
   create_table "results", :force => true do |t|
     t.string    "facebook_id"
     t.string    "winner_id"
     t.string    "loser_id"
-    t.boolean   "left",               :default => false
+    t.boolean   "left",        :default => false
     t.timestamp "created_at"
     t.timestamp "updated_at"
+    t.integer   "mode"
   end
 
   create_table "schools", :force => true do |t|
@@ -87,11 +83,11 @@ ActiveRecord::Schema.define(:version => 20101111094804) do
   create_table "users", :force => true do |t|
     t.string    "facebook_id"
     t.string    "gender"
-    t.integer   "score",        :default => 1500
-    t.integer   "wins",         :default => 0
-    t.integer   "losses",       :default => 0
-    t.integer   "win_streak",   :default => 0
-    t.integer   "loss_streak",  :default => 0
+    t.integer   "score",       :default => 1500
+    t.integer   "wins",        :default => 0
+    t.integer   "losses",      :default => 0
+    t.integer   "win_streak",  :default => 0
+    t.integer   "loss_streak", :default => 0
     t.timestamp "created_at"
     t.timestamp "updated_at"
   end
