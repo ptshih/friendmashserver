@@ -454,6 +454,14 @@ class MashController < ApplicationController
     # puts request.env["HTTP_X_USER_ID"]
     # puts request.env["HTTP_X_UDID"]
     
+    # Increment vote count for current user
+    # increment_counter
+    Profile.increment_counter('votes',Profile.find_by_facebook_id(params[:id]).id)
+    if params[:mode] == "1"
+      Profile.increment_counter('votes_network',Profile.find_by_facebook_id(params[:id]).id)
+    end
+    
+    
     winner = User.find_by_facebook_id(params[:w].to_s)
     loser  = User.find_by_facebook_id(params[:l].to_s)
     
