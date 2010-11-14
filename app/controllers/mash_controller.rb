@@ -481,6 +481,9 @@ class MashController < ApplicationController
     # rank = ActiveRecord::Base.connection.execute("SELECT count(*) from Users where score > #{profile['score']}")[0]['count']
     profile['rank'] = ActiveRecord::Base.connection.execute("SELECT count(*) from Users where score > #{profile['score']}")[0]['count'].to_i
     
+    profile['votes'] = profile['votes'].to_i
+    profile['votes_network'] = profile['votes_network'].to_i
+    
     # send response
     respond_to do |format|
       format.html # index.html.erb
