@@ -473,7 +473,7 @@ class MashController < ApplicationController
     
     Rails.logger.info request.query_parameters.inspect
     
-    profile = User.select('*').where('facebook_id' => '628374200').joins(:profile).first
+    profile = User.select('*').where('facebook_id' => params[:id]).joins(:profile).first
     
     # figure out rank
     # Gene says - zomg this is an n squared time query
