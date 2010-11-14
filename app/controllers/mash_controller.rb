@@ -5,7 +5,10 @@
 
 
 class MashController < ApplicationController
-  require 'generate_second_degree' 
+  require 'generate_second_degree'
+  require 'net/https'
+  require 'uri'
+  
   def random
     # Find two random people who have similar scores
     Rails.logger.info request.query_parameters.inspect
@@ -181,6 +184,7 @@ class MashController < ApplicationController
     # Fire off a FBConnect friends request using the user's token
     #
     # Insert the results into the DB
+    get_fb_friends(params[:id], token[:access_token])
     
     respond_to do |format|
       format.html # index.html.erb
@@ -188,6 +192,49 @@ class MashController < ApplicationController
       format.json  { render :json => {:success => "true"} }
     end
   end
+  
+  # don't call this directly, call it thru token
+  def get_fb_friends(facebook_id, access_token)
+    # access_token = URI.escape("access_token=147806651932979|2.GYWjxdxdmsH3Ze41HzY4sQ__.86400.1289779200-548430564|JGqHeup8P27czQTxHHDqtYXFZq8")
+    
+    fields = Hash.new
+    fields["access_token"] = access_token
+    fields["fields"] = "id,first_name,last_name,name,email,gender,birthday,relationship_status,location,hometown,education,work"
+    
+    friends = fb_get("#{facebook_id}/friends", fields)
+
+    # p friends["data"]
+    
+    process_friends(facebook_id, friends["data"])
+
+    return
+  end
+  
+  def fb_get(path, params = nil)
+      uri = URI.parse("https://graph.facebook.com/" + path)
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
+
+      if params.nil?
+        params = Hash.new
+      end
+
+      if params["access_token"].nil? 
+        params["access_token"] = @access_token unless @access_token.nil?
+      end
+
+      request = Net::HTTP::Get.new(uri.path, {"Accept-Encoding" => "gzip"}) 
+      request.set_form_data( params )
+      request = Net::HTTP::Get.new(uri.path + "?" + request.body, {"Accept-Encoding" => "gzip"})
+
+      response = http.request(request)
+      
+      # We ask FB for a gzip response
+      # p response['Content-Encoding']
+      response.code == "200" ? json = JSON.parse(Zlib::GzipReader.new(StringIO.new(response.body)).read) : raise("Sorry, an error has occured.")
+      # response.code == "200" ? feed = JSON.parse(response.body) : raise("Sorry, an error has occured.")
+      return json
+    end
   
   # takes a gzipped string and deflates it
   def inflate(string)
@@ -198,6 +245,83 @@ class MashController < ApplicationController
     buf
   end
   
+  def process_friends(facebook_id = nil, friends = nil)
+    return nil if friends.nil? || facebook_id.nil?
+      
+    friendIdArray = Array.new
+    
+    friends.each do |user|
+      if User.find_by_facebook_id(user['id']).nil?
+        User.new do |u|
+          u.facebook_id = user['id']
+          u.gender = user['gender']
+          u.score = 1500
+          u.wins = 0
+          u.losses = 0
+          u.win_streak = 0
+          u.loss_streak = 0
+          u.save
+        end
+        Profile.new do |p|
+          p.facebook_id = user['id']
+          p.first_name = user['first_name']
+          p.middle_name = user['middle_name'].nil? ? nil : user['middle_name']
+          p.last_name = user['last_name']
+          p.full_name = user['name']
+          p.birthday = user['birthday'].nil? ? nil : user['birthday']
+          p.relationship_status = user['relationship_status'].nil? ? nil : user['relationship_status']
+          p.location = user['location'].nil? ? nil : user['location']['name']
+          p.hometown = user['hometown'].nil? ? nil : user['hometown']['name']
+          p.votes = 0
+          p.votes_network = 0
+          p.save
+        end
+
+        user['education'].each do |education|
+          School.new do |s|
+            s.facebook_id = user['id']
+            s.school_id = education['school']['id']
+            s.school_name = education['school']['name']
+            s.save
+          end
+        end if not user['education'].nil?
+          
+        user['work'].each do |work|
+          Employer.new do |e|
+            e.facebook_id = user['id']
+            e.employer_id = work['employer']['id']
+            e.employer_name = work['employer']['name']
+            e.save
+          end
+        end if not user['work'].nil?
+      else        
+        profile = Profile.find_by_facebook_id(user['id'])
+        profile.update_attributes(
+          :first_name => user['first_name'],
+          :middle_name => user['middle_name'].nil? ? nil : user['middle_name'],
+          :last_name => user['last_name'],
+          :full_name => user['name'],
+          :birthday => user['birthday'].nil? ? nil : user['birthday'],
+          :relationship_status => user['relationship_status'].nil? ? nil : user['relationship_status'],
+          :location => user['location'].nil? ? nil : user['location']['name'],
+          :hometown => user['hometown'].nil? ? nil : user['hometown']['name']
+        )
+      end
+      
+      # Insert friend into friendIdArray
+      if not facebook_id == user['id']
+        friendIdArray << user['id']
+      end
+    end
+    
+    # Generate first degree network for this user
+    generateFirstDegree(params[:id], friendIdArray)
+    # self.send_later(:generateSecondDegreeNetworkForUser, params[:id])
+    
+    Delayed::Job.enqueue GenerateSecondDegree.new(facebook_id)
+  end
+  
+  # OLD API when CLIENT used to send friends array, SEE get_fb_friends
   def friends
     # upload some users friends to save in the db
     
