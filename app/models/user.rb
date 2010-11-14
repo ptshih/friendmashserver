@@ -8,7 +8,7 @@ class User < ActiveRecord::Base
   
   def reloadMyGender
     # Console Cmd:
-    # User.all(:include=>:profile).each do |u| u.delay.reloadMyGender end
+    # User.all(:conditons=>'gender IS NULL',:include=>:profile).each do |u| u.delay.reloadMyGender end
     
     # return if self.profile.nil? || self.profile[:first_name].nil?
     begin
@@ -72,7 +72,11 @@ class User < ActiveRecord::Base
   end
   
   def getJSON(path,params)
-    JSON.parse HTTPClient.new.get_content(path,params)
+    begin
+      JSON.parse HTTPClient.new.get_content(path,params)
+    rescue
+      puts "found invalid token!!! #{path} #{params} #{ex}"
+    end
   end
   
 end

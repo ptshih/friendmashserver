@@ -3,10 +3,10 @@ class UsersController < ApplicationController
   # GET /users.xml
   def index
     if params[:sort].nil?
-      @users = User.all
+      @users = User.all(:include=>[:profile])
     else
       if params[:sort] == "score"
-        @users = User.all(:order => "score desc")
+        @users = User.all(:order => "score desc",:include=>[:profile])
       end
     end
 

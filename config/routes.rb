@@ -1,4 +1,6 @@
 Facemash::Application.routes.draw do
+  resources :names
+
   resources :tokens
 
   resources :networks

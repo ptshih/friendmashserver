@@ -10,87 +10,20 @@
       </ul>
     </div>
   <% end %>
+  
+  <% @user.pictures.each do |p| %>
+    <a href="<%=p['source']%>"><img src="<%=p['picture']%>"></a>
+  <% end %>
+  
+  <img src="<%=@user.picture('thumb')%>"/>
+  
+  <% @user.attribute_names.each do |name| %>
+    <div class="field">
+      <%= f.label name %><br />
+      <%= f.text_field name %>
+    </div>
+  <% end%>
 
-  <div class="field">
-    <%= f.label :facebook_id %><br />
-    <%= f.text_field :facebook_id %>
-  </div>
-  <div class="field">
-    <%= f.label :email %><br />
-    <%= f.text_field :email %>
-  </div>
-  <div class="field">
-    <%= f.label :first_name %><br />
-    <%= f.text_field :first_name %>
-  </div>
-  <div class="field">
-    <%= f.label :last_name %><br />
-    <%= f.text_field :last_name %>
-  </div>
-  <div class="field">
-    <%= f.label :full_name %><br />
-    <%= f.text_field :full_name %>
-  </div>
-  <div class="field">
-    <%= f.label :gender %><br />
-    <%= f.text_field :gender %>
-  </div>
-  <div class="field">
-    <%= f.label :birthday %><br />
-    <%= f.datetime_select :birthday %>
-  </div>
-  <div class="field">
-    <%= f.label :location %><br />
-    <%= f.text_field :location %>
-  </div>
-  <div class="field">
-    <%= f.label :hometown %><br />
-    <%= f.text_field :hometown %>
-  </div>
-  <div class="field">
-    <%= f.label :political %><br />
-    <%= f.text_field :political %>
-  </div>
-  <div class="field">
-    <%= f.label :religion %><br />
-    <%= f.text_field :religion %>
-  </div>
-  <div class="field">
-    <%= f.label :relationship_status %><br />
-    <%= f.text_field :relationship_status %>
-  </div>
-  <div class="field">
-    <%= f.label :interested_in %><br />
-    <%= f.text_field :interested_in %>
-  </div>
-  <div class="field">
-    <%= f.label :significant_other_id %><br />
-    <%= f.text_field :significant_other_id %>
-  </div>
-  <div class="field">
-    <%= f.label :score %><br />
-    <%= f.text_field :score %>
-  </div>
-  <div class="field">
-    <%= f.label :wins %><br />
-    <%= f.text_field :wins %>
-  </div>
-  <div class="field">
-    <%= f.label :losses %><br />
-    <%= f.text_field :losses %>
-  </div>
-  <div class="field">
-    <%= f.label :win_streak %><br />
-    <%= f.text_field :win_streak %>
-  </div>
-  <div class="field">
-    <%= f.label :loss_streak %><br />
-    <%= f.text_field :loss_streak %>
-  </div>
-  <div class="field">
-    <%= f.label :friends %><br />
-    <%= f.text_field :friends %>
-  </div>
   <div class="actions">
     <%= f.submit %>
   </div>
