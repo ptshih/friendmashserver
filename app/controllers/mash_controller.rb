@@ -260,14 +260,16 @@ class MashController < ApplicationController
           u.loss_streak = 0
           u.save
         end
-        Profile.new do |p|
-          p.facebook_id = user['id']
-          p.first_name = user['first_name']
-          p.last_name = user['last_name']
-          p.full_name = user['name']
-          p.votes = 0
-          p.votes_network = 0
-          p.save
+        if Profile.find_by_facebook_id(user['id']).nil?
+          Profile.new do |p|
+            p.facebook_id = user['id']
+            p.first_name = user['first_name']
+            p.last_name = user['last_name']
+            p.full_name = user['name']
+            p.votes = 0
+            p.votes_network = 0
+            p.save
+          end
         end
 
         user['education'].each do |education|
@@ -287,19 +289,8 @@ class MashController < ApplicationController
             e.save
           end
         end if not user['work'].nil?
-      else
-        # Nothing inside profile actually needs to be updated, save the db hit
-        #
-        # profile = Profile.find_by_facebook_id(user['id'])
-        # profile.update_attributes(
-        #   :first_name => user['first_name'],
-        #   :last_name => user['last_name'],
-        #   :full_name => user['name']
-        # )
-
-        # In the future we can update School and Employer, but for now I'm too lazy
       end
-      
+
       # Insert friend into friendIdArray
       if not facebook_id == user['id']
         friendIdArray << user['id']
