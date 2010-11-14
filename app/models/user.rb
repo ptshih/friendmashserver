@@ -29,4 +29,50 @@ class User < ActiveRecord::Base
     end
   end
   
+  def picture(size=nil)
+    # returns first image in profile album, defaults to original size
+    p = self.pictures.first
+    case size
+      when 'thumb'
+        p['picture']
+      when 'original'
+        p['source']
+      else
+        p['source']
+    end
+  end
+  
+  def pictures
+    self.profileAlbum['data']
+  end
+  
+  # calls albums, loops through and finds first album where name includes "Profile"
+  def profileAlbum
+    aid = self.albums.select{|a| a['name'].include?('Profile')}[0]['id']
+    self.fbCall("/#{aid}/photos")
+  end
+  
+  def albums 
+    self.fbCall("/#{self['facebook_id']}/albums/")['data']
+  end
+  
+  def fbprofile
+    self.fbCall("/#{self['facebook_id']}")
+  end
+  
+  # this "looks up" the original friend that loaded this user, or itself if it has a token
+  def originalFriend    
+    self.token ? self : User.find_by_facebook_id(Network.find_by_friend_id(self['facebook_id'])['facebook_id'])
+  end
+  
+  # if necessary, lets find the original friend that loaded this users data and use their token instead
+  def fbCall(path,params = {})
+    params['access_token'] = self.token ? self.token['access_token'] : self.originalFriend.token['access_token']
+    getJSON("https://graph.facebook.com#{path}", params)
+  end
+  
+  def getJSON(path,params)
+    JSON.parse HTTPClient.new.get_content(path,params)
+  end
+  
 end
