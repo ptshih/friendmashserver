@@ -8,9 +8,6 @@ Facemash::Application.routes.draw do
   resources :profiles
 
   resources :users
-  
-  match "mash" => "mash#result"
-  match "mash/random" => "mash#random"
 
   # The priority is based upon order of creation:
   # first created -> highest priority.
