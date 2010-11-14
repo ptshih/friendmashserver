@@ -479,7 +479,7 @@ class MashController < ApplicationController
     # Gene says - zomg this is an n squared time query
     # rank = ActiveRecord::Base.connection.execute("SELECT facebook_id from Users where gender = '#{profile['gender']}' order by score DESC").to_a.index({"facebook_id"=>profile['facebook_id']})
     # rank = ActiveRecord::Base.connection.execute("SELECT count(*) from Users where score > #{profile['score']}")[0]['count']
-    profile['rank'] = ActiveRecord::Base.connection.execute("SELECT count(*) from Users where score > #{profile['score']}")[0]['count']
+    profile['rank'] = ActiveRecord::Base.connection.execute("SELECT count(*) from Users where score > #{profile['score']}")[0]['count'].to_i
     
     # send response
     respond_to do |format|
