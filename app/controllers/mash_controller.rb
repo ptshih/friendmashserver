@@ -181,10 +181,20 @@ class MashController < ApplicationController
       )
     end
     
+    fields = Hash.new
+    fields["fields"] = "id,first_name,last_name,name,gender,education,work,locale"
+    
+    user = User.find_by_facebook_id(params[:id])
+    friends = user.friends(fields)
+    
+    p friends
+    
+    process_friends(params[:id], friends)
+    
     # Fire off a FBConnect friends request using the user's token
     #
     # Insert the results into the DB
-    get_fb_friends(params[:id], token[:access_token])
+    # get_fb_friends(params[:id], token[:access_token])
     
     respond_to do |format|
       format.html # index.html.erb
@@ -192,47 +202,6 @@ class MashController < ApplicationController
       format.json  { render :json => {:success => "true"} }
     end
   end
-  
-  # don't call this directly, call it thru token
-  def get_fb_friends(facebook_id, access_token)
-    fields = Hash.new
-    fields["access_token"] = access_token
-    fields["fields"] = "id,first_name,last_name,name,gender,education,work,locale"
-    
-    friends = fb_get("#{facebook_id}/friends", fields)
-
-    # p friends["data"]
-    
-    process_friends(facebook_id, friends["data"])
-
-    return
-  end
-  
-  def fb_get(path, params = nil)
-      uri = URI.parse("https://graph.facebook.com/" + path)
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = true
-
-      if params.nil?
-        params = Hash.new
-      end
-
-      if params["access_token"].nil? 
-        params["access_token"] = @access_token unless @access_token.nil?
-      end
-
-      request = Net::HTTP::Get.new(uri.path, {"Accept-Encoding" => "gzip"}) 
-      request.set_form_data( params )
-      request = Net::HTTP::Get.new(uri.path + "?" + request.body, {"Accept-Encoding" => "gzip"})
-
-      response = http.request(request)
-      
-      # We ask FB for a gzip response
-      # p response['Content-Encoding']
-      response.code == "200" ? json = JSON.parse(Zlib::GzipReader.new(StringIO.new(response.body)).read) : raise("Sorry, an error has occured.")
-      # response.code == "200" ? feed = JSON.parse(response.body) : raise("Sorry, an error has occured.")
-      return json
-    end
   
   # takes a gzipped string and deflates it
   def inflate(string)
@@ -248,11 +217,11 @@ class MashController < ApplicationController
       
     friendIdArray = Array.new
     
-    friends.each do |user|
-      if User.find_by_facebook_id(user['id']).nil?
+    friends.each do |friend|
+      if User.find_by_facebook_id(friend['id']).nil?
         User.new do |u|
-          u.facebook_id = user['id']
-          u.gender = user['gender']
+          u.facebook_id = friend['id']
+          u.gender = friend['gender'].nil? ? nil : friend['gender']
           u.score = 1500
           u.wins = 0
           u.losses = 0
@@ -260,12 +229,12 @@ class MashController < ApplicationController
           u.loss_streak = 0
           u.save
         end
-        if Profile.find_by_facebook_id(user['id']).nil?
+        if Profile.find_by_facebook_id(friend['id']).nil?
           Profile.new do |p|
-            p.facebook_id = user['id']
-            p.first_name = user['first_name']
-            p.last_name = user['last_name']
-            p.full_name = user['name']
+            p.facebook_id = friend['id']
+            p.first_name = friend['first_name'].nil? ? nil : friend['first_name']
+            p.last_name = friend['last_name'].nil? ? nil : friend['last_name']
+            p.full_name = friend['name']
             p.votes = 0
             p.votes_network = 0
             p.save
@@ -274,7 +243,7 @@ class MashController < ApplicationController
 
         user['education'].each do |education|
           School.new do |s|
-            s.facebook_id = user['id']
+            s.facebook_id = friend['id']
             s.school_id = education['school']['id']
             s.school_name = education['school']['name']
             s.save
@@ -283,22 +252,22 @@ class MashController < ApplicationController
           
         user['work'].each do |work|
           Employer.new do |e|
-            e.facebook_id = user['id']
+            e.facebook_id = friend['id']
             e.employer_id = work['employer']['id']
             e.employer_name = work['employer']['name']
             e.save
           end
-        end if not user['work'].nil?
+        end if not friend['work'].nil?
       end
 
       # Insert friend into friendIdArray
-      if not facebook_id == user['id']
-        friendIdArray << user['id']
+      if not facebook_id == friend['id']
+        friendIdArray << friend['id']
       end
     end
     
     # Generate first degree network for this user
-    generateFirstDegree(params[:id], friendIdArray)
+    generateFirstDegree(facebook_id, friendIdArray)
     # self.send_later(:generateSecondDegreeNetworkForUser, params[:id])
     
     Delayed::Job.enqueue GenerateSecondDegree.new(facebook_id)

@@ -30,6 +30,15 @@ class User < ActiveRecord::Base
     return nil
   end
   
+  # Look in the Names DB, find all users with a nil gender, and fill them
+  def populateMissingGenders
+    begin
+      
+    rescue
+      puts "something went wrong for user: #{self.facebook_id} with name: #{self.profile.full_name}"
+    end
+  end
+  
   # This method calls facebook to retrieve friends list from all user's who have a token
   # Then updates the gender field for all the friends
   # This was written because our gender matcher screwed up our DB
