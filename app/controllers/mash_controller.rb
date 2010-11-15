@@ -218,7 +218,8 @@ class MashController < ApplicationController
     friendIdArray = Array.new
     
     friends.each do |friend|
-      if User.find_by_facebook_id(friend['id']).nil?
+      user = User.find_by_facebook_id(friend['id'])
+      if user.nil?
         User.new do |u|
           u.facebook_id = friend['id']
           u.gender = friend['gender'].nil? ? nil : friend['gender']
@@ -229,7 +230,8 @@ class MashController < ApplicationController
           u.loss_streak = 0
           u.save
         end
-        if Profile.find_by_facebook_id(friend['id']).nil?
+        profile = Profile.find_by_facebook_id(friend['id'])
+        if profile.nil?
           Profile.new do |p|
             p.facebook_id = friend['id']
             p.first_name = friend['first_name'].nil? ? nil : friend['first_name']
@@ -258,6 +260,10 @@ class MashController < ApplicationController
             e.save
           end
         end if not friend['work'].nil?
+      else
+        user.update_attributes(
+        :gender => friend['gender']
+        )
       end
 
       # Insert friend into friendIdArray
