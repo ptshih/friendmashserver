@@ -27,7 +27,31 @@ class User < ActiveRecord::Base
     rescue
       puts 'nope, didnt work'
     end
+    return nil
   end
+  
+  # This method calls facebook to retrieve friends list from all user's who have a token
+  # Then updates the gender field for all the friends
+  # This was written because our gender matcher screwed up our DB
+  # User.all.each do |u| u.refreshMyGenderFromFacebook if not u.token.nil? end
+  def refreshMyGenderFromFacebook
+    begin
+      fields = Hash.new
+      fields["fields"] = "id,name,gender"
+      friends = friends(fields)
+      
+      friends.each do |f|
+        u = User.find_by_facebook_id(f['id'])
+        puts "updating gender for #{u[:facebook_id]} with #{f['gender']}" if not f['gender'].nil?
+        u.update_attribute('gender',f['gender'])
+      end
+      puts "successfully updated friends gender for #{u[:facebook_id]}"
+    rescue
+      puts "something went wrong for user: #{self.facebook_id} with name: #{self.profile.full_name}"
+    end
+    return nil
+  end
+  
   
   def picture(size=nil)
     # returns first image in profile album, defaults to original size
@@ -54,6 +78,10 @@ class User < ActiveRecord::Base
   
   def albums 
     self.fbCall("/#{self['facebook_id']}/albums/")['data']
+  end
+  
+  def friends(params = {})
+    self.fbCall("/#{self['facebook_id']}/friends/",params)['data']
   end
   
   def fbprofile
