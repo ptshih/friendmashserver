@@ -163,36 +163,83 @@ class MashController < ApplicationController
   end 
   
   def token
-    Rails.logger.info request.query_parameters.inspect
+    # Rails.logger.info request.query_parameters.inspect
     
     # Store the user's access token
-    token = Token.find_by_facebook_id(params[:id])
+    token = Token.find_by_facebook_id(params["id"])
     if token.nil?
       token = Token.create(
-        :facebook_id => params[:id],
-        :access_token => params[:access_token],
+        :facebook_id => params["id"],
+        :access_token => params["access_token"],
         :udid => request.env["HTTP_X_UDID"]
       )
     else
       # token.update_attribute('access_token', params[:access_token])
       token.update_attributes(
-        :access_token => params[:access_token],
+        :access_token => params["access_token"],
         :udid => request.env["HTTP_X_UDID"]
       )
     end
     
+    # Get the user's first degree friends
     fields = Hash.new
     fields["fields"] = "id,first_name,last_name,name,gender,education,work,locale"
     
-    user = User.find_by_facebook_id(params[:id])
-    friends = user.friends(fields)
+    user = User.find_by_facebook_id(params["id"])
+    if user.nil?
+      # create a record for the current user
+      newUser = User.create(
+        :facebook_id => params["id"],
+        :gender => params["gender"],
+        :score => 1500,
+        :wins => 0,
+        :losses => 0,
+        :win_streak => 0,
+        :loss_streak => 0
+      )
+      
+      newProfile = Profile.create(
+        :facebook_id => params["id"],
+        :first_name => params["first_name"].nil? ? nil : params["first_name"],
+        :last_name => params["last_name"].nil? ? nil : params["last_name"],
+        :full_name => params["name"].nil? ? nil : params["name"],
+        :votes => 0,
+        :votes_network => 0
+      )
+      user = newUser
+    else
+      user.update_attributes(
+        :gender => params["gender"]
+      )
+    end
     
-    # p friends
+    # Get first degree friends from FB
+    firstDegreeFriends = user.friends(fields)
     
-    #
-    # Should we throw this into a worker thread?
-    #
-    process_friends(params[:id], friends)
+    # insert the first degree friends into the DB as degree 1
+    process_friends(params["id"], firstDegreeFriends, 1)
+    
+=begin
+# CANNOT get list of friends of friends, damnit facebook
+{
+   "error": {
+      "type": "OAuthException",
+      "message": "(#604) Can't lookup all friends of 222383. Can only lookup for the logged in user (548430564), or friends of the logged in user with the appropriate permission"
+   }
+}
+
+# Now get the user's second degree friends
+secondDegreeFriends = Array.new
+
+firstDegreeFriends.each do |firstDegreeFriend|
+  firstDegreeUser = User.find_by_facebook_id(firstDegreeFriend["id"])
+  secondDegreeFriends = secondDegreeFriends + firstDegreeUser.friends(fields)
+end
+
+# insert the second degree friends into the DB as degree 2
+# process_friends(params[:id], secondDegreeFriends, 2)
+=end
+    
     
     # Fire off a FBConnect friends request using the user's token
     #
@@ -206,68 +253,63 @@ class MashController < ApplicationController
     end
   end
   
-  # takes a gzipped string and deflates it
-  def inflate(string)
-    zstream = Zlib::Inflate.new(-Zlib::MAX_WBITS)
-    buf = zstream.inflate(string)
-    zstream.finish
-    zstream.close
-    buf
+  def createUser(fbUser)
+    user = User.find_by_facebook_id(fbUser['id'])
+    if user.nil?
+      User.new do |u|
+        u.facebook_id = fbUser['id']
+        u.gender = fbUser['gender'].nil? ? nil : fbUser['gender']
+        u.score = 1500
+        u.wins = 0
+        u.losses = 0
+        u.win_streak = 0
+        u.loss_streak = 0
+        u.save
+      end
+      profile = Profile.find_by_facebook_id(fbUser['id'])
+      if profile.nil?
+        Profile.new do |p|
+          p.facebook_id = fbUser['id']
+          p.first_name = fbUser['first_name'].nil? ? nil : fbUser['first_name']
+          p.last_name = fbUser['last_name'].nil? ? nil : fbUser['last_name']
+          p.full_name = fbUser['name']
+          p.votes = 0
+          p.votes_network = 0
+          p.save
+        end
+      end
+
+      fbUser['education'].each do |education|
+        School.new do |s|
+          s.facebook_id = fbUser['id']
+          s.school_id = education['school']['id']
+          s.school_name = education['school']['name']
+          s.save
+        end
+      end if not fbUser['education'].nil?
+        
+      fbUser['work'].each do |work|
+        Employer.new do |e|
+          e.facebook_id = fbUser['id']
+          e.employer_id = work['employer']['id']
+          e.employer_name = work['employer']['name']
+          e.save
+        end
+      end if not fbUser['work'].nil?
+    else
+      user.update_attributes(
+      :gender => fbUser['gender']
+      )
+    end
   end
   
-  def process_friends(facebook_id = nil, friends = nil)
+  def process_friends(facebook_id = nil, friends = nil, degree = 1)
     return nil if friends.nil? || facebook_id.nil?
       
     friendIdArray = Array.new
     
     friends.each do |friend|
-      user = User.find_by_facebook_id(friend['id'])
-      if user.nil?
-        User.new do |u|
-          u.facebook_id = friend['id']
-          u.gender = friend['gender'].nil? ? nil : friend['gender']
-          u.score = 1500
-          u.wins = 0
-          u.losses = 0
-          u.win_streak = 0
-          u.loss_streak = 0
-          u.save
-        end
-        profile = Profile.find_by_facebook_id(friend['id'])
-        if profile.nil?
-          Profile.new do |p|
-            p.facebook_id = friend['id']
-            p.first_name = friend['first_name'].nil? ? nil : friend['first_name']
-            p.last_name = friend['last_name'].nil? ? nil : friend['last_name']
-            p.full_name = friend['name']
-            p.votes = 0
-            p.votes_network = 0
-            p.save
-          end
-        end
-
-        user['education'].each do |education|
-          School.new do |s|
-            s.facebook_id = friend['id']
-            s.school_id = education['school']['id']
-            s.school_name = education['school']['name']
-            s.save
-          end
-        end if not user['education'].nil?
-          
-        user['work'].each do |work|
-          Employer.new do |e|
-            e.facebook_id = friend['id']
-            e.employer_id = work['employer']['id']
-            e.employer_name = work['employer']['name']
-            e.save
-          end
-        end if not friend['work'].nil?
-      else
-        user.update_attributes(
-        :gender => friend['gender']
-        )
-      end
+      createUser(friend)
 
       # Insert friend into friendIdArray
       if not facebook_id == friend['id']
@@ -276,111 +318,36 @@ class MashController < ApplicationController
     end
     
     # Generate first degree network for this user
-    generateFirstDegree(facebook_id, friendIdArray)
+    generateNetwork(facebook_id, friendIdArray, degree)
+    
+    
     # self.send_later(:generateSecondDegreeNetworkForUser, params[:id])
     
     Delayed::Job.enqueue GenerateSecondDegree.new(facebook_id)
   end
   
+  def generateNetwork(facebookId, friendIdArray, degree = 1)
+#    friendIdArray = ["1217270","1217767","1209924"]
+    # This method generates a network link table of user -> friend with degree = 1
+    puts "Generate #{degree} degree network link table for user with id: #{facebookId}"
+
+    friendIdArray.each do |friendId|
+      if Network.where(["facebook_id = :facebook_id AND friend_id = :friend_id", { :facebook_id => facebookId, :friend_id => friendId }]).empty?
+        network = Network.create(
+          :facebook_id => facebookId,
+          :friend_id => friendId, 
+          :degree => degree
+        )
+      end
+    end
+
+    return nil
+  end
+  
   # OLD API when CLIENT used to send friends array, SEE get_fb_friends
   def friends
-    # upload some users friends to save in the db
     
-    # Rails.logger.info request.query_parameters.inspect
-    
-    if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
-      respond_to do |format|
-        format.html # index.html.erb
-        format.xml  { render :xml => {:error => "access denied"} }
-        format.json  { render :json => {:error => "access denied"} }
-      end
-      return nil
-    end
-    
-    friendIdArray = []
-    
-    currentUser = User.find_by_facebook_id(params[:id])
-    
-    # ActiveRecord::Base.execute("REPLACE INTO 'token' SET 'facebook_id' = ")
-    token = Token.find_by_facebook_id(params[:id])
-    if token.nil?
-      token = Token.create(
-        :facebook_id => params[:id],
-        :access_token => params[:access_token],
-        :udid => request.env["HTTP_X_UDID"]
-      )
-    else
-      # token.update_attribute('access_token', params[:access_token])
-      token.update_attributes(
-        :access_token => params[:access_token],
-        :udid => request.env["HTTP_X_UDID"]
-      )
-    end
-    
-    # We should always be expecting a GZIP postData here
-    # params[:_json] || 
-    json = JSON.parse(Zlib::GzipReader.new(StringIO.new(request.raw_post.to_s)).read)
-
-    # puts "json = #{json.inspect}"
-    json.each do |user|
-      if User.find_by_facebook_id(user['id']).nil?
-        User.new do |u|
-          u.facebook_id = user['id']
-          u.gender = user['gender']
-          u.score = 1500
-          u.wins = 0
-          u.losses = 0
-          u.win_streak = 0
-          u.loss_streak = 0
-          u.save
-        end
-        Profile.new do |p|
-          p.facebook_id = user['id']
-          p.first_name = user['first_name']
-          p.last_name = user['last_name']
-          p.full_name = user['name']
-          p.votes = 0
-          p.votes_network = 0
-          p.save
-        end
-
-        user['education'].each do |education|
-          School.new do |s|
-            s.facebook_id = user['id']
-            s.school_id = education['school']['id']
-            s.school_name = education['school']['name']
-            s.save
-          end
-        end if not user['education'].nil?
-          
-        user['work'].each do |work|
-          Employer.new do |e|
-            e.facebook_id = user['id']
-            e.employer_id = work['employer']['id']
-            e.employer_name = work['employer']['name']
-            e.save
-          end
-        end if not user['work'].nil?
-      else        
-        # profile = Profile.find_by_facebook_id(user['id'])
-        # profile.update_attributes(
-        #   :first_name => user['first_name'],
-        #   :last_name => user['last_name'],
-        #   :full_name => user['name']
-        # )
-      end
-      
-      # Insert friend into friendIdArray
-      if not params[:id] == user['id']
-        friendIdArray << user['id']
-      end
-    end
-    
-    # Generate first degree network for this user
-    generateFirstDegree(params[:id], friendIdArray)
-    # self.send_later(:generateSecondDegreeNetworkForUser, params[:id])
-    
-    Delayed::Job.enqueue GenerateSecondDegree.new(params[:id])  
+    # deprecated
     
     respond_to do |format|
       format.html # index.html.erb
@@ -586,23 +553,14 @@ class MashController < ApplicationController
     # We might have to perform a SQL table stats query every now and then to update the distribution
     # This will restrict the number of results that come back to optimize the binarySearch on the result set
   end
-
-  def generateFirstDegree(facebookId, friendIdArray)
-#    friendIdArray = ["1217270","1217767","1209924"]
-    # This method generates a network link table of user -> friend with degree = 1
-    puts "Generate 1st degree network link table for user with id: #{facebookId}"
-
-    friendIdArray.each do |friendId|
-      if Network.where(["facebook_id = :facebook_id AND friend_id = :friend_id", { :facebook_id => facebookId, :friend_id => friendId }]).empty?
-        network = Network.create(
-          :facebook_id => facebookId,
-          :friend_id => friendId, 
-          :degree => 1
-        )
-      end
-    end
-    
-    return nil
+  
+  # takes a gzipped string and deflates it
+  def inflate(string)
+    zstream = Zlib::Inflate.new(-Zlib::MAX_WBITS)
+    buf = zstream.inflate(string)
+    zstream.finish
+    zstream.close
+    buf
   end
   
 end
