@@ -77,6 +77,7 @@ class MashController < ApplicationController
       
       if not opponent.nil?
         response = [randomUser.facebook_id, opponent.facebook_id]
+        p response
         respond_to do |format|
           format.xml  { render :xml => response }
           format.json  { render :json => response }
@@ -402,14 +403,14 @@ end
     # report a match result to the server 
     Rails.logger.info request.query_parameters.inspect
     
-    if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
-      respond_to do |format|
-        format.html # index.html.erb
-        format.xml  { render :xml => {:error => "access denied"} }
-        format.json  { render :json => {:error => "access denied"} }
-      end
-      return nil
-    end
+    # if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
+    #   respond_to do |format|
+    #     format.html # index.html.erb
+    #     format.xml  { render :xml => {:error => "access denied"} }
+    #     format.json  { render :json => {:error => "access denied"} }
+    #   end
+    #   return nil
+    # end
     
     # puts request.env["HTTP_X_USER_ID"]
     # puts request.env["HTTP_X_UDID"]
@@ -435,6 +436,8 @@ end
       r.loser_id = params[:l]
       r.left = params[:left]
       r.mode = params[:mode]
+      r.winner_score = winner[:score]
+      r.loser_score = loser[:score]
       r.save
     end
     

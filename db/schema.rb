@@ -10,7 +10,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20101116073119) do
+ActiveRecord::Schema.define(:version => 20101116114022) do
 
   create_table "delayed_jobs", :force => true do |t|
     t.integer   "priority",   :default => 0
@@ -65,10 +65,12 @@ ActiveRecord::Schema.define(:version => 20101116073119) do
     t.string    "facebook_id"
     t.string    "winner_id"
     t.string    "loser_id"
-    t.boolean   "left",        :default => false
+    t.boolean   "left",         :default => false
     t.timestamp "created_at"
     t.timestamp "updated_at"
     t.integer   "mode"
+    t.integer   "winner_score"
+    t.integer   "loser_score"
   end
 
   create_table "schools", :force => true do |t|
