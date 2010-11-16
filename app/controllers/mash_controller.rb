@@ -140,6 +140,22 @@ class MashController < ApplicationController
     return opponent
   end
   
+  def serve_ad
+    # This API should redirect to S3 or some static storage after remapping the serve request
+    
+    Rails.logger.info request.query_parameters.inspect
+    if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
+      respond_to do |format|
+        format.html # index.html.erb
+        format.xml  { render :xml => {:error => "access denied"} }
+        format.json  { render :json => {:error => "access denied"} }
+      end
+      return nil
+    end
+    
+    
+  end
+  
   def match
     # Find an opponent for the user provided in params
     # CURRENTLY UNUSED, GAME MODE DISABLED
@@ -172,6 +188,14 @@ class MashController < ApplicationController
   
   def token
     # Rails.logger.info request.query_parameters.inspect
+    if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
+      respond_to do |format|
+        format.html # index.html.erb
+        format.xml  { render :xml => {:error => "access denied"} }
+        format.json  { render :json => {:error => "access denied"} }
+      end
+      return nil
+    end
     
     # Store the user's access token
     token = Token.find_by_facebook_id(params["id"])
@@ -427,15 +451,33 @@ end
     
     Rails.logger.info request.query_parameters.inspect
     
+    if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
+      respond_to do |format|
+        format.html # index.html.erb
+        format.xml  { render :xml => {:error => "access denied"} }
+        format.json  { render :json => {:error => "access denied"} }
+      end
+      return nil
+    end
+    
     profile = User.select('*').where('facebook_id' => params[:id]).joins(:profile).first
     
+    # WORKS BUT NOT PERFORMANT!!! VERY SLOW
+    #
+    # ranksHash = ActiveRecord::Base.connection.execute("select sum(case when a.score>b.score then 1 else 0 end) as rankOfTotal, sum(case when a.score>b.score AND c.friend_id is not null then 1 else 0 end) as rankOfNetwork, sum(case when c.friend_id is not null then 1 else 0 end) as networkTotal, count(*) as total from users a left join users b on 1=1 and b.facebook_id=#{profile['facebook_id']} left join networks c on c.friend_id = a.facebook_id and c.facebook_id=b.facebook_id where a.gender = b.gender")[0]
+    # profile['rank'] = ranksHash['rankOfTotal']
+    # profile['rank_network'] = ranksHash['rankOfNetwork']
+    # profile['total'] = ranksHash['total']
+    # profile['total_network'] = ranksHash['networkTotal']
     # ActiveRecord::Base.connection.execute("select sum(case when a.score>c.score then 1 else 0 end) as rankOfTotal,sum(case when a.score>c.score && b.id!=null then 1 else 0 end) as rankAmongFriends,sum(1) as totalCount,sum(case when b.id!=null then 1 else 0 end) as networkCount from users a left outer join networks b on a.facebook_id=b.friend_id left outer join users c where c.id='#{profile['facebook_id']}' and a.gender=c.gender")
-    profile['rank'] = ActiveRecord::Base.connection.execute("SELECT count(*) from Users where score > #{profile['score']} AND gender = '#{profile['gender']}'")[0]['count'].to_i + 1
     
+    profile['rank'] = ActiveRecord::Base.connection.execute("SELECT count(*) from Users where score > #{profile['score']} AND gender = '#{profile['gender']}'")[0][0].to_i + 1
+    profile['rank_network'] = 0;
+    profile['total'] = User.count(:conditions=>"gender = '#{profile['gender']}'").to_i
+    profile['total_network'] = profile['total']
+        
     profile['votes'] = profile['votes'].to_i
     profile['votes_network'] = profile['votes_network'].to_i
-    
-    profile['total'] = User.count(:conditions=>"gender = '#{profile['gender']}'").to_i
     
     # send response
     respond_to do |format|
