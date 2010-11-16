@@ -77,7 +77,7 @@ class MashController < ApplicationController
       
       if not opponent.nil?
         response = [randomUser.facebook_id, opponent.facebook_id]
-        p response
+
         respond_to do |format|
           format.xml  { render :xml => response }
           format.json  { render :json => response }
@@ -423,8 +423,8 @@ end
     end
     
     
-    winner = User.find_by_facebook_id(params[:w].to_s)
-    loser  = User.find_by_facebook_id(params[:l].to_s)
+    winner = User.find_by_facebook_id(params[:w])
+    loser  = User.find_by_facebook_id(params[:l])
     
     adjustScoresForUsers(winner, loser, params[:mode])
     
