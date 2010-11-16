@@ -6,8 +6,6 @@
 
 class MashController < ApplicationController
   require 'generate_second_degree'
-  require 'net/https'
-  require 'uri'
   
   def random
     # Find two random people who have similar scores
@@ -71,7 +69,11 @@ class MashController < ApplicationController
     # puts "LOL"
     # p randomUser
     if not randomUser.nil?
-      opponent = findOpponentForUser(randomUser.score, params[:gender], randomUser.facebook_id, recentIds, networkIds)
+      if params[:mode] == "0"
+        opponent = findOpponentForUser(randomUser.score, params[:gender], randomUser.facebook_id, recentIds, networkIds)
+      else
+        opponent = findOpponentForUser(randomUser.score_network, params[:gender], randomUser.facebook_id, recentIds, networkIds)
+      end
       
       if not opponent.nil?
         response = [randomUser.facebook_id, opponent.facebook_id]
@@ -104,24 +106,30 @@ class MashController < ApplicationController
     
     # In the future range should be dynamically calculated based on normal distribution of desired score
     # range = calculateRange(desiredScore)
-    range = 500
+    range = calculateRange(desiredScore)
     
     if recentIds.nil?
       if networkIds.nil?
         bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score")
       else
-        bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id != :currentId AND facebook_id IN (#{networkIds})", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score")
+        bucket = User.where(["score_network >= :lowScore AND score_network <= :highScore AND gender = :gender AND facebook_id != :currentId AND facebook_id IN (#{networkIds})", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score_network")
       end
     else
       if networkIds.nil?
         bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id NOT IN (#{recentIds}) AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score")
       else
-        bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id NOT IN (#{recentIds}) AND facebook_id IN (#{networkIds}) AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score")
+        bucket = User.where(["score_network >= :lowScore AND score_network <= :highScore AND gender = :gender AND facebook_id NOT IN (#{recentIds}) AND facebook_id IN (#{networkIds}) AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score_network")
       end
     end
     
+    if networkIds.nil?
+      mode = "0"
+    else
+      mode = "1"
+    end
+    
     if bucket.length > 0
-      opponentIndex = binarySearch(bucket, desiredScore, 0, bucket.length - 1)
+      opponentIndex = binarySearch(bucket, desiredScore, 0, bucket.length - 1, mode)
       opponent = bucket[opponentIndex]
     else
       return nil # no opponent found
@@ -192,10 +200,15 @@ class MashController < ApplicationController
         :facebook_id => params["id"],
         :gender => params["gender"],
         :score => 1500,
+        :score_network => 1500,
         :wins => 0,
+        :wins_network => 0,
         :losses => 0,
+        :losses_network => 0,
         :win_streak => 0,
-        :loss_streak => 0
+        :win_streak_network => 0,
+        :loss_streak => 0,
+        :loss_streak_network => 0
       )
       
       newProfile = Profile.create(
@@ -260,10 +273,15 @@ end
         u.facebook_id = fbUser['id']
         u.gender = fbUser['gender'].nil? ? nil : fbUser['gender']
         u.score = 1500
+        u.score_network = 1500
         u.wins = 0
+        u.wins_network = 0
         u.losses = 0
+        u.losses_network = 0
         u.win_streak = 0
+        u.win_streak_network = 0
         u.loss_streak = 0
+        u.loss_streak_network = 0
         u.save
       end
       profile = Profile.find_by_facebook_id(fbUser['id'])
@@ -383,7 +401,7 @@ end
     winner = User.find_by_facebook_id(params[:w].to_s)
     loser  = User.find_by_facebook_id(params[:l].to_s)
     
-    adjustScoresForUsers(winner, loser)
+    adjustScoresForUsers(winner, loser, params[:mode])
     
     # Insert a NEW record into Result table to keep track of the fight
     # If left is true, that means left side was DISCARDED
@@ -410,7 +428,6 @@ end
     Rails.logger.info request.query_parameters.inspect
     
     profile = User.select('*').where('facebook_id' => params[:id]).joins(:profile).first
-    
     
     # ActiveRecord::Base.connection.execute("select sum(case when a.score>c.score then 1 else 0 end) as rankOfTotal,sum(case when a.score>c.score && b.id!=null then 1 else 0 end) as rankAmongFriends,sum(1) as totalCount,sum(case when b.id!=null then 1 else 0 end) as networkCount from users a left outer join networks b on a.facebook_id=b.friend_id left outer join users c where c.id='#{profile['facebook_id']}' and a.gender=c.gender")
     profile['rank'] = ActiveRecord::Base.connection.execute("SELECT count(*) from Users where score > #{profile['score']} AND gender = '#{profile['gender']}'")[0]['count'].to_i + 1
@@ -472,20 +489,33 @@ end
     if networkIds.nil?
       users = User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>"score desc",:limit=>count,:include=>:profile)
     else
-      users = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id IN (#{networkIds})",:order=>"score desc",:limit=>count,:include=>:profile)
+      users = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id IN (#{networkIds})",:order=>"score_network desc",:limit=>count,:include=>:profile)
     end
     
     rankings = []
     
     users.each_with_index do |user,rank|
+      if params[:mode] == "0"
+        actualScore = user[:score]
+        actualWins = user[:wins]
+        actualLosses = user[:losses]
+        actualWinStreak = user[:win_streak]
+        actualLossStreak = user[:loss_streak]
+      else
+        actualScore = user[:score_network]
+        actualWins = user[:wins_network]
+        actualLosses = user[:losses_network]
+        actualWinStreak = user[:win_streak_network]
+        actualLossStreak = user[:loss_streak_network]
+      end
       rankingsHash = {
         :facebook_id => user[:facebook_id],
         :full_name => user.profile[:full_name],
-        :score => user[:score],
-        :wins => user[:wins],
-        :losses => user[:losses],
-        :win_streak => user[:win_streak],
-        :loss_streak => user[:loss_streak],
+        :score => actualScore,
+        :wins => actualWins,
+        :losses => actualLosses,
+        :win_streak => actualWinStreak,
+        :loss_streak => actualLossStreak,
         :rank => rank + 1
       }
       rankings << rankingsHash
@@ -500,44 +530,76 @@ end
   
   # Calculations
 
-  def adjustScoresForUsers(winner, loser)
-    winnerExpected = expectedOutcome(winner, loser)
-    loserExpected = expectedOutcome(loser, winner)
+  def adjustScoresForUsers(winner, loser, mode = 0)
+    winnerExpected = expectedOutcome(winner, loser, mode)
+    loserExpected = expectedOutcome(loser, winner, mode)
     
-    # Adjust the winner score
-    winner.update_attributes(:wins => winner[:wins] + 1)
-    winner.update_attributes(:win_streak => winner[:win_streak] + 1)
-    winner.update_attributes(:loss_streak => 0)
-    winner.update_attributes(:score => winner[:score] + (32 * (1 - winnerExpected)))
-    
-    # Adjust the loser score
-    loser.update_attributes(:losses => loser[:losses] + 1)
-    loser.update_attributes(:loss_streak => loser[:loss_streak] + 1)
-    loser.update_attributes(:win_streak => 0)
-    loser.update_attributes(:score => loser[:score] + (32 * (0 - loserExpected)))
+    if mode == "0"
+      # Adjust the winner score
+      winner.update_attributes(:wins => winner[:wins] + 1)
+      winner.update_attributes(:win_streak => winner[:win_streak] + 1)
+      winner.update_attributes(:loss_streak => 0)
+      winner.update_attributes(:score => winner[:score] + (32 * (1 - winnerExpected)))
+
+      # Adjust the loser score
+      loser.update_attributes(:losses => loser[:losses] + 1)
+      loser.update_attributes(:loss_streak => loser[:loss_streak] + 1)
+      loser.update_attributes(:win_streak => 0)
+      loser.update_attributes(:score => loser[:score] + (32 * (0 - loserExpected)))
+    else
+      # Adjust the winner score
+      winner.update_attributes(:wins_network => winner[:wins_network] + 1)
+      winner.update_attributes(:win_streak_network => winner[:win_streak_network] + 1)
+      winner.update_attributes(:loss_streak_network => 0)
+      winner.update_attributes(:score_network => winner[:score_network] + (32 * (1 - winnerExpected)))
+
+      # Adjust the loser score
+      loser.update_attributes(:losses_network => loser[:losses_network] + 1)
+      loser.update_attributes(:loss_streak_network => loser[:loss_streak_network] + 1)
+      loser.update_attributes(:win_streak_network => 0)
+      loser.update_attributes(:score_network => loser[:score_network] + (32 * (0 - loserExpected)))
+    end
   end
   
-  def expectedOutcome(user, opponent)
+  def expectedOutcome(user, opponent, mode = 0)
+    if mode == "0"
+      user_score = user[:score]
+      opponent_score = opponent[:score]
+    else
+      user_score = user[:score_network]
+      opponent_score = opponent[:score_network]
+    end
+    
     # Calculate the expected outcomes
-    exponent = 10.0 ** ((opponent[:score] - user[:score]) / 400.0)
+    exponent = 10.0 ** ((opponent_score - user_score) / 400.0)
     expected = 1.0 / (1.0 + exponent)
     return expected
   end
      
-  def binarySearch(array, value, low, high)
+  def binarySearch(array, value, low, high, mode = "0")
     if high < low
       return -1 # not found
     end
     
     mid = low + ((high - low) / 2).to_i
     
-    if array[low].score == array[high].score
+    if mode == "0"
+      low_score = array[low].score
+      high_score = array[high].score
+      mid_score = array[mid].score
+    else
+      low_score = array[low].score_network
+      high_score = array[high].score_network
+      mid_score = array[mid].score_network
+    end
+    
+    if low_score == high_score
       puts rand(range_rand(low,high)).to_i
       return rand(range_rand(low,high)).to_i
-    elsif array[mid].score > value
-      return binarySearch(array, value, low, mid - 1)
-    elsif array[mid].score < value
-      return binarySearch(array, value, mid + 1, high)
+    elsif mid_score > value
+      return binarySearch(array, value, low, mid - 1, mode)
+    elsif mid_score < value
+      return binarySearch(array, value, mid + 1, high, mode)
     else
       return mid
     end
@@ -552,6 +614,7 @@ end
     # Calculate optimal +/- range based on SQL table stats assuming our scores are of normal distribution
     # We might have to perform a SQL table stats query every now and then to update the distribution
     # This will restrict the number of results that come back to optimize the binarySearch on the result set
+    return 500 # return 500 for now
   end
   
   # takes a gzipped string and deflates it

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20101114094308) do
+ActiveRecord::Schema.define(:version => 20101116073119) do
 
   create_table "delayed_jobs", :force => true do |t|
     t.integer   "priority",   :default => 0
@@ -36,10 +36,10 @@ ActiveRecord::Schema.define(:version => 20101114094308) do
   end
 
   create_table "names", :force => true do |t|
-    t.string   "name"
-    t.string   "gender"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.string    "name"
+    t.string    "gender"
+    t.timestamp "created_at"
+    t.timestamp "updated_at"
   end
 
   create_table "networks", :force => true do |t|
@@ -51,14 +51,14 @@ ActiveRecord::Schema.define(:version => 20101114094308) do
   end
 
   create_table "profiles", :force => true do |t|
-    t.string   "facebook_id"
-    t.string   "first_name"
-    t.string   "last_name"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.integer  "votes",         :default => 0
-    t.integer  "votes_network", :default => 0
-    t.string   "full_name"
+    t.string    "facebook_id"
+    t.string    "first_name"
+    t.string    "last_name"
+    t.timestamp "created_at"
+    t.timestamp "updated_at"
+    t.integer   "votes",         :default => 0
+    t.integer   "votes_network", :default => 0
+    t.string    "full_name"
   end
 
   create_table "results", :force => true do |t|
@@ -88,15 +88,20 @@ ActiveRecord::Schema.define(:version => 20101114094308) do
   end
 
   create_table "users", :force => true do |t|
-    t.string    "facebook_id"
-    t.string    "gender"
-    t.integer   "score",       :default => 1500
-    t.integer   "wins",        :default => 0
-    t.integer   "losses",      :default => 0
-    t.integer   "win_streak",  :default => 0
-    t.integer   "loss_streak", :default => 0
-    t.timestamp "created_at"
-    t.timestamp "updated_at"
+    t.string   "facebook_id"
+    t.string   "gender"
+    t.integer  "score",               :default => 1500
+    t.integer  "wins",                :default => 0
+    t.integer  "losses",              :default => 0
+    t.integer  "win_streak",          :default => 0
+    t.integer  "loss_streak",         :default => 0
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.integer  "score_network",       :default => 1500
+    t.integer  "wins_network",        :default => 0
+    t.integer  "losses_network",      :default => 0
+    t.integer  "win_streak_network",  :default => 0
+    t.integer  "loss_streak_network", :default => 0
   end
 
 end
