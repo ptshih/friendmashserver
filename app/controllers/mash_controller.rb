@@ -16,15 +16,6 @@ class MashController < ApplicationController
     # Find two random people who have similar scores
     Rails.logger.info request.query_parameters.inspect
     
-    
-    # # force inject ads
-    # response = ["fmad_1", "fmad_2"]
-    # respond_to do |format|
-    #   format.xml  { render :xml => response }
-    #   format.json  { render :json => response }
-    # end
-    # return nil
-    
     if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
       respond_to do |format|
         format.html # index.html.erb
@@ -151,24 +142,6 @@ class MashController < ApplicationController
     end
   
     return bucket[0]
-  end
-  
-  def serve_ad
-    # This API should redirect to S3 or some static storage after remapping the serve request
-    
-    Rails.logger.info request.query_parameters.inspect
-    # if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
-    #   respond_to do |format|
-    #     format.html # index.html.erb
-    #     format.xml  { render :xml => {:error => "access denied"} }
-    #     format.json  { render :json => {:error => "access denied"} }
-    #   end
-    #   return nil
-    # end
-
-    
-    send_file 'public/images/antoine_dodson.jpg', :type => 'image/jpeg', :disposition => 'inline'
-    # render :file => 'http://www.novafm.com.au/lib/images/audio/normal/youtube-star-antoine-dodson-260594.jpg', :type => 'image/jpg'
   end
   
   def match
@@ -328,16 +301,6 @@ end
       return nil
     end
     
-    # Process Ads
-    if params[:ad] == "1"
-      respond_to do |format|
-        format.html # index.html.erb
-        format.xml  { render :xml => {:success => "true"} }
-        format.json  { render :json => {:success => "true"} }
-      end
-      return nil
-    end
-    
     # puts request.env["HTTP_X_USER_ID"]
     # puts request.env["HTTP_X_UDID"]
     
@@ -347,7 +310,6 @@ end
     if params[:mode] == "1"
       Profile.increment_counter('votes_network',Profile.find_by_facebook_id(params[:id]).id)
     end
-    
     
     winner = User.find_by_facebook_id(params[:w])
     loser  = User.find_by_facebook_id(params[:l])
