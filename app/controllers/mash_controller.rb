@@ -17,13 +17,13 @@ class MashController < ApplicationController
     Rails.logger.info request.query_parameters.inspect
     
     
-    # force inject ads
-    response = ["fmad_1", "fmad_2"]
-    respond_to do |format|
-      format.xml  { render :xml => response }
-      format.json  { render :json => response }
-    end
-    return nil
+    # # force inject ads
+    # response = ["fmad_1", "fmad_2"]
+    # respond_to do |format|
+    #   format.xml  { render :xml => response }
+    #   format.json  { render :json => response }
+    # end
+    # return nil
     
     if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
       respond_to do |format|
