@@ -3,6 +3,11 @@
 # win streak crown
 # location based: mayor of location
 
+# CREATING INDEX
+# ActiveRecord::Base.connection.execute("create unique index idx_users_facebook_id on users (facebook_id)")
+# ActiveRecord::Base.connection.execute("create index idx_networks_facebook_id on networks (facebook_id)")
+# ActiveRecord::Base.connection.execute("create index idx_networks_friend_id on networks (friend_id)")
+# ActiveRecord::Base.connection.execute("create unique index idx_profiles_facebook_id on profiles (facebook_id)")
 
 class MashController < ApplicationController
   require 'process_friends'
@@ -367,17 +372,17 @@ end
     
     # WORKS BUT NOT PERFORMANT!!! VERY SLOW
     #
-    # ranksHash = ActiveRecord::Base.connection.execute("select sum(case when a.score>b.score then 1 else 0 end) as rankOfTotal, sum(case when a.score>b.score AND c.friend_id is not null then 1 else 0 end) as rankOfNetwork, sum(case when c.friend_id is not null then 1 else 0 end) as networkTotal, count(*) as total from users a left join users b on 1=1 and b.facebook_id=#{profile['facebook_id']} left join networks c on c.friend_id = a.facebook_id and c.facebook_id=b.facebook_id where a.gender = b.gender")[0]
-    # profile['rank'] = ranksHash['rankOfTotal']
-    # profile['rank_network'] = ranksHash['rankOfNetwork']
-    # profile['total'] = ranksHash['total']
-    # profile['total_network'] = ranksHash['networkTotal']
+    ranksHash = ActiveRecord::Base.connection.execute("select sum(case when a.score>b.score then 1 else 0 end) as rankOfTotal, sum(case when a.score>b.score AND c.friend_id is not null then 1 else 0 end) as rankOfNetwork, sum(case when c.friend_id is not null then 1 else 0 end) as networkTotal, count(*) as total from users a left join users b on 1=1 and b.facebook_id=#{profile['facebook_id']} left join networks c on c.friend_id = a.facebook_id and c.facebook_id=b.facebook_id where a.gender = b.gender")[0]
+    profile['rank'] = ranksHash['rankOfTotal']
+    profile['rank_network'] = ranksHash['rankOfNetwork']
+    profile['total'] = ranksHash['total']
+    profile['total_network'] = ranksHash['networkTotal']
     # ActiveRecord::Base.connection.execute("select sum(case when a.score>c.score then 1 else 0 end) as rankOfTotal,sum(case when a.score>c.score && b.id!=null then 1 else 0 end) as rankAmongFriends,sum(1) as totalCount,sum(case when b.id!=null then 1 else 0 end) as networkCount from users a left outer join networks b on a.facebook_id=b.friend_id left outer join users c where c.id='#{profile['facebook_id']}' and a.gender=c.gender")
     
-    profile['rank'] = ActiveRecord::Base.connection.execute("SELECT count(*) from Users where score > #{profile['score']} AND gender = '#{profile['gender']}'")[0][0].to_i + 1
-    profile['rank_network'] = 0;
-    profile['total'] = User.count(:conditions=>"gender = '#{profile['gender']}'").to_i
-    profile['total_network'] = profile['total']
+    # profile['rank'] = ActiveRecord::Base.connection.execute("SELECT count(*) from Users where score > #{profile['score']} AND gender = '#{profile['gender']}'")[0][0].to_i + 1
+    # profile['rank_network'] = 0;
+    # profile['total'] = User.count(:conditions=>"gender = '#{profile['gender']}'").to_i
+    # profile['total_network'] = profile['total']
         
     profile['votes'] = profile['votes'].to_i
     profile['votes_network'] = profile['votes_network'].to_i
