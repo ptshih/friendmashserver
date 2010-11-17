@@ -4,5 +4,6 @@
 require File.expand_path('../config/application', __FILE__)
 require 'rake'
 require 'generate_second_degree'
+require 'process_friends'
 
 Facemash::Application.load_tasks

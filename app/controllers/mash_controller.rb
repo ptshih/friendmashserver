@@ -5,7 +5,7 @@
 
 
 class MashController < ApplicationController
-  require 'generate_second_degree'
+  require 'process_friends'
   
   def random
     # Find two random people who have similar scores
@@ -66,6 +66,7 @@ class MashController < ApplicationController
       end
     end
     
+    # randomUser = User.first
     # puts "LOL"
     # p randomUser
     if not randomUser.nil?
@@ -109,17 +110,27 @@ class MashController < ApplicationController
     # range = calculateRange(desiredScore)
     range = calculateRange(desiredScore)
     
+    if Rails.env == "production"
+      randQuery = 'RANDOM()'
+    else
+      randQuery = 'RANDOM()'
+    end
+    
     if recentIds.nil?
       if networkIds.nil?
-        bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score")
+        bucket = User.all(:conditions=>"score >= (#{desiredScore} - #{range}) AND score <= (#{desiredScore} + #{range}) AND gender = '#{gender}' AND facebook_id != '#{currentId}'",:order=>randQuery,:select =>"facebook_id, score")
+        # bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }], :order => randQuery).select("facebook_id, score")
       else
-        bucket = User.where(["score_network >= :lowScore AND score_network <= :highScore AND gender = :gender AND facebook_id != :currentId AND facebook_id IN (#{networkIds})", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score_network")
+        bucket = User.all(:conditions=>"score_network >= (#{desiredScore} - #{range}) AND score_network <= (#{desiredScore} + #{range}) AND gender = '#{gender}' AND facebook_id IN (#{networkIds}) AND facebook_id != '#{currentId}'",:order=>randQuery,:select =>"facebook_id, score_network")
+        # bucket = User.where(["score_network >= :lowScore AND score_network <= :highScore AND gender = :gender AND facebook_id != :currentId AND facebook_id IN (#{networkIds})", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score_network")
       end
     else
       if networkIds.nil?
-        bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id NOT IN (#{recentIds}) AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score")
+        bucket = User.all(:conditions=>"score >= (#{desiredScore} - #{range}) AND score <= (#{desiredScore} + #{range}) AND gender = '#{gender}' AND facebook_id NOT IN (#{recentIds}) AND facebook_id != '#{currentId}'",:order=>randQuery,:select =>"facebook_id, score")
+        # bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id NOT IN (#{recentIds}) AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score")
       else
-        bucket = User.where(["score_network >= :lowScore AND score_network <= :highScore AND gender = :gender AND facebook_id NOT IN (#{recentIds}) AND facebook_id IN (#{networkIds}) AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score_network")
+        bucket = User.all(:conditions=>"score_network >= (#{desiredScore} - #{range}) AND score_network <= (#{desiredScore} + #{range}) AND gender = '#{gender}' AND facebook_id NOT IN (#{recentIds}) AND facebook_id IN (#{networkIds}) AND facebook_id != '#{currentId}'",:order=>randQuery,:select =>"facebook_id, score_network")
+        # bucket = User.where(["score_network >= :lowScore AND score_network <= :highScore AND gender = :gender AND facebook_id NOT IN (#{recentIds}) AND facebook_id IN (#{networkIds}) AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score_network")
       end
     end
     
@@ -214,10 +225,6 @@ class MashController < ApplicationController
       )
     end
     
-    # Get the user's first degree friends
-    fields = Hash.new
-    fields["fields"] = "id,first_name,last_name,name,gender,education,work,locale"
-    
     user = User.find_by_facebook_id(params["id"])
     if user.nil?
       # create a record for the current user
@@ -235,7 +242,6 @@ class MashController < ApplicationController
         :loss_streak => 0,
         :loss_streak_network => 0
       )
-      
       newProfile = Profile.create(
         :facebook_id => params["id"],
         :first_name => params["first_name"].nil? ? nil : params["first_name"],
@@ -251,11 +257,8 @@ class MashController < ApplicationController
       )
     end
     
-    # Get first degree friends from FB
-    firstDegreeFriends = user.friends(fields)
-    
-    # insert the first degree friends into the DB as degree 1
-    process_friends(params["id"], firstDegreeFriends, 1)
+    # Process friends in worker
+    Delayed::Job.enqueue ProcessFriends.new(params["id"])
     
 =begin
 # CANNOT get list of friends of friends, damnit facebook
@@ -291,103 +294,7 @@ end
     end
   end
   
-  def createUser(fbUser)
-    user = User.find_by_facebook_id(fbUser['id'])
-    if user.nil?
-      User.new do |u|
-        u.facebook_id = fbUser['id']
-        u.gender = fbUser['gender'].nil? ? nil : fbUser['gender']
-        u.score = 1500
-        u.score_network = 1500
-        u.wins = 0
-        u.wins_network = 0
-        u.losses = 0
-        u.losses_network = 0
-        u.win_streak = 0
-        u.win_streak_network = 0
-        u.loss_streak = 0
-        u.loss_streak_network = 0
-        u.save
-      end
-      profile = Profile.find_by_facebook_id(fbUser['id'])
-      if profile.nil?
-        Profile.new do |p|
-          p.facebook_id = fbUser['id']
-          p.first_name = fbUser['first_name'].nil? ? nil : fbUser['first_name']
-          p.last_name = fbUser['last_name'].nil? ? nil : fbUser['last_name']
-          p.full_name = fbUser['name']
-          p.votes = 0
-          p.votes_network = 0
-          p.save
-        end
-      end
-
-      fbUser['education'].each do |education|
-        School.new do |s|
-          s.facebook_id = fbUser['id']
-          s.school_id = education['school']['id']
-          s.school_name = education['school']['name']
-          s.save
-        end
-      end if not fbUser['education'].nil?
-        
-      fbUser['work'].each do |work|
-        Employer.new do |e|
-          e.facebook_id = fbUser['id']
-          e.employer_id = work['employer']['id']
-          e.employer_name = work['employer']['name']
-          e.save
-        end
-      end if not fbUser['work'].nil?
-    else
-      user.update_attributes(
-      :gender => fbUser['gender']
-      )
-    end
-  end
-  
-  def process_friends(facebook_id = nil, friends = nil, degree = 1)
-    return nil if friends.nil? || facebook_id.nil?
-      
-    friendIdArray = Array.new
-    
-    friends.each do |friend|
-      createUser(friend)
-
-      # Insert friend into friendIdArray
-      if not facebook_id == friend['id']
-        friendIdArray << friend['id']
-      end
-    end
-    
-    # Generate first degree network for this user
-    generateNetwork(facebook_id, friendIdArray, degree)
-    
-    
-    # self.send_later(:generateSecondDegreeNetworkForUser, params[:id])
-    
-    Delayed::Job.enqueue GenerateSecondDegree.new(facebook_id)
-  end
-  
-  def generateNetwork(facebookId, friendIdArray, degree = 1)
-#    friendIdArray = ["1217270","1217767","1209924"]
-    # This method generates a network link table of user -> friend with degree = 1
-    puts "Generate #{degree} degree network link table for user with id: #{facebookId}"
-
-    friendIdArray.each do |friendId|
-      if Network.where(["facebook_id = :facebook_id AND friend_id = :friend_id", { :facebook_id => facebookId, :friend_id => friendId }]).empty?
-        network = Network.create(
-          :facebook_id => facebookId,
-          :friend_id => friendId, 
-          :degree => degree
-        )
-      end
-    end
-
-    return nil
-  end
-  
-  # OLD API when CLIENT used to send friends array, SEE get_fb_friends
+  # Tell the server to process the current user's friends
   def friends
     
     # deprecated
@@ -398,6 +305,8 @@ end
       format.json  { render :json => {:success => "true"} }
     end
   end
+  
+
   
   def result
     # report a match result to the server 
@@ -646,6 +555,7 @@ end
     elsif mid_score < value
       return binarySearch(array, value, mid + 1, high, mode)
     else
+      puts mid
       return mid
     end
   end
