@@ -372,7 +372,7 @@ end
     
     # WORKS BUT NOT PERFORMANT!!! VERY SLOW
     #
-    ranksHash = ActiveRecord::Base.connection.execute("select sum(case when a.score>b.score then 1 else 0 end) as rankOfTotal, sum(case when a.score>b.score AND c.friend_id is not null then 1 else 0 end) as rankOfNetwork, sum(case when c.friend_id is not null then 1 else 0 end) as networkTotal, count(*) as total from users a left join users b on 1=1 and b.facebook_id=#{profile['facebook_id']} left join networks c on c.friend_id = a.facebook_id and c.facebook_id=b.facebook_id where a.gender = b.gender")[0]
+    ranksHash = ActiveRecord::Base.connection.execute("select sum(case when a.score>b.score then 1 else 0 end) as rankOfTotal, sum(case when a.score>b.score AND c.friend_id is not null then 1 else 0 end) as rankOfNetwork, sum(case when c.friend_id is not null then 1 else 0 end) as networkTotal, count(*) as total from users a left join users b on 1=1 and b.facebook_id='#{profile['facebook_id']}' left join networks c on c.friend_id = a.facebook_id and c.facebook_id=b.facebook_id where a.gender = b.gender")[0]
     profile['rank'] = ranksHash['rankOfTotal']
     profile['rank_network'] = ranksHash['rankOfNetwork']
     profile['total'] = ranksHash['total']
