@@ -120,7 +120,7 @@ class MashController < ApplicationController
     
     if recentIds.nil?
       if networkIds.nil?
-        bucket = User.all(:conditions=>"score > #{low} AND score <= #{high} AND gender = '#{gender}' AND facebook_id != '#{currentId}'",:order=>randQuery,:select =>"facebook_id".:limit=>1)
+        bucket = User.all(:conditions=>"score > #{low} AND score <= #{high} AND gender = '#{gender}' AND facebook_id != '#{currentId}'",:order=>randQuery,:select =>"facebook_id",:limit=>1)
         # bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }], :order => randQuery).select("facebook_id, score")
       else
         bucket = User.all(:conditions=>"score_network > #{low} AND score_network <= #{high} AND gender = '#{gender}' AND facebook_id IN (#{networkIds}) AND facebook_id != '#{currentId}'",:order=>"score_network desc",:select =>"facebook_id",:limit=>1)
@@ -227,7 +227,11 @@ class MashController < ApplicationController
         :win_streak => 0,
         :win_streak_network => 0,
         :loss_streak => 0,
-        :loss_streak_network => 0
+        :loss_streak_network => 0,
+        :win_streak_max => 0,
+        :loss_streak_max => 0,
+        :win_streak_max_network => 0,
+        :loss_streak_max_network => 0
       )
       newProfile = Profile.create(
         :facebook_id => params["id"],
@@ -481,24 +485,40 @@ end
       winner.update_attributes(:win_streak => winner[:win_streak] + 1)
       winner.update_attributes(:loss_streak => 0)
       winner.update_attributes(:score => winner[:score] + (32 * (1 - winnerExpected)))
+      
+      if winner[:win_streak] > winner[:win_streak_max]
+        winner.update_attributes(:win_streak_max => winner[:win_streak])
+      end
 
       # Adjust the loser score
       loser.update_attributes(:losses => loser[:losses] + 1)
       loser.update_attributes(:loss_streak => loser[:loss_streak] + 1)
       loser.update_attributes(:win_streak => 0)
       loser.update_attributes(:score => loser[:score] + (32 * (0 - loserExpected)))
+      
+      if loser[:loss_streak] > loser[:loss_streak_max]
+        loser.update_attributes(:loss_streak_max => loser[:loss_streak])
+      end
     else
       # Adjust the winner score
       winner.update_attributes(:wins_network => winner[:wins_network] + 1)
       winner.update_attributes(:win_streak_network => winner[:win_streak_network] + 1)
       winner.update_attributes(:loss_streak_network => 0)
       winner.update_attributes(:score_network => winner[:score_network] + (32 * (1 - winnerExpected)))
+      
+      if winner[:win_streak_network] > winner[:win_streak_max_network]
+        winner.update_attributes(:win_streak_max_network => winner[:win_streak_network])
+      end
 
       # Adjust the loser score
       loser.update_attributes(:losses_network => loser[:losses_network] + 1)
       loser.update_attributes(:loss_streak_network => loser[:loss_streak_network] + 1)
       loser.update_attributes(:win_streak_network => 0)
       loser.update_attributes(:score_network => loser[:score_network] + (32 * (0 - loserExpected)))
+      
+      if loser[:loss_streak_network] > loser[:loss_streak_max_network]
+        loser.update_attributes(:loss_streak_max_network => loser[:loss_streak_network])
+      end
     end
   end
   
@@ -528,6 +548,8 @@ end
     
     ranges = [0, 1145, 1263, 1352, 1429, 1500, 1571, 1648, 1735, 1855, 3000]
     found = 0
+    low = 0
+    high = 10
     
     ranges.each_with_index do |r,i|
       if score > r

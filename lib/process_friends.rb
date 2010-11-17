@@ -56,6 +56,10 @@ class ProcessFriends < Struct.new(:facebookId)
         u.win_streak_network = 0
         u.loss_streak = 0
         u.loss_streak_network = 0
+        u.win_streak_max = 0
+        u.loss_streak_max = 0
+        u.win_streak_max_network = 0
+        u.loss_streak_max_network = 0
         u.save
       end
       profile = Profile.find_by_facebook_id(fbUser['id'])

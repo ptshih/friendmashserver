@@ -10,7 +10,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20101116114022) do
+ActiveRecord::Schema.define(:version => 20101117055148) do
 
   create_table "delayed_jobs", :force => true do |t|
     t.integer   "priority",   :default => 0
@@ -90,20 +90,24 @@ ActiveRecord::Schema.define(:version => 20101116114022) do
   end
 
   create_table "users", :force => true do |t|
-    t.string   "facebook_id"
-    t.string   "gender"
-    t.integer  "score",               :default => 1500
-    t.integer  "wins",                :default => 0
-    t.integer  "losses",              :default => 0
-    t.integer  "win_streak",          :default => 0
-    t.integer  "loss_streak",         :default => 0
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.integer  "score_network",       :default => 1500
-    t.integer  "wins_network",        :default => 0
-    t.integer  "losses_network",      :default => 0
-    t.integer  "win_streak_network",  :default => 0
-    t.integer  "loss_streak_network", :default => 0
+    t.string    "facebook_id"
+    t.string    "gender"
+    t.integer   "score",                   :default => 1500
+    t.integer   "wins",                    :default => 0
+    t.integer   "losses",                  :default => 0
+    t.integer   "win_streak",              :default => 0
+    t.integer   "loss_streak",             :default => 0
+    t.timestamp "created_at"
+    t.timestamp "updated_at"
+    t.integer   "score_network",           :default => 1500
+    t.integer   "wins_network",            :default => 0
+    t.integer   "losses_network",          :default => 0
+    t.integer   "win_streak_network",      :default => 0
+    t.integer   "loss_streak_network",     :default => 0
+    t.integer   "win_streak_max",          :default => 0
+    t.integer   "loss_streak_max",         :default => 0
+    t.integer   "win_streak_max_network",  :default => 0
+    t.integer   "loss_streak_max_network", :default => 0
   end
 
 end
