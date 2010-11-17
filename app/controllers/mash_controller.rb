@@ -446,21 +446,29 @@ end
         actualLosses = user[:losses]
         actualWinStreak = user[:win_streak]
         actualLossStreak = user[:loss_streak]
+        actualWinStreakMax = user[:win_streak_max]
+        actualLossStreakMax = user[:loss_streak_max]
       else
         actualScore = user[:score_network]
         actualWins = user[:wins_network]
         actualLosses = user[:losses_network]
         actualWinStreak = user[:win_streak_network]
         actualLossStreak = user[:loss_streak_network]
+        actualWinStreakMax = user[:win_streak_max_network]
+        actualLossStreakMax = user[:loss_streak_max_network]
       end
       rankingsHash = {
         :facebook_id => user[:facebook_id],
         :full_name => user.profile[:full_name],
+        :first_name => user.profile[:first_name],
+        :last_name => user.profile[:last_name],
         :score => actualScore,
         :wins => actualWins,
         :losses => actualLosses,
         :win_streak => actualWinStreak,
         :loss_streak => actualLossStreak,
+        :win_streak_max => actualWinStreakMax,
+        :loss_streak_max => actualLossStreakMax,
         :rank => rank + 1
       }
       rankings << rankingsHash

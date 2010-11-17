@@ -6,6 +6,12 @@ class User < ActiveRecord::Base
   has_many :school, :foreign_key => 'facebook_id', :primary_key => 'facebook_id'
   has_many :result, :foreign_key => 'facebook_id', :primary_key => 'facebook_id'
   
+  # When migrating new default values, it doesnt zero it out for some reason
+  #
+  # User.all.each do |u| u.update_attributes(:score_network => 1500, :wins_network => 0, :losses_network => 0, :win_streak_network => 0, :loss_streak_network => 0) end
+  # User.all.each do |u| u.update_attributes(:win_streak_max => 0, :loss_streak_max => 0, :win_streak_max_network => 0, :loss_streak_max_network => 0) end
+  #
+  
   def reloadMyGender
     # Console Cmd:
     # User.all(:conditons=>'gender IS NULL',:include=>:profile).each do |u| u.delay.reloadMyGender end
