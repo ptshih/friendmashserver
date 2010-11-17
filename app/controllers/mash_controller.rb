@@ -71,9 +71,9 @@ class MashController < ApplicationController
     # p randomUser
     if not randomUser.nil?
       if params[:mode] == "0"
-        opponent = findOpponentForUser(randomUser.score, params[:gender], randomUser.facebook_id, recentIds, networkIds)
+        opponent = find_opponent(randomUser.score, params[:gender], randomUser.facebook_id, recentIds, networkIds)
       else
-        opponent = findOpponentForUser(randomUser.score_network, params[:gender], randomUser.facebook_id, recentIds, networkIds)
+        opponent = find_opponent(randomUser.score_network, params[:gender], randomUser.facebook_id, recentIds, networkIds)
       end
       
       if not opponent.nil?
@@ -100,7 +100,7 @@ class MashController < ApplicationController
     end
   end
   
-  def findOpponentForUser(desiredScore, gender, currentId = nil, recentIds = nil, networkIds = nil)
+  def find_opponent(desiredScore, gender, currentId = nil, recentIds = nil, networkIds = nil)
     # First hit the DB with a CSV of excluded IDs and a match_score +/- match_range
     # Fetch an array of valid IDs from DB who match the +/- range from the current user's score
     # Perform a binary search on the array to find the best possible opponent
@@ -108,7 +108,9 @@ class MashController < ApplicationController
     
     # In the future range should be dynamically calculated based on normal distribution of desired score
     # range = calculateRange(desiredScore)
-    range = calculateRange(desiredScore)
+    scoreRange = calculate_range(desiredScore)
+    low = scoreRange[0]
+    high = scoreRange[1]
     
     if Rails.env == "production"
       randQuery = 'RANDOM()'
@@ -118,38 +120,23 @@ class MashController < ApplicationController
     
     if recentIds.nil?
       if networkIds.nil?
-        bucket = User.all(:conditions=>"score >= (#{desiredScore} - #{range}) AND score <= (#{desiredScore} + #{range}) AND gender = '#{gender}' AND facebook_id != '#{currentId}'",:order=>randQuery,:select =>"facebook_id, score")
+        bucket = User.all(:conditions=>"score > #{low} AND score <= #{high} AND gender = '#{gender}' AND facebook_id != '#{currentId}'",:order=>randQuery,:select =>"facebook_id".:limit=>1)
         # bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }], :order => randQuery).select("facebook_id, score")
       else
-        bucket = User.all(:conditions=>"score_network >= (#{desiredScore} - #{range}) AND score_network <= (#{desiredScore} + #{range}) AND gender = '#{gender}' AND facebook_id IN (#{networkIds}) AND facebook_id != '#{currentId}'",:order=>randQuery,:select =>"facebook_id, score_network")
+        bucket = User.all(:conditions=>"score_network > #{low} AND score_network <= #{high} AND gender = '#{gender}' AND facebook_id IN (#{networkIds}) AND facebook_id != '#{currentId}'",:order=>"score_network desc",:select =>"facebook_id",:limit=>1)
         # bucket = User.where(["score_network >= :lowScore AND score_network <= :highScore AND gender = :gender AND facebook_id != :currentId AND facebook_id IN (#{networkIds})", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score_network")
       end
     else
       if networkIds.nil?
-        bucket = User.all(:conditions=>"score >= (#{desiredScore} - #{range}) AND score <= (#{desiredScore} + #{range}) AND gender = '#{gender}' AND facebook_id NOT IN (#{recentIds}) AND facebook_id != '#{currentId}'",:order=>randQuery,:select =>"facebook_id, score")
+        bucket = User.all(:conditions=>"score > #{low} AND score <= #{high} AND gender = '#{gender}' AND facebook_id NOT IN (#{recentIds}) AND facebook_id != '#{currentId}'",:order=>"score desc",:select =>"facebook_id",:limit=>1)
         # bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id NOT IN (#{recentIds}) AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score")
       else
-        bucket = User.all(:conditions=>"score_network >= (#{desiredScore} - #{range}) AND score_network <= (#{desiredScore} + #{range}) AND gender = '#{gender}' AND facebook_id NOT IN (#{recentIds}) AND facebook_id IN (#{networkIds}) AND facebook_id != '#{currentId}'",:order=>randQuery,:select =>"facebook_id, score_network")
+        bucket = User.all(:conditions=>"score_network > #{low} AND score_network <= #{high} AND gender = '#{gender}' AND facebook_id NOT IN (#{recentIds}) AND facebook_id IN (#{networkIds}) AND facebook_id != '#{currentId}'",:order=>"score_network desc",:select =>"facebook_id",:limit=>1)
         # bucket = User.where(["score_network >= :lowScore AND score_network <= :highScore AND gender = :gender AND facebook_id NOT IN (#{recentIds}) AND facebook_id IN (#{networkIds}) AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score_network")
       end
     end
-    
-    if networkIds.nil?
-      mode = "0"
-    else
-      mode = "1"
-    end
-    
-    if bucket.length > 0
-      opponentIndex = binarySearch(bucket, desiredScore, 0, bucket.length - 1, mode)
-      opponent = bucket[opponentIndex]
-    else
-      return nil # no opponent found
-    end
-    
-    # puts opponent
-    
-    return opponent
+  
+    return bucket[0]
   end
   
   def serve_ad
@@ -188,7 +175,7 @@ class MashController < ApplicationController
     
     recentIds = '\''+params[:recents].split(',').join('\',\'')+'\''
     
-    opponent = findOpponentForUser(user.score, params[:gender], params[:id], recentIds, nil)
+    opponent = find_opponent(user.score, params[:gender], params[:id], recentIds, nil)
     
     # puts opponent.facebook_id
     respond_to do |format|
@@ -529,47 +516,34 @@ end
     expected = 1.0 / (1.0 + exponent)
     return expected
   end
-     
-  def binarySearch(array, value, low, high, mode = "0")
-    if high < low
-      return -1 # not found
-    end
-    
-    mid = low + ((high - low) / 2).to_i
-    
-    if mode == "0"
-      low_score = array[low].score
-      high_score = array[high].score
-      mid_score = array[mid].score
-    else
-      low_score = array[low].score_network
-      high_score = array[high].score_network
-      mid_score = array[mid].score_network
-    end
-    
-    if low_score == high_score
-      puts rand(range_rand(low,high)).to_i
-      return rand(range_rand(low,high)).to_i
-    elsif mid_score > value
-      return binarySearch(array, value, low, mid - 1, mode)
-    elsif mid_score < value
-      return binarySearch(array, value, mid + 1, high, mode)
-    else
-      puts mid
-      return mid
-    end
-  end
   
-  def range_rand(min,max)
-    min + rand(max-min)
-  end
-  
-  def calculateRange(score)
-    # Pass in a desired score in which we want to find approximately 100~1000 people who are within +/- range
-    # Calculate optimal +/- range based on SQL table stats assuming our scores are of normal distribution
-    # We might have to perform a SQL table stats query every now and then to update the distribution
-    # This will restrict the number of results that come back to optimize the binarySearch on the result set
-    return 500 # return 500 for now
+  def calculate_range(score)
+    # Pass in a desired score
+    # We break up the buckets into 10 ranges
+    # Based on the score, we then return the desired range back to the SQL query
+    
+    # Elo Range
+    # 600 <-> 2400
+    # 0 ~ 3000 (absolute min/max)    
+    
+    ranges = [0, 1145, 1263, 1352, 1429, 1500, 1571, 1648, 1735, 1855, 3000]
+    found = 0
+    
+    ranges.each_with_index do |r,i|
+      if score > r
+        next # keep going
+      else
+        found = 1
+        low = i - 1
+        high = i
+        break if found == 1
+      end
+    end
+    
+
+    scoreRange = [ranges[low],ranges[high]]
+    p scoreRange
+    return scoreRange
   end
   
   # takes a gzipped string and deflates it
