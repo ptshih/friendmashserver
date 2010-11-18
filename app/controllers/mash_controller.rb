@@ -11,6 +11,7 @@
 
 class MashController < ApplicationController
   require 'process_friends'
+  require 'generate_result'
   
   def random
     # Find two random people who have similar scores
@@ -338,15 +339,17 @@ end
     
     # Insert a NEW record into Result table to keep track of the fight
     # If left is true, that means left side was DISCARDED
-    Result.create(
-      :facebook_id => params[:id],
-      :winner_id => params[:w],
-      :loser_id => params[:l],
-      :left => params[:left],
-      :mode => params[:mode],
-      :winner_score => winner[:score],
-      :loser_score => loser[:score]
-    )
+    Delayed::Job.enqueue GenerateResult.new(params, winner, loser)
+    
+    # Result.create(
+    #   :facebook_id => params[:id],
+    #   :winner_id => params[:w],
+    #   :loser_id => params[:l],
+    #   :left => params[:left],
+    #   :mode => params[:mode],
+    #   :winner_score => winner[:score],
+    #   :loser_score => loser[:score]
+    # )
     
     # Result.new do |r|
     #   r.facebook_id = params[:id]
