@@ -58,16 +58,16 @@ class MashController < ApplicationController
     if params[:recents].length == 0
       recentIds = nil
       if networkIds.nil?
-        randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id != '#{params[:id]}'",:order=>randQuery,:limit=>1,:include=>[:profile])[0]
+        randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id != '#{params[:id]}'",:order=>randQuery,:limit=>1)[0]
       else
-        randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id != '#{params[:id]}' AND facebook_id IN (#{networkIds})",:order=>randQuery,:limit=>1,:include=>[:profile])[0]
+        randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id != '#{params[:id]}' AND facebook_id IN (#{networkIds})",:order=>randQuery,:limit=>1)[0]
       end
     else
       recentIds = '\'' + params[:recents].split(',').join('\',\'')+'\'' 
       if networkIds.nil?
-        randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id != '#{params[:id]}' AND facebook_id NOT IN (#{recentIds})",:order=>randQuery,:limit=>1,:include=>[:profile])[0]
+        randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id != '#{params[:id]}' AND facebook_id NOT IN (#{recentIds})",:order=>randQuery,:limit=>1)[0]
       else
-        randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id != '#{params[:id]}' AND facebook_id NOT IN (#{recentIds}) AND facebook_id IN (#{networkIds})",:order=>randQuery,:limit=>1,:include=>[:profile])[0]
+        randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id != '#{params[:id]}' AND facebook_id NOT IN (#{recentIds}) AND facebook_id IN (#{networkIds})",:order=>randQuery,:limit=>1)[0]
       end
     end
     
