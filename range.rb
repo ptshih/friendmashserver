@@ -25,32 +25,22 @@ def distinct_range
   puts ranges[high]
 end
 
-def bounds(userScore, pop, popAverage, popSD, sampleSize, upperOrLower)
-  k = (upperOrLower ? (1 * (sampleSize / pop)) : (-1 * (sampleSize / pop)))
+def bounds(userScore, pop, popAverage, popSD, sampleSize)
+  # k = (upperOrLower ? (1 * (sampleSize / pop)) : (-1 * (sampleSize / pop)))
   
-  array_returns = (600..2400).map { |i|
-    (k + Math.erf((userScore-popAverage)/(popSD**0.5)) - Math.erf((i-popAverage)/(popSD**0.5))).abs
+  k_low = (-1 * (sampleSize / pop))
+  k_high = (1 * (sampleSize / pop))
+  
+  array_returns_low = (600..2400).map { |i|
+    (k_low + Math.erf((userScore-popAverage)/(popSD*(2.0**0.5))) - Math.erf((i-popAverage)/(popSD*(2.0**0.5)))).abs
+  }
+  
+  array_returns_high = (600..2400).map { |i|
+    (k_high + Math.erf((userScore-popAverage)/(popSD*(2.0**0.5))) - Math.erf((i-popAverage)/(popSD*(2.0**0.5)))).abs
   }
 
-  # return array_returns.min.round
-  return (600..2400).map[array_returns.min.round]
+  return [(600..2400).map[array_returns_low.index(array_returns_low.min)], (600..2400).map[array_returns_high.index(array_returns_high.min)]]
 end
 
-def factorial(n)
- if n == 0
-   1
- else
-   n * factorial(n-1)
- end
-end
+puts bounds(1500.0, 1500.0, 1500.0, 282.0, 278.0)
 
-puts bounds(1600, 1000000, 1500, 224, 1000, true)
-
-
-puts Math.erf(46.77)
-
-x = Math.erf(46.77071732559853)
-
-puts sprintf "%.10f", 46.77071732559853
-
-puts Math::PI

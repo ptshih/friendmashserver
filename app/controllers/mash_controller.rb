@@ -113,9 +113,26 @@ class MashController < ApplicationController
     
     # In the future range should be dynamically calculated based on normal distribution of desired score
     # range = calculateRange(desiredScore)
-    scoreRange = calculate_range(desiredScore)
-    low = scoreRange[0]
-    high = scoreRange[1]
+    
+    # using new formula
+    # scoreRange = calculate_range(desiredScore)
+    # low = scoreRange[0]
+    # high = scoreRange[1]
+    
+    # USE NEW DYNAMIC RANGE CALC
+    # def calculate_bounds(userScore, pop, popAverage, popSD, sampleSize)
+    # userScore = score used to find range
+    # pop = total population
+    # popAverage = average score of total population
+    # popSD = standard deviation of total population scores
+    # sampleSize = how many results we want inside our bounds
+    
+    # We need to calculate POP, POPAVERAGE, and POPSD from the DB, not everytime
+    # Probably calculate it once a day/hour/etc... and store it in a static table/cache
+    
+    bounds = calculate_bounds(desiredScore, 3000.0, 1500.0, 282.0, 1000.0)
+    low = bounds[0]
+    high = bounds[1]
     
     if Rails.env == "production"
       randQuery = 'RANDOM()'
@@ -562,6 +579,23 @@ end
     scoreRange = [ranges[low],ranges[high]]
     p scoreRange
     return scoreRange
+  end
+  
+  def calculate_bounds(userScore, pop, popAverage, popSD, sampleSize)
+    # returns an array [low, high]
+    
+    k_low = (-1 * (sampleSize / pop))
+    k_high = (1 * (sampleSize / pop))
+
+    array_returns_low = (600..2400).map { |i|
+      (k_low + Math.erf((userScore-popAverage)/(popSD*(2.0**0.5))) - Math.erf((i-popAverage)/(popSD*(2.0**0.5)))).abs
+    }
+
+    array_returns_high = (600..2400).map { |i|
+      (k_high + Math.erf((userScore-popAverage)/(popSD*(2.0**0.5))) - Math.erf((i-popAverage)/(popSD*(2.0**0.5)))).abs
+    }
+
+    return [(600..2400).map[array_returns_low.index(array_returns_low.min)], (600..2400).map[array_returns_high.index(array_returns_high.min)]]
   end
   
   # takes a gzipped string and deflates it
