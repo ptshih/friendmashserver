@@ -335,11 +335,14 @@ end
     winner = User.find_by_facebook_id(params[:w])
     loser  = User.find_by_facebook_id(params[:l])
     
+    winnerBeforeScore = winner[:score]
+    loserBeforeScore = loser[:score]
+    
     adjustScoresForUsers(winner, loser, params[:mode])
     
     # Insert a NEW record into Result table to keep track of the fight
     # If left is true, that means left side was DISCARDED
-    Delayed::Job.enqueue GenerateResult.new(params, winner, loser)
+    Delayed::Job.enqueue GenerateResult.new(params[:id], params[:w], params[:l], params[:left], params[:mode], winnerBeforeScore, loserBeforeScore)
     
     # Result.create(
     #   :facebook_id => params[:id],
