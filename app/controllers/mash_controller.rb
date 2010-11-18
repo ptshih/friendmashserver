@@ -111,10 +111,7 @@ class MashController < ApplicationController
     # Perform a binary search on the array to find the best possible opponent
     # Return a single opponent
     
-    # In the future range should be dynamically calculated based on normal distribution of desired score
-    # range = calculateRange(desiredScore)
-    
-    # using new formula
+    # OLD RANGE CALC FORMULA
     # scoreRange = calculate_range(desiredScore)
     # low = scoreRange[0]
     # high = scoreRange[1]
@@ -130,7 +127,11 @@ class MashController < ApplicationController
     # We need to calculate POP, POPAVERAGE, and POPSD from the DB, not everytime
     # Probably calculate it once a day/hour/etc... and store it in a static table/cache
     
-    bounds = calculate_bounds(desiredScore, 3000.0, 1500.0, 282.0, 1000.0)
+    # for now lets calculate the count on every request
+    # female = 903
+    # male = 1420
+    
+    bounds = calculate_bounds(desiredScore, 900.0, 1500.0, 282.0, 1000.0)
     low = bounds[0]
     high = bounds[1]
     
