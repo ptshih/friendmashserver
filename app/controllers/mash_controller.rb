@@ -112,9 +112,9 @@ class MashController < ApplicationController
     # Return a single opponent
     
     # OLD RANGE CALC FORMULA
-    # scoreRange = calculate_range(desiredScore)
-    # low = scoreRange[0]
-    # high = scoreRange[1]
+    scoreRange = calculate_range(desiredScore)
+    low = scoreRange[0]
+    high = scoreRange[1]
     
     # USE NEW DYNAMIC RANGE CALC
     # def calculate_bounds(userScore, pop, popAverage, popSD, sampleSize)
@@ -131,9 +131,9 @@ class MashController < ApplicationController
     # female = 903
     # male = 1420
     
-    bounds = calculate_bounds(desiredScore, 900.0, 1500.0, 282.0, 1000.0)
-    low = bounds[0]
-    high = bounds[1]
+    # bounds = calculate_bounds(desiredScore, 900.0, 1500.0, 282.0, 1000.0)
+    # low = bounds[0]
+    # high = bounds[1]
     
     if Rails.env == "production"
       randQuery = 'RANDOM()'
