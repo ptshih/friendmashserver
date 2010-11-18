@@ -1,10 +1,8 @@
 #!/bin/bash
 #
-MSG=$1
-: ${MSG:="quick deploy to heroku"}
 
-echo "Deploying to Heroku with commit msg: $MSG"
+# echo "Deploying to Heroku with commit msg: $MSG"
 
 git add .;
-git commit -m '$MSG';
+git commit -m 'Quick desploy to Heroku';
 time git push heroku master --force;

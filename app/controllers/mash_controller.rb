@@ -112,9 +112,9 @@ class MashController < ApplicationController
     # Return a single opponent
     
     # OLD RANGE CALC FORMULA
-    scoreRange = calculate_range(desiredScore)
-    low = scoreRange[0]
-    high = scoreRange[1]
+    # scoreRange = calculate_range(desiredScore)
+    # low = scoreRange[0]
+    # high = scoreRange[1]
     
     # USE NEW DYNAMIC RANGE CALC
     # def calculate_bounds(userScore, pop, popAverage, popSD, sampleSize)
@@ -131,9 +131,11 @@ class MashController < ApplicationController
     # female = 903
     # male = 1420
     
-    # bounds = calculate_bounds(desiredScore, 900.0, 1500.0, 282.0, 1000.0)
-    # low = bounds[0]
-    # high = bounds[1]
+    
+    
+    bounds = calculate_bounds(desiredScore, 900.0, 1500.0, 282.0, 500.0)
+    low = bounds[0]
+    high = bounds[1]
     
     if Rails.env == "production"
       randQuery = 'RANDOM()'
@@ -146,15 +148,15 @@ class MashController < ApplicationController
         bucket = User.all(:conditions=>"score > #{low} AND score <= #{high} AND gender = '#{gender}' AND facebook_id != '#{currentId}'",:order=>randQuery,:select =>"facebook_id",:limit=>1)
         # bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }], :order => randQuery).select("facebook_id, score")
       else
-        bucket = User.all(:conditions=>"score_network > #{low} AND score_network <= #{high} AND gender = '#{gender}' AND facebook_id IN (#{networkIds}) AND facebook_id != '#{currentId}'",:order=>"score_network desc",:select =>"facebook_id",:limit=>1)
+        bucket = User.all(:conditions=>"score_network > #{low} AND score_network <= #{high} AND gender = '#{gender}' AND facebook_id IN (#{networkIds}) AND facebook_id != '#{currentId}'",:order=>randQuery,:select =>"facebook_id",:limit=>1)
         # bucket = User.where(["score_network >= :lowScore AND score_network <= :highScore AND gender = :gender AND facebook_id != :currentId AND facebook_id IN (#{networkIds})", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score_network")
       end
     else
       if networkIds.nil?
-        bucket = User.all(:conditions=>"score > #{low} AND score <= #{high} AND gender = '#{gender}' AND facebook_id NOT IN (#{recentIds}) AND facebook_id != '#{currentId}'",:order=>"score desc",:select =>"facebook_id",:limit=>1)
+        bucket = User.all(:conditions=>"score > #{low} AND score <= #{high} AND gender = '#{gender}' AND facebook_id NOT IN (#{recentIds}) AND facebook_id != '#{currentId}'",:order=>randQuery,:select =>"facebook_id",:limit=>1)
         # bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id NOT IN (#{recentIds}) AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score")
       else
-        bucket = User.all(:conditions=>"score_network > #{low} AND score_network <= #{high} AND gender = '#{gender}' AND facebook_id NOT IN (#{recentIds}) AND facebook_id IN (#{networkIds}) AND facebook_id != '#{currentId}'",:order=>"score_network desc",:select =>"facebook_id",:limit=>1)
+        bucket = User.all(:conditions=>"score_network > #{low} AND score_network <= #{high} AND gender = '#{gender}' AND facebook_id NOT IN (#{recentIds}) AND facebook_id IN (#{networkIds}) AND facebook_id != '#{currentId}'",:order=>randQuery,:select =>"facebook_id",:limit=>1)
         # bucket = User.where(["score_network >= :lowScore AND score_network <= :highScore AND gender = :gender AND facebook_id NOT IN (#{recentIds}) AND facebook_id IN (#{networkIds}) AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score_network")
       end
     end
@@ -336,16 +338,26 @@ end
     
     # Insert a NEW record into Result table to keep track of the fight
     # If left is true, that means left side was DISCARDED
-    Result.new do |r|
-      r.facebook_id = params[:id]
-      r.winner_id = params[:w]
-      r.loser_id = params[:l]
-      r.left = params[:left]
-      r.mode = params[:mode]
-      r.winner_score = winner[:score]
-      r.loser_score = loser[:score]
-      r.save
-    end
+    Result.create(
+      :facebook_id => params[:id],
+      :winner_id => params[:w],
+      :loser_id => params[:l],
+      :left => params[:left],
+      :mode => params[:mode],
+      :winner_score => winner[:score],
+      :loser_score => loser[:score]
+    )
+    
+    # Result.new do |r|
+    #   r.facebook_id = params[:id]
+    #   r.winner_id = params[:w]
+    #   r.loser_id = params[:l]
+    #   r.left = params[:left]
+    #   r.mode = params[:mode]
+    #   r.winner_score = winner[:score]
+    #   r.loser_score = loser[:score]
+    #   r.save
+    # end
     
     respond_to do |format|
       format.html # index.html.erb
@@ -490,53 +502,85 @@ end
   # Calculations
 
   def adjustScoresForUsers(winner, loser, mode = 0)
-    winnerExpected = expectedOutcome(winner, loser, mode)
-    loserExpected = expectedOutcome(loser, winner, mode)
+    winnerExpected = expected_outcome(winner, loser, mode)
+    loserExpected = expected_outcome(loser, winner, mode)
     
     if mode == "0"
       # Adjust the winner score
-      winner.update_attributes(:wins => winner[:wins] + 1)
-      winner.update_attributes(:win_streak => winner[:win_streak] + 1)
-      winner.update_attributes(:loss_streak => 0)
-      winner.update_attributes(:score => winner[:score] + (32 * (1 - winnerExpected)))
+      winner.update_attributes(
+        :wins => winner[:wins] + 1,
+        :win_streak => winner[:win_streak] + 1,
+        :loss_streak => 0,
+        :score => winner[:score] + (32 * (1 - winnerExpected)),
+        :win_streak_max => winner[:win_streak] > winner[:win_streak_max] ? winner[:win_streak] : winner[:win_streak_max]
+      )
       
-      if winner[:win_streak] > winner[:win_streak_max]
-        winner.update_attributes(:win_streak_max => winner[:win_streak])
-      end
+      # winner.update_attributes(:wins => winner[:wins] + 1)
+      # winner.update_attributes(:win_streak => winner[:win_streak] + 1)
+      # winner.update_attributes(:loss_streak => 0)
+      # winner.update_attributes(:score => winner[:score] + (32 * (1 - winnerExpected)))
+      
+      # if winner[:win_streak] > winner[:win_streak_max]
+      #   winner.update_attributes(:win_streak_max => winner[:win_streak])
+      # end
 
       # Adjust the loser score
-      loser.update_attributes(:losses => loser[:losses] + 1)
-      loser.update_attributes(:loss_streak => loser[:loss_streak] + 1)
-      loser.update_attributes(:win_streak => 0)
-      loser.update_attributes(:score => loser[:score] + (32 * (0 - loserExpected)))
+      loser.update_attributes(
+        :losses => loser[:losses] + 1,
+        :loss_streak => loser[:loss_streak] + 1,
+        :win_streak => 0,
+        :score => loser[:score] + (32 * (0 - loserExpected)),
+        :loss_streak_max => loser[:loss_streak] > loser[:loss_streak_max] ? loser[:loss_streak] : loser[:loss_streak_max]
+      )
       
-      if loser[:loss_streak] > loser[:loss_streak_max]
-        loser.update_attributes(:loss_streak_max => loser[:loss_streak])
-      end
+      # loser.update_attributes(:losses => loser[:losses] + 1)
+      # loser.update_attributes(:loss_streak => loser[:loss_streak] + 1)
+      # loser.update_attributes(:win_streak => 0)
+      # loser.update_attributes(:score => loser[:score] + (32 * (0 - loserExpected)))
+      # 
+      # if loser[:loss_streak] > loser[:loss_streak_max]
+      #   loser.update_attributes(:loss_streak_max => loser[:loss_streak])
+      # end
     else
       # Adjust the winner score
-      winner.update_attributes(:wins_network => winner[:wins_network] + 1)
-      winner.update_attributes(:win_streak_network => winner[:win_streak_network] + 1)
-      winner.update_attributes(:loss_streak_network => 0)
-      winner.update_attributes(:score_network => winner[:score_network] + (32 * (1 - winnerExpected)))
+      winner.update_attributes(
+        :wins_network => winner[:wins_network] + 1,
+        :win_streak_network => winner[:win_streak_network] + 1,
+        :loss_streak_network => 0,
+        :score_network => winner[:score_network] + (32 * (1 - winnerExpected)),
+        :win_streak_max_network => winner[:win_streak_network] > winner[:win_streak_max_network] ? winner[:win_streak_network] : winner[:win_streak_max_network]
+      )
       
-      if winner[:win_streak_network] > winner[:win_streak_max_network]
-        winner.update_attributes(:win_streak_max_network => winner[:win_streak_network])
-      end
+      # winner.update_attributes(:wins_network => winner[:wins_network] + 1)
+      # winner.update_attributes(:win_streak_network => winner[:win_streak_network] + 1)
+      # winner.update_attributes(:loss_streak_network => 0)
+      # winner.update_attributes(:score_network => winner[:score_network] + (32 * (1 - winnerExpected)))
+      # 
+      # if winner[:win_streak_network] > winner[:win_streak_max_network]
+      #   winner.update_attributes(:win_streak_max_network => winner[:win_streak_network])
+      # end
 
       # Adjust the loser score
-      loser.update_attributes(:losses_network => loser[:losses_network] + 1)
-      loser.update_attributes(:loss_streak_network => loser[:loss_streak_network] + 1)
-      loser.update_attributes(:win_streak_network => 0)
-      loser.update_attributes(:score_network => loser[:score_network] + (32 * (0 - loserExpected)))
+      loser.update_attributes(
+        :losses_network => loser[:losses_network] + 1,
+        :loss_streak_network => loser[:loss_streak_network] + 1,
+        :win_streak_network => 0,
+        :score_network => loser[:score_network] + (32 * (0 - loserExpected)),
+        :loss_streak_max_network => loser[:loss_streak_network] > loser[:loss_streak_max_network] ? loser[:loss_streak_network] : loser[:loss_streak_max_network]
+      )
       
-      if loser[:loss_streak_network] > loser[:loss_streak_max_network]
-        loser.update_attributes(:loss_streak_max_network => loser[:loss_streak_network])
-      end
+      # loser.update_attributes(:losses_network => loser[:losses_network] + 1)
+      # loser.update_attributes(:loss_streak_network => loser[:loss_streak_network] + 1)
+      # loser.update_attributes(:win_streak_network => 0)
+      # loser.update_attributes(:score_network => loser[:score_network] + (32 * (0 - loserExpected)))
+      # 
+      # if loser[:loss_streak_network] > loser[:loss_streak_max_network]
+      #   loser.update_attributes(:loss_streak_max_network => loser[:loss_streak_network])
+      # end
     end
   end
   
-  def expectedOutcome(user, opponent, mode = 0)
+  def expected_outcome(user, opponent, mode = 0)
     if mode == "0"
       user_score = user[:score]
       opponent_score = opponent[:score]
@@ -552,6 +596,9 @@ end
   end
   
   def calculate_range(score)
+    # DEPRECATED
+    # SEE calculate_bounds
+    
     # Pass in a desired score
     # We break up the buckets into 10 ranges
     # Based on the score, we then return the desired range back to the SQL query
@@ -588,15 +635,15 @@ end
     k_low = (-1 * (sampleSize / pop))
     k_high = (1 * (sampleSize / pop))
 
-    array_returns_low = (600..2400).map { |i|
+    array_returns_low = (600..userScore).map { |i|
       (k_low + Math.erf((userScore-popAverage)/(popSD*(2.0**0.5))) - Math.erf((i-popAverage)/(popSD*(2.0**0.5)))).abs
     }
 
-    array_returns_high = (600..2400).map { |i|
+    array_returns_high = (userScore..2400).map { |i|
       (k_high + Math.erf((userScore-popAverage)/(popSD*(2.0**0.5))) - Math.erf((i-popAverage)/(popSD*(2.0**0.5)))).abs
     }
 
-    return [(600..2400).map[array_returns_low.index(array_returns_low.min)], (600..2400).map[array_returns_high.index(array_returns_high.min)]]
+    return [(600..userScore).map[array_returns_low.index(array_returns_low.min)], (userScore..2400).map[array_returns_high.index(array_returns_high.min)]]
   end
   
   # takes a gzipped string and deflates it
