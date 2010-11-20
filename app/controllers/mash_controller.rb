@@ -50,7 +50,7 @@ class MashController < ApplicationController
     # MySQL uses RAND, SQLLite uses RANDOM
     # Apparently MySQL-RDS has to use RAND() but PostgreSQL and SQLite use RANDOM()
     if Rails.env == "production"
-      randQuery = 'RANDOM()'
+      randQuery = 'RAND()'
     else
       randQuery = 'RANDOM()'
     end
@@ -139,7 +139,7 @@ class MashController < ApplicationController
     high = bounds[1]
     
     if Rails.env == "production"
-      randQuery = 'RANDOM()'
+      randQuery = 'RAND()'
     else
       randQuery = 'RANDOM()'
     end
