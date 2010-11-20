@@ -10,9 +10,9 @@ gem 'json'
 
 # gem 'logworm_client'
 
-# group :production do
-#   gem 'mysql', '2.8.1'
-# end
+group :production do
+  gem 'mysql', '2.8.1'
+end
 
 # Bundle edge Rails instead:
 # gem 'rails', :git => 'git://github.com/rails/rails.git'
