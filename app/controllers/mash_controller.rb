@@ -432,7 +432,7 @@ end
       count = params[:count]
     end
     
-    topPlayers = Profile.all(:order=>"votes desc",:limit=>99)
+    topPlayers = Profile.all(:conditions=>"votes > 0",:order=>"votes desc",:limit=>99)
     
     rankings = []
     
