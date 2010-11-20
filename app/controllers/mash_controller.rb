@@ -414,6 +414,49 @@ end
     end
   end
   
+  def topplayers
+    Rails.logger.info request.query_parameters.inspect
+    
+    if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
+      respond_to do |format|
+        format.html # index.html.erb
+        format.xml  { render :xml => {:error => "access denied"} }
+        format.json  { render :json => {:error => "access denied"} }
+      end
+      return nil
+    end
+    
+    if params[:count].nil?
+      count = 99
+    else
+      count = params[:count]
+    end
+    
+    topPlayers = Profile.all(:order=>"votes desc",:limit=>99)
+    
+    rankings = []
+    
+    topPlayers.each_with_index do |profile,rank|
+      rankingsHash = {
+        :facebook_id => profile[:facebook_id],
+        :full_name => profile[:full_name],
+        :first_name => profile[:first_name],
+        :last_name => profile[:last_name],
+        :votes => profile[:votes],
+        :votes_network => profile[:votes_network],
+        :rank => rank + 1
+      }
+      rankings << rankingsHash
+    end
+    
+    respond_to do |format|
+      format.html # index.html.erb
+      format.xml  { render :xml => rankings }
+      format.json  { render :json => rankings }
+    end
+    
+  end
+  
   def rankings
     # return a list of top 25 in each category
     # expects parameters
@@ -433,7 +476,7 @@ end
     end
     
     if params[:count].nil?
-      count = 25
+      count = 99
     else
       count = params[:count]
     end
