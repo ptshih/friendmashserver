@@ -48,5 +48,7 @@ Facemash::Application.configure do
   config.active_support.deprecation = :notify
   
   config.action_controller.logger = Logger.new(STDOUT)
+  
+  config.cache_store = :dalli_store
 
 end

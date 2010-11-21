@@ -32,6 +32,7 @@ GEM
       activesupport (~> 3.0.0)
     builder (2.1.2)
     daemons (1.1.0)
+    dalli (0.11.2)
     delayed_job (2.1.0.pre2)
       activesupport (~> 3.0)
       daemons
@@ -77,6 +78,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  dalli
   delayed_job (= 2.1.0.pre2)
   httpclient
   json

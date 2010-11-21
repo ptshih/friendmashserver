@@ -8,6 +8,8 @@ gem 'httpclient'
 
 gem 'json'
 
+gem 'dalli'
+
 # gem 'logworm_client'
 
 group :production do
