@@ -8,9 +8,6 @@ Facemash::Application.routes.draw do
   resources :profiles
 
   resources :users
-  
-  match '/privacy',  :to => 'privacy#index'
-  match '/terms', :to => 'terms#index'
 
   # The priority is based upon order of creation:
   # first created -> highest priority.
