@@ -5,4 +5,4 @@
 
 git add .;
 git commit -m 'Quick desploy to Heroku';
-time git push heroku master --force;
+time git push production master --force;

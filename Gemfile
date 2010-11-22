@@ -10,6 +10,8 @@ gem 'json'
 
 gem 'dalli'
 
+gem 'hoptoad_notifier'
+
 # gem 'logworm_client'
 
 group :production do
