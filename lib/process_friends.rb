@@ -34,10 +34,20 @@ class ProcessFriends < Struct.new(:facebookId)
     # Generate first degree network for this user
     generate_network(facebook_id, friendIdArray, degree)
 
-
-    # self.send_later(:generateSecondDegreeNetworkForUser, params[:id])
-
+    # Calculate the 2nd degree network table for the newly created user
     Delayed::Job.enqueue GenerateSecondDegree.new(facebook_id)
+  
+    # Whenever a new user is created or friends list is processed
+    # We should re-calculate the 2nd degree network table 
+    # for all people who have logged in before (token table) who are friends of this new user
+    # 
+    # Token.select('facebook_id').where("facebook_id IN ('548430564','1217270')").map do |x| x.facebook_id end
+    friendIdString = "\'" + friendIdArray.split(',').join("\',\'") + "\'"
+    tokenIdArray = Token.select('facebook_id').where("facebook_id IN (#{friendIdString})").map do |u| u.facebook_id end
+    
+    tokenIdArray.each do |tokenId|
+      Delayed::Job.enqueue GenerateSecondDegree.new(tokenId)
+    end
   end
   
   def create_user(fbUser)
