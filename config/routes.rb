@@ -1,14 +1,26 @@
 Facemash::Application.routes.draw do
-  resources :names
-
-  resources :tokens
-
-  resources :networks
-
-  resources :profiles
-
-  resources :users
-
+  # resources :names
+  # 
+  # resources :tokens
+  # 
+  # resources :networks
+  # 
+  # resources :profiles
+  # 
+  # resources :users
+  
+  match 'mash/random/:id' => 'mash#random', :via => :get
+  
+  match 'mash/token/:id' => 'mash#token', :via => :post
+  
+  match 'mash/result/:id' => 'mash#result', :via => :get
+  
+  match 'mash/profile/:id' => 'mash#profile', :via => :get
+  
+  match 'mash/topplayers/:id' => 'mash#topplayers', :via => :get
+  
+  match 'mash/rankings/:id' => 'mash#rankings', :via => :get
+  
   # The priority is based upon order of creation:
   # first created -> highest priority.
 
@@ -64,5 +76,5 @@ Facemash::Application.routes.draw do
 
   # This is a legacy wild controller route that's not recommended for RESTful applications.
   # Note: This route will make all actions in every controller accessible via GET requests.
-  match ':controller(/:action(/:id(.:format)))'
+  # match ':controller(/:action(/:id(.:format)))'
 end
