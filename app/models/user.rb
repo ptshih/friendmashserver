@@ -14,24 +14,40 @@ class User < ActiveRecord::Base
   
   def reloadMyGender
     # Console Cmd:
-    # User.all(:conditons=>'gender IS NULL',:include=>:profile).each do |u| u.delay.reloadMyGender end
+    # User.all(:conditions=>'gender IS NULL',:include=>:profile).each do |u| u.reloadMyGender end
     
     # return if self.profile.nil? || self.profile[:first_name].nil?
     begin
       return nil if not self[:gender].nil? # don't perform if gender already exists
-      firstname = self.profile[:first_name].split(' ')[0]
-      html = HTTPClient.new.get_content("http://www.gpeters.com/names/baby-names.php?name=#{firstname}&button=Go")
-      if html.include?("It's a boy")
-        puts "found a boy! #{firstname}"
-        self.update_attribute('gender','male')
-      elsif html.include?("It's a girl")
-        puts "found a girl! #{firstname}"
-        self.update_attribute('gender','female')
+      firstname = self.profile[:first_name].split(' ')[0].downcase
+      
+      result = Name.where("name = '#{firstname}'")
+      
+      
+      if result.count == 0
+        puts "could not find a gender for #{firstname}"
+      elsif result.count > 1
+        foundGender = result.first.score > result.last.score ? result.first.gender : result.last.gender
+        puts "found two genders for #{firstname}, returning #{foundGender}"
+        self.update_attribute('gender',foundGender)
       else
-        puts "could not detect gender for #{firstname}"
+        # found a single entry
+        puts "found a gender for #{firstname} - #{result.first.gender}"
+        self.update_attribute('gender',result.first.gender)
       end
+      
+      # html = HTTPClient.new.get_content("http://www.gpeters.com/names/baby-names.php?name=#{firstname}&button=Go")
+      # if html.include?("It's a boy")
+      #   puts "found a boy! #{firstname}"
+      #   self.update_attribute('gender','male')
+      # elsif html.include?("It's a girl")
+      #   puts "found a girl! #{firstname}"
+      #   self.update_attribute('gender','female')
+      # else
+      #   puts "could not detect gender for #{firstname}"
+      # end
     rescue
-      puts 'nope, didnt work'
+      puts "nope, didnt work for #{firstname}"
     end
     return nil
   end

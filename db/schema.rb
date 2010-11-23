@@ -10,7 +10,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20101117055148) do
+ActiveRecord::Schema.define(:version => 20101123061048) do
 
   create_table "delayed_jobs", :force => true do |t|
     t.integer   "priority",   :default => 0
@@ -40,6 +40,7 @@ ActiveRecord::Schema.define(:version => 20101117055148) do
     t.string    "gender"
     t.timestamp "created_at"
     t.timestamp "updated_at"
+    t.float     "score"
   end
 
   create_table "networks", :force => true do |t|
@@ -49,6 +50,9 @@ ActiveRecord::Schema.define(:version => 20101117055148) do
     t.timestamp "created_at"
     t.timestamp "updated_at"
   end
+
+  add_index "networks", ["facebook_id"], :name => "idx_networks_facebook_id"
+  add_index "networks", ["friend_id"], :name => "idx_networks_friend_id"
 
   create_table "profiles", :force => true do |t|
     t.string    "facebook_id"
@@ -60,6 +64,8 @@ ActiveRecord::Schema.define(:version => 20101117055148) do
     t.integer   "votes_network", :default => 0
     t.string    "full_name"
   end
+
+  add_index "profiles", ["facebook_id"], :name => "idx_profiles_facebook_id", :unique => true
 
   create_table "results", :force => true do |t|
     t.string    "facebook_id"
@@ -109,5 +115,7 @@ ActiveRecord::Schema.define(:version => 20101117055148) do
     t.integer   "win_streak_max_network",  :default => 0
     t.integer   "loss_streak_max_network", :default => 0
   end
+
+  add_index "users", ["facebook_id"], :name => "idx_users_facebook_id", :unique => true
 
 end
