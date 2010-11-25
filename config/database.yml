@@ -23,7 +23,18 @@ test:
   pool: 5
   timeout: 5000
 
+# facemashlarge.clhyg7sm4xmb.us-east-1.rds.amazonaws.com
+# facemash.clhyg7sm4xmb.us-east-1.rds.amazonaws.com
+
 production:
+  adapter: mysql
+  host: facemashlarge.clhyg7sm4xmb.us-east-1.rds.amazonaws.com
+  reconnect: false
+  database: facemash
+  username: facemash
+  password: Lik3aG6
+  
+staging:
   adapter: mysql
   host: facemash.clhyg7sm4xmb.us-east-1.rds.amazonaws.com
   reconnect: false
