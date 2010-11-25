@@ -1,4 +1,8 @@
 class Name < ActiveRecord::Base
+  #
+  # Name.all.each do |n| n.delete end
+  # Name.new.loadSomeNames
+  # 
   def loadSomeNames
     f = File.open('genders.txt', "r") 
     f.each_line do |line|

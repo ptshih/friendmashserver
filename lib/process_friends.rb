@@ -1,5 +1,6 @@
 class ProcessFriends < Struct.new(:facebookId) 
   require 'generate_second_degree'
+  require 'populate_missing_genders'
   
   def perform
     puts "ProcessFriends called for user with id: #{facebookId}"
@@ -33,6 +34,9 @@ class ProcessFriends < Struct.new(:facebookId)
 
     # Generate first degree network for this user
     generate_network(facebook_id, friendIdArray, degree)
+    
+    # Populate any missing genders
+    Delayed::Job.enqueue PopulateMissingGenders.new(friendIdArray)
 
     # Calculate the 2nd degree network table for the newly created user
     Delayed::Job.enqueue GenerateSecondDegree.new(facebook_id)
