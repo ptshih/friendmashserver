@@ -20,6 +20,10 @@ group :production do
   gem 'mysql'
 end
 
+group :staging do
+  gem 'mysql'
+end
+
 # Bundle edge Rails instead:
 # gem 'rails', :git => 'git://github.com/rails/rails.git'
 
