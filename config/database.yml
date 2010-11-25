@@ -30,7 +30,7 @@ production:
   adapter: mysql
   host: facemashlarge.clhyg7sm4xmb.us-east-1.rds.amazonaws.com
   reconnect: false
-  database: facemashlarge
+  database: facemash
   username: facemash
   password: Lik3aG6
   
