@@ -50,7 +50,7 @@ class ProcessFriends < Struct.new(:facebookId)
     tokenIdArray = Token.select('facebook_id').where("facebook_id IN (#{friendIdString})").map do |u| u.facebook_id end
     
     tokenIdArray.each do |tokenId|
-      if tokenId.facebook_id != facebookId
+      if not tokenId == facebookId
         Delayed::Job.enqueue GenerateSecondDegree.new(tokenId)
       end
     end
