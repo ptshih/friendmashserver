@@ -1,20 +1,19 @@
-# Achievement icon/badges go into profile page
-# special rankings, maybe chevrons, wow pvp ranking badges
-# win streak crown
-# location based: mayor of location
-
-# CREATING INDEX
-# ActiveRecord::Base.connection.execute("create unique index idx_users_facebook_id on users (facebook_id)")
-# ActiveRecord::Base.connection.execute("create index idx_networks_facebook_id on networks (facebook_id)")
-# ActiveRecord::Base.connection.execute("create index idx_networks_friend_id on networks (friend_id)")
-# ActiveRecord::Base.connection.execute("create unique index idx_profiles_facebook_id on profiles (facebook_id)")
-
 class MashController < ApplicationController
   require 'process_friends'
   require 'generate_result'
   
+  #
+  # APIs for Client
+  #
+  
   def random
-    # Find two random people who have similar scores
+    # This API will randomly choose a single user from the database
+    # It will then call find_opponent to find an opponent close to this user's score
+    # The return will be a JSON string of 2 facebookIds for left and right
+    # params[:mode]
+    # 0 - ALL
+    # 1 - NETWORK
+    
     Rails.logger.info request.query_parameters.inspect
     
     if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
@@ -24,10 +23,6 @@ class MashController < ApplicationController
       end
       return nil
     end
-    
-    # params[:mode]
-    # 0 - ALL
-    # 1 - NETWORK
     
     networkIds = []
     if params[:mode] == "1"
@@ -51,8 +46,6 @@ class MashController < ApplicationController
     
     excludedString = "'" + excludedIds.join('\',\'') + "'" # SQL string for excludedIds
     
-    # "'" + arr.join('\',\'') + "'"
-    
     # Randomly choose a user from the DB with a CSV of excluded IDs
     if networkIds.empty?
       randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id NOT IN (#{excludedString})",:order=>randQuery,:limit=>1).first
@@ -63,17 +56,18 @@ class MashController < ApplicationController
     excludedIds << "#{randomUser.facebook_id}" # add the random user into the excludedIds array
     
     if not randomUser.nil?
+      # Find an opponent for the randomly selected user
       opponent = find_opponent(randomUser.score, params[:gender], excludedIds, networkIds)
       
       if not opponent.nil?
         response = [randomUser.facebook_id, opponent.facebook_id]
-
         respond_to do |format|
           format.xml  { render :xml => response }
           format.json  { render :json => response }
         end
       else
-        response = {:error => "second opponent not found"} # did not find an opponent
+        # did not find an opponent
+        response = {:error => "second opponent not found"}
         respond_to do |format|
           format.xml  { render :xml => response, :status => :not_implemented }
           format.json  { render :json => response, :status => :not_implemented }
@@ -87,56 +81,6 @@ class MashController < ApplicationController
         format.json  { render :json => response, :status => :not_implemented }
       end
     end
-  end
-  
-  def find_opponent(desiredScore, gender, excludedIds = [], networkIds = [])
-    # First hit the DB with a CSV of excluded IDs and a match_score +/- match_range
-    # Fetch an array of valid IDs from DB who match the +/- range from the current user's score
-    # The array of IDs should be calculated from the forumla calculate_bounds
-    # Return a single opponent
-    
-    # OLD RANGE CALC FORMULA
-    # scoreRange = calculate_range(desiredScore)
-    # low = scoreRange[0]
-    # high = scoreRange[1]
-    
-    # USE NEW DYNAMIC RANGE CALC
-    # def calculate_bounds(userScore, pop, popAverage, popSD, sampleSize)
-    # userScore = score used to find range
-    # pop = total population
-    # popAverage = average score of total population
-    # popSD = standard deviation of total population scores
-    # sampleSize = how many results we want inside our bounds
-    
-    # We need to calculate POP, POPAVERAGE, and POPSD from the DB, not everytime
-    # Probably calculate it once a day/hour/etc... and store it in a static table/cache
-    
-    # for now lets calculate the count on every request
-    # female = 903
-    # male = 1420
-    
-    population = User.where("gender = '#{gender}'").count
-    
-    bounds = calculate_bounds(desiredScore, population, 1500.0, 282.0, 500.0)
-    low = bounds[0]
-    high = bounds[1]
-    
-    if Rails.env == "production" || Rails.env == "staging"
-      randQuery = 'RAND()'
-    else
-      randQuery = 'RANDOM()'
-    end
-    
-    excludedString = "'" + excludedIds.join('\',\'') + "'" # SQL string for excludedIds
-    
-    if networkIds.empty?
-      opponent = User.all(:conditions=>"score > #{low} AND score <= #{high} AND gender = '#{gender}' AND facebook_id NOT IN (#{excludedString})",:order=>randQuery,:select =>"facebook_id",:limit=>1)
-    else
-      networkString = "'" + networkIds.join('\',\'') + "'"
-      opponent = User.all(:conditions=>"score > #{low} AND score <= #{high} AND gender = '#{gender}' AND facebook_id NOT IN (#{excludedString}) AND facebook_id IN (#{networkString})",:order=>randQuery,:select =>"facebook_id",:limit=>1)
-    end
-  
-    return opponent.first
   end
   
   def match
@@ -160,6 +104,11 @@ class MashController < ApplicationController
   end 
   
   def token
+    # This API is called when a user signs in to facebook
+    # This will create/update a record in the Tokens table for the user
+    # It will create/update a record in the Users table for the current user
+    # Then it will call a delayed job to process the user's friends list
+    
     # Rails.logger.info request.query_parameters.inspect
     if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
       respond_to do |format|
@@ -187,8 +136,8 @@ class MashController < ApplicationController
     
     user = User.find_by_facebook_id(params["id"])
     if user.nil?
-      # create a record for the current user
-      newUser = User.create(
+      # Create a new user for the current user
+      User.create(
         :facebook_id => params["id"],
         :gender => params["gender"],
         :score => 1500,
@@ -205,7 +154,8 @@ class MashController < ApplicationController
         :win_streak_max_network => 0,
         :loss_streak_max_network => 0
       )
-      newProfile = Profile.create(
+      # Create a new profile for the current user
+      Profile.create(
         :facebook_id => params["id"],
         :first_name => params["first_name"].nil? ? nil : params["first_name"],
         :last_name => params["last_name"].nil? ? nil : params["last_name"],
@@ -213,14 +163,13 @@ class MashController < ApplicationController
         :votes => 0,
         :votes_network => 0
       )
-      user = newUser
     else
       user.update_attributes(
         :gender => params["gender"]
       )
     end
     
-    # Process friends in worker
+    # Process friends in a delayed job
     Delayed::Job.enqueue ProcessFriends.new(params["id"])
     
     respond_to do |format|
@@ -230,7 +179,10 @@ class MashController < ApplicationController
   end
     
   def result
-    # report a match result to the server 
+    # This API will calculate the result of a mash and adjust scores for winner and loser
+    # It will also fire a delayed job to insert a record into the Results table
+    # Response is a simple JSON "success" => "true" that is ignored by the client
+    
     Rails.logger.info request.query_parameters.inspect
     
     if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
@@ -245,7 +197,7 @@ class MashController < ApplicationController
     # puts request.env["HTTP_X_UDID"]
     
     # Increment vote count for current user
-    # increment_counter
+    # If network only mode, increment votes_network also
     Profile.increment_counter('votes',Profile.find_by_facebook_id(params[:id]).id)
     if params[:mode] == "1"
       Profile.increment_counter('votes_network',Profile.find_by_facebook_id(params[:id]).id)
@@ -254,9 +206,12 @@ class MashController < ApplicationController
     winner = User.find_by_facebook_id(params[:w])
     loser  = User.find_by_facebook_id(params[:l])
     
+    # Store the score of the winner/loser before we calculate the new scores
+    # These old scores get passed into the Results table
     winnerBeforeScore = winner[:score]
     loserBeforeScore = loser[:score]
     
+    # Adjust scores for winner/loser for this mash
     adjustScoresForUsers(winner, loser, params[:mode])
     
     # Insert a NEW record into Result table to keep track of the fight
@@ -270,8 +225,8 @@ class MashController < ApplicationController
   end
   
   def profile
-    # given a parameter facebookId
-    # return a hash of a given user's profile
+    # Given a parameter facebookId
+    # Return a hash of a given user's profile
     
     Rails.logger.info request.query_parameters.inspect
     
@@ -316,6 +271,9 @@ class MashController < ApplicationController
   end
   
   def topplayers
+    # This API will find the top COUNT (99 default) players with the highest votes (mashes)
+    # Response is an array of hashes that represent Users/Profiles of the players
+    
     Rails.logger.info request.query_parameters.inspect
     
     if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
@@ -326,13 +284,15 @@ class MashController < ApplicationController
       return nil
     end
     
+    # If the client does not pass a count param, default to 99
     if params[:count].nil?
       count = 99
     else
       count = params[:count]
     end
     
-    topPlayers = Profile.all(:conditions=>"votes > 0",:order=>"votes desc",:limit=>99)
+    # Only show players who have more than 0 mashes
+    topPlayers = Profile.all(:conditions=>"votes > 0",:order=>"votes desc",:limit=>count)
     
     rankings = []
     
@@ -353,14 +313,11 @@ class MashController < ApplicationController
       format.xml  { render :xml => rankings }
       format.json  { render :json => rankings }
     end
-    
   end
   
   def rankings
-    # return a list of top 25 in each category
-    # expects parameters
-    # gender
-    # mode (all,network)
+    # This API returns the top COUNT (99 default) Users based on score for a gender
+    # The response is a JSON array of hashes that represent Users/Profiles
     
     Rails.logger.info request.query_parameters.inspect
     # Rails.logger.info request.env.inspect
@@ -373,6 +330,7 @@ class MashController < ApplicationController
       return nil
     end
     
+    # If the client does not pass a count param, default to 99
     if params[:count].nil?
       count = 99
     else
@@ -438,9 +396,66 @@ class MashController < ApplicationController
     end
   end
   
-  # Calculations
-
+  #
+  # NON-API Internal Methods
+  #
+  
+  def find_opponent(desiredScore, gender, excludedIds = [], networkIds = [])
+    # This API finds an opponent close to the desired score who is not:
+    # Part of the excludedIds
+    # If network only mode is on, the opponent in the set of networkIds
+    # It will return a single User entity as the opponent
+    
+    # First hit the DB with a CSV of excluded IDs and a match_score +/- match_range
+    # Fetch an array of valid IDs from DB who match the +/- range from the current user's score
+    # The array of IDs should be calculated from the forumla calculate_bounds
+    # Return a single opponent
+    
+    # OLD RANGE CALC FORMULA
+    # scoreRange = calculate_range(desiredScore)
+    # low = scoreRange[0]
+    # high = scoreRange[1]
+    
+    # USE NEW DYNAMIC RANGE CALC
+    # def calculate_bounds(userScore, pop, popAverage, popSD, sampleSize)
+    # userScore = score used to find range
+    # pop = total population
+    # popAverage = average score of total population
+    # popSD = standard deviation of total population scores
+    # sampleSize = how many results we want inside our bounds
+    
+    # We need to calculate POP, POPAVERAGE, and POPSD from the DB, not everytime
+    # Probably calculate it once a day/hour/etc... and store it in a static table/cache
+    
+    population = User.where("gender = '#{gender}'").count # Get the total population size of the user's table for this gender
+    
+    # Calculate the low and high end bounds
+    bounds = calculate_bounds(desiredScore, population, 1500.0, 282.0, 500.0)
+    low = bounds[0]
+    high = bounds[1]
+    
+    if Rails.env == "production" || Rails.env == "staging"
+      randQuery = 'RAND()'
+    else
+      randQuery = 'RANDOM()'
+    end
+    
+    excludedString = "'" + excludedIds.join('\',\'') + "'" # SQL string for excludedIds
+    
+    # Network only mode should only search in a restricted SET of Users
+    if networkIds.empty?
+      opponent = User.all(:conditions=>"score > #{low} AND score <= #{high} AND gender = '#{gender}' AND facebook_id NOT IN (#{excludedString})",:order=>randQuery,:select =>"facebook_id",:limit=>1)
+    else
+      networkString = "'" + networkIds.join('\',\'') + "'"
+      opponent = User.all(:conditions=>"score > #{low} AND score <= #{high} AND gender = '#{gender}' AND facebook_id NOT IN (#{excludedString}) AND facebook_id IN (#{networkString})",:order=>randQuery,:select =>"facebook_id",:limit=>1)
+    end
+  
+    return opponent.first
+  end
+  
   def adjustScoresForUsers(winner, loser, mode = "0")
+    # This method calculates and adjusts the score and stats for the winner and loser
+    
     winnerExpected = expected_outcome(winner, loser)
     loserExpected = expected_outcome(loser, winner)
     
@@ -470,14 +485,35 @@ class MashController < ApplicationController
       :loss_streak_max_network => (mode == "1") ? ( loser[:loss_streak_network]  + 1 > loser[:loss_streak_max_network] ? loser[:loss_streak_network] + 1 : loser[:loss_streak_max_network] ) : loser[:loss_streak_max_network]
     )
     
-    return
+    return nil
   end
   
   def expected_outcome(user, opponent)    
-    # Calculate the expected outcomes
+    # Calculate the expected outcomes of a mash between two users
+    
     exponent = 10.0 ** ((opponent[:score] - user[:score]) / 400.0)
     expected = 1.0 / (1.0 + exponent)
+    
     return expected
+  end
+  
+  def calculate_bounds(userScore, pop, popAverage, popSD, sampleSize)
+    # Uses a normal distribution formula
+    # Calculates the low and high bounds for selecting an opponent
+    # Returns an array [low, high]
+    
+    k_low = (-1 * (sampleSize / pop))
+    k_high = (1 * (sampleSize / pop))
+
+    array_returns_low = (600..userScore).map { |i|
+      (k_low + Math.erf((userScore-popAverage)/(popSD*(2.0**0.5))) - Math.erf((i-popAverage)/(popSD*(2.0**0.5)))).abs
+    }
+
+    array_returns_high = (userScore..2400).map { |i|
+      (k_high + Math.erf((userScore-popAverage)/(popSD*(2.0**0.5))) - Math.erf((i-popAverage)/(popSD*(2.0**0.5)))).abs
+    }
+
+    return [(600..userScore).map[array_returns_low.index(array_returns_low.min)], (userScore..2400).map[array_returns_high.index(array_returns_high.min)]]
   end
   
   def calculate_range(score)
@@ -511,23 +547,6 @@ class MashController < ApplicationController
     scoreRange = [ranges[low],ranges[high]]
     p scoreRange
     return scoreRange
-  end
-  
-  def calculate_bounds(userScore, pop, popAverage, popSD, sampleSize)
-    # returns an array [low, high]
-    
-    k_low = (-1 * (sampleSize / pop))
-    k_high = (1 * (sampleSize / pop))
-
-    array_returns_low = (600..userScore).map { |i|
-      (k_low + Math.erf((userScore-popAverage)/(popSD*(2.0**0.5))) - Math.erf((i-popAverage)/(popSD*(2.0**0.5)))).abs
-    }
-
-    array_returns_high = (userScore..2400).map { |i|
-      (k_high + Math.erf((userScore-popAverage)/(popSD*(2.0**0.5))) - Math.erf((i-popAverage)/(popSD*(2.0**0.5)))).abs
-    }
-
-    return [(600..userScore).map[array_returns_low.index(array_returns_low.min)], (userScore..2400).map[array_returns_high.index(array_returns_high.min)]]
   end
   
   # takes a gzipped string and deflates it
