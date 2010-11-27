@@ -377,34 +377,28 @@ class MashController < ApplicationController
       count = params[:count]
     end
     
-    if params[:mode] == "0"
-      networkIds = nil
-    else
-      networkIds = []
+    # if network only is on, generate the sql string
+    networkIds = []
+    if params[:mode] == "1"
       Network.where("facebook_id = '#{params[:id]}'").each do |network|
         networkIds << network.friend_id
       end
-      # p networkIds
-      if networkIds.empty?
-        networkIds = nil
-      else
-        networkIds = '\'' + networkIds.split(',').join('\',\'')+'\'' 
-      end
+      networkString = "'" + networkIds.join('\',\'') + "'"
     end
     
     # Active Record Join Alternative
     # users = User.select('*').all(:conditions=>"gender = '#{params[:gender]}'",:order=>"score desc",:limit=>count,:joins=>:profile)
-    if networkIds.nil?
+    if networkIds.empty?
       users = User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>"score desc",:limit=>count,:include=>:profile)
     else
-      users = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id IN (#{networkIds})",:order=>"score_network desc",:limit=>count,:include=>:profile)
+      users = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id IN (#{networkString})",:order=>"score desc",:limit=>count,:include=>:profile)
     end
     
     rankings = []
     
     users.each_with_index do |user,rank|
+      actualScore = user[:score]
       if params[:mode] == "0"
-        actualScore = user[:score]
         actualWins = user[:wins]
         actualLosses = user[:losses]
         actualWinStreak = user[:win_streak]
@@ -412,7 +406,6 @@ class MashController < ApplicationController
         actualWinStreakMax = user[:win_streak_max]
         actualLossStreakMax = user[:loss_streak_max]
       else
-        actualScore = user[:score_network]
         actualWins = user[:wins_network]
         actualLosses = user[:losses_network]
         actualWinStreak = user[:win_streak_network]
