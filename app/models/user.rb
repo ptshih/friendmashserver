@@ -127,8 +127,12 @@ class User < ActiveRecord::Base
   def getJSON(path,params)
     begin
       # JSON.parse HTTPClient.new.get_content(path,params)
-      extheader = { 'Accept-Encoding' => 'gzip' }
-      JSON.parse(Zlib::GzipReader.new(StringIO.new(HTTPClient.new.get_content(path,params,extheader))).read)
+      # extheader = { 'Accept-Encoding' => 'gzip' }
+      
+      # it seems the gzip response is unreliable, so just using json for now
+      JSON.parse(HTTPClient.new.get_content(path,params))
+      
+      # JSON.parse(Zlib::GzipReader.new(StringIO.new(HTTPClient.new.get_content(path,params,extheader))).read)
     rescue
       puts "found invalid token!!! #{path} #{params}"
     end
