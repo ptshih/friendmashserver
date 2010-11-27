@@ -126,13 +126,26 @@ class User < ActiveRecord::Base
   
   def getJSON(path,params)
     begin
-      # JSON.parse HTTPClient.new.get_content(path,params)
-      # extheader = { 'Accept-Encoding' => 'gzip' }
-      
-      # it seems the gzip response is unreliable, so just using json for now
-      JSON.parse(HTTPClient.new.get_content(path,params))
-      
+      # JSON.parse(HTTPClient.new.get_content(path,params))
       # JSON.parse(Zlib::GzipReader.new(StringIO.new(HTTPClient.new.get_content(path,params,extheader))).read)
+      # it seems the gzip response is unreliable, so we need to check the response encoding
+      
+      extheader = { 'Accept-Encoding' => 'gzip' }
+      response = HTTPClient.new.get(path,params,extheader)
+      
+      # p response.content
+      # contentType = response.contenttype
+      encoding = response.header["Content-Encoding"].to_s
+      
+      if encoding == "gzip"
+        puts "found gzip response"
+        parsedResponse = JSON.parse(Zlib::GzipReader.new(StringIO.new(response.content)).read)
+      else
+        puts "found text response"
+        parsedResponse = JSON.parse(response.content)
+      end
+      
+      return parsedResponse
     rescue
       puts "found invalid token!!! #{path} #{params}"
     end
