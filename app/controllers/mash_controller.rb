@@ -19,32 +19,22 @@ class MashController < ApplicationController
     
     if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
       respond_to do |format|
-        format.html # index.html.erb
         format.xml  { render :xml => {:error => "access denied"} }
         format.json  { render :json => {:error => "access denied"} }
       end
       return nil
     end
     
-    # puts params[:recents].length
-    
     # params[:mode]
     # 0 - ALL
     # 1 - NETWORK
     
-    if params[:mode] == "0"
-      networkIds = nil
-    else
-      networkIds = []
+    networkIds = []
+    if params[:mode] == "1"
       Network.where("facebook_id = '#{params[:id]}'").each do |network|
         networkIds << network.friend_id
       end
-      # p networkIds
-      if networkIds.empty?
-        networkIds = nil
-      else
-        networkIds = '\'' + networkIds.split(',').join('\',\'')+'\'' 
-      end
+      networkString = "'" + networkIds.join('\',\'') + "'"
     end
     
     # MySQL uses RAND, SQLLite uses RANDOM
@@ -55,32 +45,25 @@ class MashController < ApplicationController
       randQuery = 'RANDOM()'
     end
     
+    excludedIds = params[:recents].split(',') # split on comma
+    
+    excludedIds << "#{params[:id]}" # add currentId to excludedIds
+    
+    excludedString = "'" + excludedIds.join('\',\'') + "'" # SQL string for excludedIds
+    
+    # "'" + arr.join('\',\'') + "'"
+    
     # Randomly choose a user from the DB with a CSV of excluded IDs
-    if params[:recents].length == 0
-      recentIds = nil
-      if networkIds.nil?
-        randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id != '#{params[:id]}'",:order=>randQuery,:limit=>1)[0]
-      else
-        randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id != '#{params[:id]}' AND facebook_id IN (#{networkIds})",:order=>randQuery,:limit=>1)[0]
-      end
+    if networkIds.empty?
+      randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id NOT IN (#{excludedString})",:order=>randQuery,:limit=>1)[0]
     else
-      recentIds = '\'' + params[:recents].split(',').join('\',\'')+'\'' 
-      if networkIds.nil?
-        randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id != '#{params[:id]}' AND facebook_id NOT IN (#{recentIds})",:order=>randQuery,:limit=>1)[0]
-      else
-        randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id != '#{params[:id]}' AND facebook_id NOT IN (#{recentIds}) AND facebook_id IN (#{networkIds})",:order=>randQuery,:limit=>1)[0]
-      end
+      randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id NOT IN (#{excludedString}) AND facebook_id IN (#{networkString})",:order=>randQuery,:limit=>1)[0]
     end
     
-    # randomUser = User.first
-    # puts "LOL"
-    # p randomUser
+    excludedIds << "#{randomUser.facebook_id}" # add the random user into the excludedIds array
+    
     if not randomUser.nil?
-      if params[:mode] == "0"
-        opponent = find_opponent(randomUser.score, params[:gender], randomUser.facebook_id, recentIds, networkIds)
-      else
-        opponent = find_opponent(randomUser.score_network, params[:gender], randomUser.facebook_id, recentIds, networkIds)
-      end
+      opponent = find_opponent(randomUser.score, params[:gender], excludedIds, networkIds)
       
       if not opponent.nil?
         response = [randomUser.facebook_id, opponent.facebook_id]
@@ -106,7 +89,7 @@ class MashController < ApplicationController
     end
   end
   
-  def find_opponent(desiredScore, gender, currentId = nil, recentIds = nil, networkIds = nil)
+  def find_opponent(desiredScore, gender, excludedIds = [], networkIds = [])
     # First hit the DB with a CSV of excluded IDs and a match_score +/- match_range
     # Fetch an array of valid IDs from DB who match the +/- range from the current user's score
     # Perform a binary search on the array to find the best possible opponent
@@ -132,8 +115,6 @@ class MashController < ApplicationController
     # female = 903
     # male = 1420
     
-    
-    
     bounds = calculate_bounds(desiredScore, 900.0, 1500.0, 282.0, 500.0)
     low = bounds[0]
     high = bounds[1]
@@ -144,25 +125,16 @@ class MashController < ApplicationController
       randQuery = 'RANDOM()'
     end
     
-    if recentIds.nil?
-      if networkIds.nil?
-        bucket = User.all(:conditions=>"score > #{low} AND score <= #{high} AND gender = '#{gender}' AND facebook_id != '#{currentId}'",:order=>randQuery,:select =>"facebook_id",:limit=>1)
-        # bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }], :order => randQuery).select("facebook_id, score")
-      else
-        bucket = User.all(:conditions=>"score_network > #{low} AND score_network <= #{high} AND gender = '#{gender}' AND facebook_id IN (#{networkIds}) AND facebook_id != '#{currentId}'",:order=>randQuery,:select =>"facebook_id",:limit=>1)
-        # bucket = User.where(["score_network >= :lowScore AND score_network <= :highScore AND gender = :gender AND facebook_id != :currentId AND facebook_id IN (#{networkIds})", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score_network")
-      end
+    excludedString = "'" + excludedIds.join('\',\'') + "'" # SQL string for excludedIds
+    
+    if networkIds.empty?
+      opponent = User.all(:conditions=>"score > #{low} AND score <= #{high} AND gender = '#{gender}' AND facebook_id NOT IN (#{excludedString})",:order=>randQuery,:select =>"facebook_id",:limit=>1)
     else
-      if networkIds.nil?
-        bucket = User.all(:conditions=>"score > #{low} AND score <= #{high} AND gender = '#{gender}' AND facebook_id NOT IN (#{recentIds}) AND facebook_id != '#{currentId}'",:order=>randQuery,:select =>"facebook_id",:limit=>1)
-        # bucket = User.where(["score >= :lowScore AND score <= :highScore AND gender = :gender AND facebook_id NOT IN (#{recentIds}) AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score")
-      else
-        bucket = User.all(:conditions=>"score_network > #{low} AND score_network <= #{high} AND gender = '#{gender}' AND facebook_id NOT IN (#{recentIds}) AND facebook_id IN (#{networkIds}) AND facebook_id != '#{currentId}'",:order=>randQuery,:select =>"facebook_id",:limit=>1)
-        # bucket = User.where(["score_network >= :lowScore AND score_network <= :highScore AND gender = :gender AND facebook_id NOT IN (#{recentIds}) AND facebook_id IN (#{networkIds}) AND facebook_id != :currentId", { :lowScore => (desiredScore - range), :highScore => (desiredScore + range), :gender => gender, :currentId => currentId }]).select("facebook_id, score_network")
-      end
+      networkString = "'" + networkIds.join('\',\'') + "'"
+      opponent = User.all(:conditions=>"score > #{low} AND score <= #{high} AND gender = '#{gender}' AND facebook_id NOT IN (#{excludedString}) AND facebook_id IN (#{networkString})",:order=>randQuery,:select =>"facebook_id",:limit=>1)
     end
   
-    return bucket[0]
+    return opponent.first
   end
   
   def match
@@ -172,26 +144,16 @@ class MashController < ApplicationController
     
     if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
       respond_to do |format|
-        format.html # index.html.erb
         format.xml  { render :xml => {:error => "access denied"} }
         format.json  { render :json => {:error => "access denied"} }
       end
       return nil
     end
-    
-    user = User.find_by_facebook_id(params[:id])
-    
-    # puts user.score
-    
-    recentIds = '\''+params[:recents].split(',').join('\',\'')+'\''
-    
-    opponent = find_opponent(user.score, params[:gender], params[:id], recentIds, nil)
-    
-    # puts opponent.facebook_id
+
+    response = {:error => "api not implemented"}
     respond_to do |format|
-      format.html # index.html.erb
-      format.xml  { render :xml => opponent.facebook_id }
-      format.json  { render :json => opponent.facebook_id }
+      format.xml  { render :xml => response, :status => :not_implemented }
+      format.json  { render :json => response, :status => :not_implemented }
     end
   end 
   
@@ -199,7 +161,6 @@ class MashController < ApplicationController
     # Rails.logger.info request.query_parameters.inspect
     if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
       respond_to do |format|
-        format.html # index.html.erb
         format.xml  { render :xml => {:error => "access denied"} }
         format.json  { render :json => {:error => "access denied"} }
       end
@@ -229,7 +190,6 @@ class MashController < ApplicationController
         :facebook_id => params["id"],
         :gender => params["gender"],
         :score => 1500,
-        :score_network => 1500,
         :wins => 0,
         :wins_network => 0,
         :losses => 0,
@@ -261,61 +221,18 @@ class MashController < ApplicationController
     # Process friends in worker
     Delayed::Job.enqueue ProcessFriends.new(params["id"])
     
-=begin
-# CANNOT get list of friends of friends, damnit facebook
-{
-   "error": {
-      "type": "OAuthException",
-      "message": "(#604) Can't lookup all friends of 222383. Can only lookup for the logged in user (548430564), or friends of the logged in user with the appropriate permission"
-   }
-}
-
-# Now get the user's second degree friends
-secondDegreeFriends = Array.new
-
-firstDegreeFriends.each do |firstDegreeFriend|
-  firstDegreeUser = User.find_by_facebook_id(firstDegreeFriend["id"])
-  secondDegreeFriends = secondDegreeFriends + firstDegreeUser.friends(fields)
-end
-
-# insert the second degree friends into the DB as degree 2
-# process_friends(params[:id], secondDegreeFriends, 2)
-=end
-    
-    
-    # Fire off a FBConnect friends request using the user's token
-    #
-    # Insert the results into the DB
-    # get_fb_friends(params[:id], token[:access_token])
-    
     respond_to do |format|
-      format.html # index.html.erb
       format.xml  { render :xml => {:success => "true"} }
       format.json  { render :json => {:success => "true"} }
     end
   end
-  
-  # Tell the server to process the current user's friends
-  def friends
     
-    # deprecated
-    
-    respond_to do |format|
-      format.html # index.html.erb
-      format.xml  { render :xml => {:success => "true"} }
-      format.json  { render :json => {:success => "true"} }
-    end
-  end
-  
-
-  
   def result
     # report a match result to the server 
     Rails.logger.info request.query_parameters.inspect
     
     if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
       respond_to do |format|
-        format.html # index.html.erb
         format.xml  { render :xml => {:error => "access denied"} }
         format.json  { render :json => {:error => "access denied"} }
       end
@@ -344,29 +261,7 @@ end
     # If left is true, that means left side was DISCARDED
     Delayed::Job.enqueue GenerateResult.new(params[:id], params[:w], params[:l], params[:left], params[:mode], winnerBeforeScore, loserBeforeScore)
     
-    # Result.create(
-    #   :facebook_id => params[:id],
-    #   :winner_id => params[:w],
-    #   :loser_id => params[:l],
-    #   :left => params[:left],
-    #   :mode => params[:mode],
-    #   :winner_score => winner[:score],
-    #   :loser_score => loser[:score]
-    # )
-    
-    # Result.new do |r|
-    #   r.facebook_id = params[:id]
-    #   r.winner_id = params[:w]
-    #   r.loser_id = params[:l]
-    #   r.left = params[:left]
-    #   r.mode = params[:mode]
-    #   r.winner_score = winner[:score]
-    #   r.loser_score = loser[:score]
-    #   r.save
-    # end
-    
     respond_to do |format|
-      format.html # index.html.erb
       format.xml  { render :xml => {:success => "true"} }
       format.json  { render :json => {:success => "true"} }
     end
@@ -397,23 +292,22 @@ end
       ranksHash = ActiveRecord::Base.connection.execute(query)[0]
     end
     
-    profile['rank'] = ranksHash['rankoftotal'].to_i
-    profile['rank_network'] = ranksHash['rankofnetwork'].to_i
+    profile['rank'] = ranksHash['rankoftotal'].to_i + 1
+    profile['rank_network'] = ranksHash['rankofnetwork'].to_i + 1
     profile['total'] = ranksHash['total'].to_i
-    profile['total_network'] = ranksHash['networktotal'].to_i
+    profile['total_network'] = ranksHash['networktotal'].to_i + 1 # need to add 1 for the current user since networks doesnt do a user -> user entry
+    profile['votes'] = profile['votes'].to_i
+    profile['votes_network'] = profile['votes_network'].to_i
+    
     # ActiveRecord::Base.connection.execute("select sum(case when a.score>c.score then 1 else 0 end) as rankOfTotal,sum(case when a.score>c.score && b.id!=null then 1 else 0 end) as rankAmongFriends,sum(1) as totalCount,sum(case when b.id!=null then 1 else 0 end) as networkCount from users a left outer join networks b on a.facebook_id=b.friend_id left outer join users c where c.id='#{profile['facebook_id']}' and a.gender=c.gender")
     
     # profile['rank'] = ActiveRecord::Base.connection.execute("SELECT count(*) from Users where score > #{profile['score']} AND gender = '#{profile['gender']}'")[0][0].to_i + 1
     # profile['rank_network'] = 0;
     # profile['total'] = User.count(:conditions=>"gender = '#{profile['gender']}'").to_i
     # profile['total_network'] = profile['total']
-        
-    profile['votes'] = profile['votes'].to_i
-    profile['votes_network'] = profile['votes_network'].to_i
     
     # send response
     respond_to do |format|
-      format.html # index.html.erb
       format.xml  { render :xml => profile }
       format.json  { render :json => profile }
     end
@@ -424,7 +318,6 @@ end
     
     if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
       respond_to do |format|
-        format.html # index.html.erb
         format.xml  { render :xml => {:error => "access denied"} }
         format.json  { render :json => {:error => "access denied"} }
       end
@@ -455,7 +348,6 @@ end
     end
     
     respond_to do |format|
-      format.html # index.html.erb
       format.xml  { render :xml => rankings }
       format.json  { render :json => rankings }
     end
@@ -473,7 +365,6 @@ end
     
     if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
       respond_to do |format|
-        format.html # index.html.erb
         format.xml  { render :xml => {:error => "access denied"} }
         format.json  { render :json => {:error => "access denied"} }
       end
@@ -547,7 +438,6 @@ end
     end
 
     respond_to do |format|
-      format.html # index.html.erb
       format.xml  { render :xml => rankings }
       format.json  { render :json => rankings }
     end
@@ -555,96 +445,42 @@ end
   
   # Calculations
 
-  def adjustScoresForUsers(winner, loser, mode = 0)
-    winnerExpected = expected_outcome(winner, loser, mode)
-    loserExpected = expected_outcome(loser, winner, mode)
+  def adjustScoresForUsers(winner, loser, mode = "0")
+    winnerExpected = expected_outcome(winner, loser)
+    loserExpected = expected_outcome(loser, winner)
     
-    if mode == "0"
-      # Adjust the winner score
-      winner.update_attributes(
-        :wins => winner[:wins] + 1,
-        :win_streak => winner[:win_streak] + 1,
-        :loss_streak => 0,
-        :score => winner[:score] + (32 * (1 - winnerExpected)),
-        :win_streak_max => winner[:win_streak] > winner[:win_streak_max] ? winner[:win_streak] : winner[:win_streak_max]
-      )
-      
-      # winner.update_attributes(:wins => winner[:wins] + 1)
-      # winner.update_attributes(:win_streak => winner[:win_streak] + 1)
-      # winner.update_attributes(:loss_streak => 0)
-      # winner.update_attributes(:score => winner[:score] + (32 * (1 - winnerExpected)))
-      
-      # if winner[:win_streak] > winner[:win_streak_max]
-      #   winner.update_attributes(:win_streak_max => winner[:win_streak])
-      # end
-
-      # Adjust the loser score
-      loser.update_attributes(
-        :losses => loser[:losses] + 1,
-        :loss_streak => loser[:loss_streak] + 1,
-        :win_streak => 0,
-        :score => loser[:score] + (32 * (0 - loserExpected)),
-        :loss_streak_max => loser[:loss_streak] > loser[:loss_streak_max] ? loser[:loss_streak] : loser[:loss_streak_max]
-      )
-      
-      # loser.update_attributes(:losses => loser[:losses] + 1)
-      # loser.update_attributes(:loss_streak => loser[:loss_streak] + 1)
-      # loser.update_attributes(:win_streak => 0)
-      # loser.update_attributes(:score => loser[:score] + (32 * (0 - loserExpected)))
-      # 
-      # if loser[:loss_streak] > loser[:loss_streak_max]
-      #   loser.update_attributes(:loss_streak_max => loser[:loss_streak])
-      # end
-    else
-      # Adjust the winner score
-      winner.update_attributes(
-        :wins_network => winner[:wins_network] + 1,
-        :win_streak_network => winner[:win_streak_network] + 1,
-        :loss_streak_network => 0,
-        :score_network => winner[:score_network] + (32 * (1 - winnerExpected)),
-        :win_streak_max_network => winner[:win_streak_network] > winner[:win_streak_max_network] ? winner[:win_streak_network] : winner[:win_streak_max_network]
-      )
-      
-      # winner.update_attributes(:wins_network => winner[:wins_network] + 1)
-      # winner.update_attributes(:win_streak_network => winner[:win_streak_network] + 1)
-      # winner.update_attributes(:loss_streak_network => 0)
-      # winner.update_attributes(:score_network => winner[:score_network] + (32 * (1 - winnerExpected)))
-      # 
-      # if winner[:win_streak_network] > winner[:win_streak_max_network]
-      #   winner.update_attributes(:win_streak_max_network => winner[:win_streak_network])
-      # end
-
-      # Adjust the loser score
-      loser.update_attributes(
-        :losses_network => loser[:losses_network] + 1,
-        :loss_streak_network => loser[:loss_streak_network] + 1,
-        :win_streak_network => 0,
-        :score_network => loser[:score_network] + (32 * (0 - loserExpected)),
-        :loss_streak_max_network => loser[:loss_streak_network] > loser[:loss_streak_max_network] ? loser[:loss_streak_network] : loser[:loss_streak_max_network]
-      )
-      
-      # loser.update_attributes(:losses_network => loser[:losses_network] + 1)
-      # loser.update_attributes(:loss_streak_network => loser[:loss_streak_network] + 1)
-      # loser.update_attributes(:win_streak_network => 0)
-      # loser.update_attributes(:score_network => loser[:score_network] + (32 * (0 - loserExpected)))
-      # 
-      # if loser[:loss_streak_network] > loser[:loss_streak_max_network]
-      #   loser.update_attributes(:loss_streak_max_network => loser[:loss_streak_network])
-      # end
-    end
+    # Adjust the winner score
+    winner.update_attributes(
+      :wins => (mode == "0") ? winner[:wins] + 1 : winner[:wins],
+      :wins_network => (mode == "1") ? winner[:wins_network] + 1 : winner[:wins_network],
+      :win_streak => (mode == "0") ? winner[:win_streak] + 1 : winner[:win_streak],
+      :win_streak_network => (mode == "1")? winner[:win_streak_network] + 1 : winner[:win_streak_network],
+      :loss_streak => (mode == "0") ? 0 : winner[:loss_streak],
+      :loss_streak_network => (mode == "1") ? 0 : winner[:loss_streak_network],
+      :score => winner[:score] + (32 * (1 - winnerExpected)),
+      :win_streak_max => (mode == "0") ? ( winner[:win_streak] + 1 > winner[:win_streak_max] ? winner[:win_streak] + 1: winner[:win_streak_max] ) : winner[:win_streak_max],
+      :win_streak_max_network => (mode == "1") ? ( winner[:win_streak_network] + 1 > winner[:win_streak_max_network] ? winner[:win_streak_network] + 1 : winner[:win_streak_max_network] ) : winner[:win_streak_max_network]
+    )
+    
+    # Adjust the loser score
+    loser.update_attributes(
+      :losses => (mode == "0") ? loser[:losses] + 1 : loser[:losses],
+      :losses_network => (mode == "1") ? loser[:losses_network] + 1 : loser[:losses_network],
+      :loss_streak => (mode == "0") ? loser[:loss_streak] + 1 : loser[:loss_streak],
+      :loss_streak_network => (mode == "1") ? loser[:loss_streak_network] + 1 : loser[:loss_streak_network],
+      :win_streak => (mode == "0") ? 0 : loser[:win_streak],
+      :win_streak_network => (mode == "1") ? 0 : loser[:win_streak_network],
+      :score => loser[:score] + (32 * (0 - loserExpected)),
+      :loss_streak_max => (mode == "0") ? ( loser[:loss_streak] + 1 > loser[:loss_streak_max] ? loser[:loss_streak] + 1 : loser[:loss_streak_max] ) : loser[:loss_streak_max],
+      :loss_streak_max_network => (mode == "1") ? ( loser[:loss_streak_network]  + 1 > loser[:loss_streak_max_network] ? loser[:loss_streak_network] + 1 : loser[:loss_streak_max_network] ) : loser[:loss_streak_max_network]
+    )
+    
+    return
   end
   
-  def expected_outcome(user, opponent, mode = 0)
-    if mode == "0"
-      user_score = user[:score]
-      opponent_score = opponent[:score]
-    else
-      user_score = user[:score_network]
-      opponent_score = opponent[:score_network]
-    end
-    
+  def expected_outcome(user, opponent)    
     # Calculate the expected outcomes
-    exponent = 10.0 ** ((opponent_score - user_score) / 400.0)
+    exponent = 10.0 ** ((opponent[:score] - user[:score]) / 400.0)
     expected = 1.0 / (1.0 + exponent)
     return expected
   end
@@ -677,7 +513,6 @@ end
       end
     end
     
-
     scoreRange = [ranges[low],ranges[high]]
     p scoreRange
     return scoreRange
