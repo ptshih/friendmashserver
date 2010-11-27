@@ -1,4 +1,5 @@
-class GenerateResult < Struct.new(:id, :winnerId, :loserId, :left, :mode, :winnerBeforeScore, :loserBeforeScore) 
+class GenerateResult < Struct.new(:id, :winnerId, :loserId, :left, :mode, :winnerBeforeScore, :loserBeforeScore)
+  # This delayed job class creates a Result entry for a given mash result
   def perform
     Result.create(
       :facebook_id => id,
