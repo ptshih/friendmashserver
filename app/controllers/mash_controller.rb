@@ -55,9 +55,9 @@ class MashController < ApplicationController
     
     # Randomly choose a user from the DB with a CSV of excluded IDs
     if networkIds.empty?
-      randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id NOT IN (#{excludedString})",:order=>randQuery,:limit=>1)[0]
+      randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id NOT IN (#{excludedString})",:order=>randQuery,:limit=>1).first
     else
-      randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id NOT IN (#{excludedString}) AND facebook_id IN (#{networkString})",:order=>randQuery,:limit=>1)[0]
+      randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id NOT IN (#{excludedString}) AND facebook_id IN (#{networkString})",:order=>randQuery,:limit=>1).first
     end
     
     excludedIds << "#{randomUser.facebook_id}" # add the random user into the excludedIds array
@@ -92,7 +92,7 @@ class MashController < ApplicationController
   def find_opponent(desiredScore, gender, excludedIds = [], networkIds = [])
     # First hit the DB with a CSV of excluded IDs and a match_score +/- match_range
     # Fetch an array of valid IDs from DB who match the +/- range from the current user's score
-    # Perform a binary search on the array to find the best possible opponent
+    # The array of IDs should be calculated from the forumla calculate_bounds
     # Return a single opponent
     
     # OLD RANGE CALC FORMULA
@@ -115,7 +115,9 @@ class MashController < ApplicationController
     # female = 903
     # male = 1420
     
-    bounds = calculate_bounds(desiredScore, 900.0, 1500.0, 282.0, 500.0)
+    population = User.where("gender = '#{gender}'").count
+    
+    bounds = calculate_bounds(desiredScore, population, 1500.0, 282.0, 500.0)
     low = bounds[0]
     high = bounds[1]
     
