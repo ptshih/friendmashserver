@@ -61,7 +61,6 @@ class ProcessFriends < Struct.new(:facebookId)
         u.facebook_id = fbUser['id']
         u.gender = fbUser['gender'].nil? ? nil : fbUser['gender']
         u.score = 1500
-        u.score_network = 1500
         u.wins = 0
         u.wins_network = 0
         u.losses = 0
