@@ -558,4 +558,16 @@ class MashController < ApplicationController
     buf
   end
   
+  # Stats APIs
+  def recents
+    Rails.logger.info request.query_parameters.inspect
+    
+    response = ""
+    
+    respond_to do |format|
+      format.xml  { render :xml => response }
+      format.json  { render :json => response }
+    end
+  end
+  
 end
