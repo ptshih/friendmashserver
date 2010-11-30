@@ -605,7 +605,7 @@ class MashController < ApplicationController
     # Need to hook up interval parameter
     
     if params[:fields].nil? 
-      fields = %w(users profiles tokens networks results delayed_jobs, employers, schools)
+      fields = %w(users profiles tokens networks results delayed_jobs employers schools)
       # fields = %w(users profiles)
     else
       fields = params[:fields].split(',')
@@ -617,16 +617,22 @@ class MashController < ApplicationController
       interval = params[:interval]
     end
     
-    if params[:period]=="day" || params[:period]=="hour" 
-      period = [:period]
+    if params[:period].nil?
+      period = "hour"
     else
-      period = "day"
+      period = params[:period]
     end
+        # 
+        # if params[:period] == "day" || params[:period] == "hour" 
+        #   period = params[:period]
+        # else
+        #   period = "day"
+        # end
     
     response = {}
     
     fields.each do |field|
-      if period="day"
+      if period == "day"
         query = "select year(dt) as year, month(dt) as month, day(dt) as day,
                   sum(case when a.created_at is not null then 1 else 0 end) as data
                   from #{field} a
