@@ -46,11 +46,14 @@ class MashController < ApplicationController
     
     excludedString = "'" + excludedIds.join('\',\'') + "'" # SQL string for excludedIds
     
+    # perform score bias
+    lowerBound = rand(900) + 600 # random between 600 and 1500
+    
     # Randomly choose a user from the DB with a CSV of excluded IDs
     if networkIds.empty?
-      randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id NOT IN (#{excludedString})",:order=>randQuery,:limit=>1).first
+      randomUser = User.all(:conditions=>"score >= #{lowerBound} AND gender = '#{params[:gender]}' AND facebook_id NOT IN (#{excludedString})",:order=>randQuery,:limit=>1).first
     else
-      randomUser = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id NOT IN (#{excludedString}) AND facebook_id IN (#{networkString})",:order=>randQuery,:limit=>1).first
+      randomUser = User.all(:conditions=>"score >= #{lowerBound} AND gender = '#{params[:gender]}' AND facebook_id NOT IN (#{excludedString}) AND facebook_id IN (#{networkString})",:order=>randQuery,:limit=>1).first
     end
     
     excludedIds << "#{randomUser.facebook_id}" # add the random user into the excludedIds array
@@ -60,7 +63,12 @@ class MashController < ApplicationController
       opponent = find_opponent(randomUser.score, params[:gender], excludedIds, networkIds)
       
       if not opponent.nil?
-        response = [randomUser.facebook_id, opponent.facebook_id]
+        # 50/50 chance for left/right position
+        if rand(2).zero?
+          response = [randomUser.facebook_id, opponent.facebook_id]
+        else
+          response = [opponent.facebook_id, randomUser.facebook_id]
+        end
         respond_to do |format|
           format.xml  { render :xml => response }
           format.json  { render :json => response }
