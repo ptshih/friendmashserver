@@ -246,7 +246,7 @@ class MashController < ApplicationController
     if Rails.env == "production" || Rails.env == "staging"
       ranksHash = ActiveRecord::Base.connection.execute(query).fetch_hash
     else
-      ranksHash = ActiveRecord::Base.connection.execute(query)[0]
+      ranksHash = ActiveRecord::Base.connection.execute(query).first
     end
     
     profile['rank'] = ranksHash['rankoftotal'].to_i + 1
@@ -568,6 +568,20 @@ class MashController < ApplicationController
       format.xml  { render :xml => response }
       format.json  { render :json => response }
     end
+  end
+  
+  def activity
+    # This API returns a JSON response for recent server activity for the Web client to render.
+    # This is admin only and should be restricted/authenticated
+    Rails.logger.info request.query_parameters.inspect
+    
+  end
+  
+  def serverstats
+    # This API returns a JSON response for server stats for the Web client to render.
+    # This is admin only and should be restricted/authenticated
+    Rails.logger.info request.query_parameters.inspect
+    
   end
   
 end
