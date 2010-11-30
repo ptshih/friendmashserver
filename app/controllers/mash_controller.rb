@@ -592,11 +592,11 @@ class MashController < ApplicationController
     
     fields.each do |field|
       query = "select year(dt), month(dt), day(dt), sum(case when a.created_at is not null then 1 else 0 end) as data
-      					from #{field} a
-      					right join calendar b on year(created_at)=year(dt) and month(created_at)=month(dt) and day(created_at)=day(dt) and hour(dt)=0
-      					where dt between (select now()) - interval 24 day and (select now())
-      					group by year(dt), month(dt), day(dt)
-      					order by year(dt), month(dt), day(dt)"
+                from #{field} a
+                right join calendar b on year(created_at)=year(dt) and month(created_at)=month(dt) and day(created_at)=day(dt) and hour(dt)=0
+                where dt between (select now()) - interval 24 day and (select now())
+                group by year(dt), month(dt), day(dt)
+                order by year(dt), month(dt), day(dt)"
       mysqlresults = ActiveRecord::Base.connection.execute(query)
       
       response["#{field}"] = {}
@@ -621,6 +621,38 @@ class MashController < ApplicationController
     # This is admin only and should be restricted/authenticated
     Rails.logger.info request.query_parameters.inspect
     
+    if params[:fields].nil? 
+      fields = %w(users profiles tokens networks results delayed_jobs, employers, schools)
+    else
+      fields = params[:fields].split(',')
+    end
+    
+    response = {}
+    
+    query = "select
+              TABLE_SCHEMA,
+              TABLE_NAME,
+              concat(table_rows) rows,
+              concat(data_length) data_size,
+              concat(index_length) idx_size,
+              concat(data_length + index_length) total_size,
+              round(index_length/data_length,2) idx_frac
+              from information_schema.TABLES s
+              where table_schema = 'facemash'
+              order by data_length+index_length desc"
+              
+    mysqlresults = ActiveRecord::Base.connection.execute(query)
+    
+    while mysqlresult = mysqlresults.fetch_hash do
+      response["#{mysqlresult['TABLE_NAME']}"] = mysqlresult
+    end
+    
+    mysqlresults.free
+    
+    respond_to do |format|
+      format.xml  { render :xml => response }
+      format.json  { render :json => response }
+    end
   end
   
 end
