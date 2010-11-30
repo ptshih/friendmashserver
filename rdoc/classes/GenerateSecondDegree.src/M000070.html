@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>perform (GenerateSecondDegree)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File lib/generate_second_degree.rb, line 2</span>
+  <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">perform</span>
+    <span class="ruby-comment cmt"># This method appends to the network link table of user -&gt; friendoffriend with degree = 2</span>
+    <span class="ruby-comment cmt"># It checks inside the network table for all friends of a friend and creates a record for the user -&gt; friendoffriend with degree = 2</span>
+    <span class="ruby-comment cmt"># This only works if the friend of the user has also logged in once and generated his/her firstDegree network also (has uploaded friends list)</span>
+
+??
+    
+    <span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;Generate 2nd degree network table for user with id: #{facebookId}&quot;</span>
+
+    <span class="ruby-identifier">firstDegree</span> = <span class="ruby-constant">Network</span>.<span class="ruby-identifier">where</span>([<span class="ruby-value str">&quot;facebook_id = :facebook_id AND degree = 1&quot;</span>, { <span class="ruby-identifier">:facebook_id</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">facebookId</span> } ])
+
+    <span class="ruby-comment cmt"># p firstDegree</span>
+<span class="ruby-comment cmt">#    firstDegree = User.all(:conditions =&gt; &quot;facebook_id = '{facebookId}'&quot;)</span>
+
+    <span class="ruby-identifier">firstHash</span> = {}
+    <span class="ruby-identifier">secondHash</span> = {}
+
+    <span class="ruby-identifier">firstDegree</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">firstDegreeFriend</span><span class="ruby-operator">|</span>
+      <span class="ruby-identifier">firstHash</span>.<span class="ruby-identifier">store</span>(<span class="ruby-identifier">firstDegreeFriend</span>.<span class="ruby-identifier">friend_id</span>, <span class="ruby-value">1</span>)
+    <span class="ruby-keyword kw">end</span>
+
+    <span class="ruby-identifier">firstDegree</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">firstDegreeFriend</span><span class="ruby-operator">|</span>
+      <span class="ruby-identifier">secondDegree</span> = <span class="ruby-constant">Network</span>.<span class="ruby-identifier">where</span>([<span class="ruby-value str">&quot;facebook_id = :first_id AND degree = 1&quot;</span>, { <span class="ruby-identifier">:first_id</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">firstDegreeFriend</span>.<span class="ruby-identifier">friend_id</span> } ])
+
+      <span class="ruby-identifier">secondDegree</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">secondDegreeFriend</span><span class="ruby-operator">|</span>
+        <span class="ruby-keyword kw">if</span> <span class="ruby-keyword kw">not</span> <span class="ruby-identifier">firstHash</span>.<span class="ruby-identifier">has_key?</span>(<span class="ruby-identifier">secondDegreeFriend</span>.<span class="ruby-identifier">friend_id</span>)
+          <span class="ruby-identifier">secondHash</span>.<span class="ruby-identifier">store</span>(<span class="ruby-identifier">secondDegreeFriend</span>.<span class="ruby-identifier">friend_id</span>, <span class="ruby-value">2</span>)
+        <span class="ruby-keyword kw">end</span>
+
+        <span class="ruby-comment cmt"># puts secondDegreeFriend.friend_id</span>
+      <span class="ruby-keyword kw">end</span>
+    <span class="ruby-keyword kw">end</span>
+
+    <span class="ruby-identifier">secondHash</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">key</span>, <span class="ruby-identifier">value</span><span class="ruby-operator">|</span>
+      <span class="ruby-comment cmt"># puts &quot;#{key} - #{value}&quot;</span>
+
+      <span class="ruby-keyword kw">if</span> <span class="ruby-constant">Network</span>.<span class="ruby-identifier">where</span>([<span class="ruby-value str">&quot;facebook_id = :facebook_id AND friend_id = :friend_id&quot;</span>, { <span class="ruby-identifier">:facebook_id</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">facebookId</span>, <span class="ruby-identifier">:friend_id</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">key</span> }]).<span class="ruby-identifier">empty?</span>
+        <span class="ruby-identifier">network</span> = <span class="ruby-constant">Network</span>.<span class="ruby-identifier">create</span>(
+          <span class="ruby-identifier">:facebook_id</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">facebookId</span>,
+          <span class="ruby-identifier">:friend_id</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">key</span>, 
+          <span class="ruby-identifier">:degree</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">value</span>
+        )
+      <span class="ruby-keyword kw">end</span>
+    <span class="ruby-keyword kw">end</span>
+    <span class="ruby-comment cmt"># p secondHash</span>
+    <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">nil</span>
+  <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>

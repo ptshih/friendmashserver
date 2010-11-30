@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>reloadMyGender (User)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File app/models/user.rb, line 15</span>
+  <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">reloadMyGender</span>
+    <span class="ruby-comment cmt"># Console Cmd:</span>
+    <span class="ruby-comment cmt"># User.all(:conditions=&gt;'gender IS NULL',:include=&gt;:profile).each do |u| u.reloadMyGender end</span>
+    
+    <span class="ruby-comment cmt"># return if self.profile.nil? || self.profile[:first_name].nil?</span>
+    <span class="ruby-keyword kw">begin</span>
+      <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">nil</span> <span class="ruby-keyword kw">if</span> <span class="ruby-keyword kw">not</span> <span class="ruby-keyword kw">self</span>[<span class="ruby-identifier">:gender</span>].<span class="ruby-identifier">nil?</span> <span class="ruby-comment cmt"># don't perform if gender already exists</span>
+      <span class="ruby-identifier">firstname</span> = <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">profile</span>[<span class="ruby-identifier">:first_name</span>].<span class="ruby-identifier">split</span>(<span class="ruby-value str">' '</span>)[<span class="ruby-value">0</span>].<span class="ruby-identifier">downcase</span>
+      
+      <span class="ruby-identifier">result</span> = <span class="ruby-constant">Name</span>.<span class="ruby-identifier">where</span>(<span class="ruby-node">&quot;name = '#{firstname}'&quot;</span>)
+      
+      
+      <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">result</span>.<span class="ruby-identifier">count</span> <span class="ruby-operator">==</span> <span class="ruby-value">0</span>
+        <span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;could not find a gender for #{firstname}&quot;</span>
+      <span class="ruby-keyword kw">elsif</span> <span class="ruby-identifier">result</span>.<span class="ruby-identifier">count</span> <span class="ruby-operator">&gt;</span> <span class="ruby-value">1</span>
+        <span class="ruby-identifier">foundGender</span> = <span class="ruby-identifier">result</span>.<span class="ruby-identifier">first</span>.<span class="ruby-identifier">score</span> <span class="ruby-operator">&gt;</span> <span class="ruby-identifier">result</span>.<span class="ruby-identifier">last</span>.<span class="ruby-identifier">score</span> <span class="ruby-value">? </span><span class="ruby-identifier">result</span>.<span class="ruby-identifier">first</span>.<span class="ruby-identifier">gender</span> <span class="ruby-operator">:</span> <span class="ruby-identifier">result</span>.<span class="ruby-identifier">last</span>.<span class="ruby-identifier">gender</span>
+        <span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;found two genders for #{firstname}, returning #{foundGender}&quot;</span>
+        <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">update_attribute</span>(<span class="ruby-value str">'gender'</span>,<span class="ruby-identifier">foundGender</span>)
+      <span class="ruby-keyword kw">else</span>
+        <span class="ruby-comment cmt"># found a single entry</span>
+        <span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;found a gender for #{firstname} - #{result.first.gender}&quot;</span>
+        <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">update_attribute</span>(<span class="ruby-value str">'gender'</span>,<span class="ruby-identifier">result</span>.<span class="ruby-identifier">first</span>.<span class="ruby-identifier">gender</span>)
+      <span class="ruby-keyword kw">end</span>
+      
+      <span class="ruby-comment cmt"># html = HTTPClient.new.get_content(&quot;http://www.gpeters.com/names/baby-names.php?name=#{firstname}&amp;button=Go&quot;)</span>
+      <span class="ruby-comment cmt"># if html.include?(&quot;It's a boy&quot;)</span>
+      <span class="ruby-comment cmt">#   puts &quot;found a boy! #{firstname}&quot;</span>
+      <span class="ruby-comment cmt">#   self.update_attribute('gender','male')</span>
+      <span class="ruby-comment cmt"># elsif html.include?(&quot;It's a girl&quot;)</span>
+      <span class="ruby-comment cmt">#   puts &quot;found a girl! #{firstname}&quot;</span>
+      <span class="ruby-comment cmt">#   self.update_attribute('gender','female')</span>
+      <span class="ruby-comment cmt"># else</span>
+      <span class="ruby-comment cmt">#   puts &quot;could not detect gender for #{firstname}&quot;</span>
+      <span class="ruby-comment cmt"># end</span>
+    <span class="ruby-keyword kw">rescue</span>
+      <span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;nope, didnt work for #{firstname}&quot;</span>
+    <span class="ruby-keyword kw">end</span>
+    <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">nil</span>
+  <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>

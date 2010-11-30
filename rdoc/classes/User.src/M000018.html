@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>getJSON (User)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File app/models/user.rb, line 133</span>
+  <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">getJSON</span>(<span class="ruby-identifier">path</span>,<span class="ruby-identifier">params</span>)
+    <span class="ruby-keyword kw">begin</span>
+      <span class="ruby-comment cmt"># JSON.parse HTTPClient.new.get_content(path,params)</span>
+      <span class="ruby-identifier">extheader</span> = { <span class="ruby-value str">'Accept-Encoding'</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value str">'gzip'</span> }
+      <span class="ruby-constant">JSON</span>.<span class="ruby-identifier">parse</span>(<span class="ruby-constant">Zlib</span><span class="ruby-operator">::</span><span class="ruby-constant">GzipReader</span>.<span class="ruby-identifier">new</span>(<span class="ruby-constant">StringIO</span>.<span class="ruby-identifier">new</span>(<span class="ruby-constant">HTTPClient</span>.<span class="ruby-identifier">new</span>.<span class="ruby-identifier">get_content</span>(<span class="ruby-identifier">path</span>,<span class="ruby-identifier">params</span>,<span class="ruby-identifier">extheader</span>))).<span class="ruby-identifier">read</span>)
+    <span class="ruby-keyword kw">rescue</span>
+      <span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;found invalid token!!! #{path} #{params}&quot;</span>
+    <span class="ruby-keyword kw">end</span>
+  <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>

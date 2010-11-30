@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>create_user (ProcessFriends)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File lib/process_friends.rb, line 57</span>
+  <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">create_user</span>(<span class="ruby-identifier">fbUser</span>)
+    <span class="ruby-identifier">user</span> = <span class="ruby-constant">User</span>.<span class="ruby-identifier">find_by_facebook_id</span>(<span class="ruby-identifier">fbUser</span>[<span class="ruby-value str">'id'</span>])
+    <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">user</span>.<span class="ruby-identifier">nil?</span>
+      <span class="ruby-constant">User</span>.<span class="ruby-identifier">new</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">u</span><span class="ruby-operator">|</span>
+        <span class="ruby-identifier">u</span>.<span class="ruby-identifier">facebook_id</span> = <span class="ruby-identifier">fbUser</span>[<span class="ruby-value str">'id'</span>]
+        <span class="ruby-identifier">u</span>.<span class="ruby-identifier">gender</span> = <span class="ruby-identifier">fbUser</span>[<span class="ruby-value str">'gender'</span>].<span class="ruby-identifier">nil?</span> <span class="ruby-value">? </span><span class="ruby-keyword kw">nil</span> <span class="ruby-operator">:</span> <span class="ruby-identifier">fbUser</span>[<span class="ruby-value str">'gender'</span>]
+        <span class="ruby-identifier">u</span>.<span class="ruby-identifier">score</span> = <span class="ruby-value">1500</span>
+        <span class="ruby-identifier">u</span>.<span class="ruby-identifier">score_network</span> = <span class="ruby-value">1500</span>
+        <span class="ruby-identifier">u</span>.<span class="ruby-identifier">wins</span> = <span class="ruby-value">0</span>
+        <span class="ruby-identifier">u</span>.<span class="ruby-identifier">wins_network</span> = <span class="ruby-value">0</span>
+        <span class="ruby-identifier">u</span>.<span class="ruby-identifier">losses</span> = <span class="ruby-value">0</span>
+        <span class="ruby-identifier">u</span>.<span class="ruby-identifier">losses_network</span> = <span class="ruby-value">0</span>
+        <span class="ruby-identifier">u</span>.<span class="ruby-identifier">win_streak</span> = <span class="ruby-value">0</span>
+        <span class="ruby-identifier">u</span>.<span class="ruby-identifier">win_streak_network</span> = <span class="ruby-value">0</span>
+        <span class="ruby-identifier">u</span>.<span class="ruby-identifier">loss_streak</span> = <span class="ruby-value">0</span>
+        <span class="ruby-identifier">u</span>.<span class="ruby-identifier">loss_streak_network</span> = <span class="ruby-value">0</span>
+        <span class="ruby-identifier">u</span>.<span class="ruby-identifier">win_streak_max</span> = <span class="ruby-value">0</span>
+        <span class="ruby-identifier">u</span>.<span class="ruby-identifier">loss_streak_max</span> = <span class="ruby-value">0</span>
+        <span class="ruby-identifier">u</span>.<span class="ruby-identifier">win_streak_max_network</span> = <span class="ruby-value">0</span>
+        <span class="ruby-identifier">u</span>.<span class="ruby-identifier">loss_streak_max_network</span> = <span class="ruby-value">0</span>
+        <span class="ruby-identifier">u</span>.<span class="ruby-identifier">save</span>
+      <span class="ruby-keyword kw">end</span>
+      <span class="ruby-identifier">profile</span> = <span class="ruby-constant">Profile</span>.<span class="ruby-identifier">find_by_facebook_id</span>(<span class="ruby-identifier">fbUser</span>[<span class="ruby-value str">'id'</span>])
+      <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">profile</span>.<span class="ruby-identifier">nil?</span>
+        <span class="ruby-constant">Profile</span>.<span class="ruby-identifier">new</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">p</span><span class="ruby-operator">|</span>
+          <span class="ruby-identifier">p</span>.<span class="ruby-identifier">facebook_id</span> = <span class="ruby-identifier">fbUser</span>[<span class="ruby-value str">'id'</span>]
+          <span class="ruby-identifier">p</span>.<span class="ruby-identifier">first_name</span> = <span class="ruby-identifier">fbUser</span>[<span class="ruby-value str">'first_name'</span>].<span class="ruby-identifier">nil?</span> <span class="ruby-value">? </span><span class="ruby-keyword kw">nil</span> <span class="ruby-operator">:</span> <span class="ruby-identifier">fbUser</span>[<span class="ruby-value str">'first_name'</span>]
+          <span class="ruby-identifier">p</span>.<span class="ruby-identifier">last_name</span> = <span class="ruby-identifier">fbUser</span>[<span class="ruby-value str">'last_name'</span>].<span class="ruby-identifier">nil?</span> <span class="ruby-value">? </span><span class="ruby-keyword kw">nil</span> <span class="ruby-operator">:</span> <span class="ruby-identifier">fbUser</span>[<span class="ruby-value str">'last_name'</span>]
+          <span class="ruby-identifier">p</span>.<span class="ruby-identifier">full_name</span> = <span class="ruby-identifier">fbUser</span>[<span class="ruby-value str">'name'</span>]
+          <span class="ruby-identifier">p</span>.<span class="ruby-identifier">votes</span> = <span class="ruby-value">0</span>
+          <span class="ruby-identifier">p</span>.<span class="ruby-identifier">votes_network</span> = <span class="ruby-value">0</span>
+          <span class="ruby-identifier">p</span>.<span class="ruby-identifier">save</span>
+        <span class="ruby-keyword kw">end</span>
+      <span class="ruby-keyword kw">end</span>
+
+      <span class="ruby-identifier">fbUser</span>[<span class="ruby-value str">'education'</span>].<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">education</span><span class="ruby-operator">|</span>
+        <span class="ruby-constant">School</span>.<span class="ruby-identifier">new</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">s</span><span class="ruby-operator">|</span>
+          <span class="ruby-identifier">s</span>.<span class="ruby-identifier">facebook_id</span> = <span class="ruby-identifier">fbUser</span>[<span class="ruby-value str">'id'</span>]
+          <span class="ruby-identifier">s</span>.<span class="ruby-identifier">school_id</span> = <span class="ruby-identifier">education</span>[<span class="ruby-value str">'school'</span>][<span class="ruby-value str">'id'</span>]
+          <span class="ruby-identifier">s</span>.<span class="ruby-identifier">school_name</span> = <span class="ruby-identifier">education</span>[<span class="ruby-value str">'school'</span>][<span class="ruby-value str">'name'</span>]
+          <span class="ruby-identifier">s</span>.<span class="ruby-identifier">save</span>
+        <span class="ruby-keyword kw">end</span>
+      <span class="ruby-keyword kw">end</span> <span class="ruby-keyword kw">if</span> <span class="ruby-keyword kw">not</span> <span class="ruby-identifier">fbUser</span>[<span class="ruby-value str">'education'</span>].<span class="ruby-identifier">nil?</span>
+
+      <span class="ruby-identifier">fbUser</span>[<span class="ruby-value str">'work'</span>].<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">work</span><span class="ruby-operator">|</span>
+        <span class="ruby-constant">Employer</span>.<span class="ruby-identifier">new</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">e</span><span class="ruby-operator">|</span>
+          <span class="ruby-identifier">e</span>.<span class="ruby-identifier">facebook_id</span> = <span class="ruby-identifier">fbUser</span>[<span class="ruby-value str">'id'</span>]
+          <span class="ruby-identifier">e</span>.<span class="ruby-identifier">employer_id</span> = <span class="ruby-identifier">work</span>[<span class="ruby-value str">'employer'</span>][<span class="ruby-value str">'id'</span>]
+          <span class="ruby-identifier">e</span>.<span class="ruby-identifier">employer_name</span> = <span class="ruby-identifier">work</span>[<span class="ruby-value str">'employer'</span>][<span class="ruby-value str">'name'</span>]
+          <span class="ruby-identifier">e</span>.<span class="ruby-identifier">save</span>
+        <span class="ruby-keyword kw">end</span>
+      <span class="ruby-keyword kw">end</span> <span class="ruby-keyword kw">if</span> <span class="ruby-keyword kw">not</span> <span class="ruby-identifier">fbUser</span>[<span class="ruby-value str">'work'</span>].<span class="ruby-identifier">nil?</span>
+    <span class="ruby-keyword kw">else</span>
+      <span class="ruby-identifier">user</span>.<span class="ruby-identifier">update_attributes</span>(
+      <span class="ruby-identifier">:gender</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">fbUser</span>[<span class="ruby-value str">'gender'</span>]
+      )
+    <span class="ruby-keyword kw">end</span>
+  <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>

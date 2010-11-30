@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>token (MashController)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File app/controllers/mash_controller.rb, line 198</span>
+  <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">token</span>
+    <span class="ruby-comment cmt"># Rails.logger.info request.query_parameters.inspect</span>
+    <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">request</span>.<span class="ruby-identifier">env</span>[<span class="ruby-value str">&quot;HTTP_X_FACEMASH_SECRET&quot;</span>] <span class="ruby-operator">!=</span> <span class="ruby-value str">&quot;omgwtfbbq&quot;</span>
+      <span class="ruby-identifier">respond_to</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">format</span><span class="ruby-operator">|</span>
+        <span class="ruby-identifier">format</span>.<span class="ruby-identifier">html</span> <span class="ruby-comment cmt"># index.html.erb</span>
+        <span class="ruby-identifier">format</span>.<span class="ruby-identifier">xml</span>  { <span class="ruby-identifier">render</span> <span class="ruby-identifier">:xml</span> =<span class="ruby-operator">&gt;</span> {<span class="ruby-identifier">:error</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value str">&quot;access denied&quot;</span>} }
+        <span class="ruby-identifier">format</span>.<span class="ruby-identifier">json</span>  { <span class="ruby-identifier">render</span> <span class="ruby-identifier">:json</span> =<span class="ruby-operator">&gt;</span> {<span class="ruby-identifier">:error</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value str">&quot;access denied&quot;</span>} }
+      <span class="ruby-keyword kw">end</span>
+      <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">nil</span>
+    <span class="ruby-keyword kw">end</span>
+    
+    <span class="ruby-comment cmt"># Store the user's access token</span>
+    <span class="ruby-identifier">token</span> = <span class="ruby-constant">Token</span>.<span class="ruby-identifier">find_by_facebook_id</span>(<span class="ruby-identifier">params</span>[<span class="ruby-value str">&quot;id&quot;</span>])
+    <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">token</span>.<span class="ruby-identifier">nil?</span>
+      <span class="ruby-identifier">token</span> = <span class="ruby-constant">Token</span>.<span class="ruby-identifier">create</span>(
+        <span class="ruby-identifier">:facebook_id</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">params</span>[<span class="ruby-value str">&quot;id&quot;</span>],
+        <span class="ruby-identifier">:access_token</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">params</span>[<span class="ruby-value str">&quot;access_token&quot;</span>],
+        <span class="ruby-identifier">:udid</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">request</span>.<span class="ruby-identifier">env</span>[<span class="ruby-value str">&quot;HTTP_X_UDID&quot;</span>]
+      )
+    <span class="ruby-keyword kw">else</span>
+      <span class="ruby-comment cmt"># token.update_attribute('access_token', params[:access_token])</span>
+      <span class="ruby-identifier">token</span>.<span class="ruby-identifier">update_attributes</span>(
+        <span class="ruby-identifier">:access_token</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">params</span>[<span class="ruby-value str">&quot;access_token&quot;</span>],
+        <span class="ruby-identifier">:udid</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">request</span>.<span class="ruby-identifier">env</span>[<span class="ruby-value str">&quot;HTTP_X_UDID&quot;</span>]
+      )
+    <span class="ruby-keyword kw">end</span>
+    
+    <span class="ruby-identifier">user</span> = <span class="ruby-constant">User</span>.<span class="ruby-identifier">find_by_facebook_id</span>(<span class="ruby-identifier">params</span>[<span class="ruby-value str">&quot;id&quot;</span>])
+    <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">user</span>.<span class="ruby-identifier">nil?</span>
+      <span class="ruby-comment cmt"># create a record for the current user</span>
+      <span class="ruby-identifier">newUser</span> = <span class="ruby-constant">User</span>.<span class="ruby-identifier">create</span>(
+        <span class="ruby-identifier">:facebook_id</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">params</span>[<span class="ruby-value str">&quot;id&quot;</span>],
+        <span class="ruby-identifier">:gender</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">params</span>[<span class="ruby-value str">&quot;gender&quot;</span>],
+        <span class="ruby-identifier">:score</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">1500</span>,
+        <span class="ruby-identifier">:score_network</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">1500</span>,
+        <span class="ruby-identifier">:wins</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>,
+        <span class="ruby-identifier">:wins_network</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>,
+        <span class="ruby-identifier">:losses</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>,
+        <span class="ruby-identifier">:losses_network</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>,
+        <span class="ruby-identifier">:win_streak</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>,
+        <span class="ruby-identifier">:win_streak_network</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>,
+        <span class="ruby-identifier">:loss_streak</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>,
+        <span class="ruby-identifier">:loss_streak_network</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>,
+        <span class="ruby-identifier">:win_streak_max</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>,
+        <span class="ruby-identifier">:loss_streak_max</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>,
+        <span class="ruby-identifier">:win_streak_max_network</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>,
+        <span class="ruby-identifier">:loss_streak_max_network</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>
+      )
+      <span class="ruby-identifier">newProfile</span> = <span class="ruby-constant">Profile</span>.<span class="ruby-identifier">create</span>(
+        <span class="ruby-identifier">:facebook_id</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">params</span>[<span class="ruby-value str">&quot;id&quot;</span>],
+        <span class="ruby-identifier">:first_name</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">params</span>[<span class="ruby-value str">&quot;first_name&quot;</span>].<span class="ruby-identifier">nil?</span> <span class="ruby-value">? </span><span class="ruby-keyword kw">nil</span> <span class="ruby-operator">:</span> <span class="ruby-identifier">params</span>[<span class="ruby-value str">&quot;first_name&quot;</span>],
+        <span class="ruby-identifier">:last_name</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">params</span>[<span class="ruby-value str">&quot;last_name&quot;</span>].<span class="ruby-identifier">nil?</span> <span class="ruby-value">? </span><span class="ruby-keyword kw">nil</span> <span class="ruby-operator">:</span> <span class="ruby-identifier">params</span>[<span class="ruby-value str">&quot;last_name&quot;</span>],
+        <span class="ruby-identifier">:full_name</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">params</span>[<span class="ruby-value str">&quot;name&quot;</span>].<span class="ruby-identifier">nil?</span> <span class="ruby-value">? </span><span class="ruby-keyword kw">nil</span> <span class="ruby-operator">:</span> <span class="ruby-identifier">params</span>[<span class="ruby-value str">&quot;name&quot;</span>],
+        <span class="ruby-identifier">:votes</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>,
+        <span class="ruby-identifier">:votes_network</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>
+      )
+      <span class="ruby-identifier">user</span> = <span class="ruby-identifier">newUser</span>
+    <span class="ruby-keyword kw">else</span>
+      <span class="ruby-identifier">user</span>.<span class="ruby-identifier">update_attributes</span>(
+        <span class="ruby-identifier">:gender</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">params</span>[<span class="ruby-value str">&quot;gender&quot;</span>]
+      )
+    <span class="ruby-keyword kw">end</span>
+    
+    <span class="ruby-comment cmt"># Process friends in worker</span>
+    <span class="ruby-constant">Delayed</span><span class="ruby-operator">::</span><span class="ruby-constant">Job</span>.<span class="ruby-identifier">enqueue</span> <span class="ruby-constant">ProcessFriends</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">params</span>[<span class="ruby-value str">&quot;id&quot;</span>])
+    
+??
+    
+    
+    <span class="ruby-comment cmt"># Fire off a FBConnect friends request using the user's token</span>
+    <span class="ruby-comment cmt">#</span>
+    <span class="ruby-comment cmt"># Insert the results into the DB</span>
+    <span class="ruby-comment cmt"># get_fb_friends(params[:id], token[:access_token])</span>
+    
+    <span class="ruby-identifier">respond_to</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">format</span><span class="ruby-operator">|</span>
+      <span class="ruby-identifier">format</span>.<span class="ruby-identifier">html</span> <span class="ruby-comment cmt"># index.html.erb</span>
+      <span class="ruby-identifier">format</span>.<span class="ruby-identifier">xml</span>  { <span class="ruby-identifier">render</span> <span class="ruby-identifier">:xml</span> =<span class="ruby-operator">&gt;</span> {<span class="ruby-identifier">:success</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value str">&quot;true&quot;</span>} }
+      <span class="ruby-identifier">format</span>.<span class="ruby-identifier">json</span>  { <span class="ruby-identifier">render</span> <span class="ruby-identifier">:json</span> =<span class="ruby-operator">&gt;</span> {<span class="ruby-identifier">:success</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value str">&quot;true&quot;</span>} }
+    <span class="ruby-keyword kw">end</span>
+  <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>

@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>Class: User</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <meta http-equiv="Content-Script-Type" content="text/javascript" />
+  <link rel="stylesheet" href=".././rdoc-style.css" type="text/css" media="screen" />
+  <script type="text/javascript">
+  // <![CDATA[
+
+  function popupCode( url ) {
+    window.open(url, "Code", "resizable=yes,scrollbars=yes,toolbar=no,status=no,height=150,width=400")
+  }
+
+  function toggleCode( id ) {
+    if ( document.getElementById )
+      elem = document.getElementById( id );
+    else if ( document.all )
+      elem = eval( "document.all." + id );
+    else
+      return false;
+
+    elemStyle = elem.style;
+    
+    if ( elemStyle.display != "block" ) {
+      elemStyle.display = "block"
+    } else {
+      elemStyle.display = "none"
+    }
+
+    return true;
+  }
+  
+  // Make codeblocks hidden by default
+  document.writeln( "<style type=\"text/css\">div.method-source-code { display: none }</style>" )
+  
+  // ]]>
+  </script>
+
+</head>
+<body>
+
+
+
+    <div id="classHeader">
+        <table class="header-table">
+        <tr class="top-aligned-row">
+          <td><strong>Class</strong></td>
+          <td class="class-name-in-header">User</td>
+        </tr>
+        <tr class="top-aligned-row">
+            <td><strong>In:</strong></td>
+            <td>
+                <a href="../files/app/models/user_rb.html">
+                app/models/user.rb
+                </a>
+        <br />
+            </td>
+        </tr>
+
+        <tr class="top-aligned-row">
+            <td><strong>Parent:</strong></td>
+            <td>
+                ActiveRecord::Base
+            </td>
+        </tr>
+        </table>
+    </div>
+  <!-- banner header -->
+
+  <div id="bodyContent">
+
+
+
+  <div id="contextContent">
+
+
+
+   </div>
+
+    <div id="method-list">
+      <h3 class="section-bar">Methods</h3>
+
+      <div class="name-list">
+      <a href="#M000013">albums</a>&nbsp;&nbsp;
+      <a href="#M000017">fbCall</a>&nbsp;&nbsp;
+      <a href="#M000015">fbprofile</a>&nbsp;&nbsp;
+      <a href="#M000014">friends</a>&nbsp;&nbsp;
+      <a href="#M000018">getJSON</a>&nbsp;&nbsp;
+      <a href="#M000016">originalFriend</a>&nbsp;&nbsp;
+      <a href="#M000010">picture</a>&nbsp;&nbsp;
+      <a href="#M000011">pictures</a>&nbsp;&nbsp;
+      <a href="#M000008">populateMissingGenders</a>&nbsp;&nbsp;
+      <a href="#M000012">profileAlbum</a>&nbsp;&nbsp;
+      <a href="#M000009">refreshMyGenderFromFacebook</a>&nbsp;&nbsp;
+      <a href="#M000007">reloadMyGender</a>&nbsp;&nbsp;
+      </div>
+    </div>
+
+  </div>
+
+
+    <!-- if includes -->
+
+    <div id="section">
+
+
+
+
+
+      
+
+
+    <!-- if method_list -->
+    <div id="methods">
+      <h3 class="section-bar">Public Instance methods</h3>
+
+      <div id="method-M000013" class="method-detail">
+        <a name="M000013"></a>
+
+        <div class="method-heading">
+          <a href="User.src/M000013.html" target="Code" class="method-signature"
+            onclick="popupCode('User.src/M000013.html');return false;">
+          <span class="method-name">albums</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+        </div>
+      </div>
+
+      <div id="method-M000017" class="method-detail">
+        <a name="M000017"></a>
+
+        <div class="method-heading">
+          <a href="User.src/M000017.html" target="Code" class="method-signature"
+            onclick="popupCode('User.src/M000017.html');return false;">
+          <span class="method-name">fbCall</span><span class="method-args">(path,params = {})</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+if necessary, lets find the original friend that loaded this users data and
+use their token instead
+</p>
+        </div>
+      </div>
+
+      <div id="method-M000015" class="method-detail">
+        <a name="M000015"></a>
+
+        <div class="method-heading">
+          <a href="User.src/M000015.html" target="Code" class="method-signature"
+            onclick="popupCode('User.src/M000015.html');return false;">
+          <span class="method-name">fbprofile</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+        </div>
+      </div>
+
+      <div id="method-M000014" class="method-detail">
+        <a name="M000014"></a>
+
+        <div class="method-heading">
+          <a href="User.src/M000014.html" target="Code" class="method-signature"
+            onclick="popupCode('User.src/M000014.html');return false;">
+          <span class="method-name">friends</span><span class="method-args">(params = {})</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+        </div>
+      </div>
+
+      <div id="method-M000018" class="method-detail">
+        <a name="M000018"></a>
+
+        <div class="method-heading">
+          <a href="User.src/M000018.html" target="Code" class="method-signature"
+            onclick="popupCode('User.src/M000018.html');return false;">
+          <span class="method-name">getJSON</span><span class="method-args">(path,params)</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+        </div>
+      </div>
+
+      <div id="method-M000016" class="method-detail">
+        <a name="M000016"></a>
+
+        <div class="method-heading">
+          <a href="User.src/M000016.html" target="Code" class="method-signature"
+            onclick="popupCode('User.src/M000016.html');return false;">
+          <span class="method-name">originalFriend</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+this &quot;looks up&quot; the original friend that loaded this user, or
+itself if it has a token
+</p>
+        </div>
+      </div>
+
+      <div id="method-M000010" class="method-detail">
+        <a name="M000010"></a>
+
+        <div class="method-heading">
+          <a href="User.src/M000010.html" target="Code" class="method-signature"
+            onclick="popupCode('User.src/M000010.html');return false;">
+          <span class="method-name">picture</span><span class="method-args">(size=nil)</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+        </div>
+      </div>
+
+      <div id="method-M000011" class="method-detail">
+        <a name="M000011"></a>
+
+        <div class="method-heading">
+          <a href="User.src/M000011.html" target="Code" class="method-signature"
+            onclick="popupCode('User.src/M000011.html');return false;">
+          <span class="method-name">pictures</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+        </div>
+      </div>
+
+      <div id="method-M000008" class="method-detail">
+        <a name="M000008"></a>
+
+        <div class="method-heading">
+          <a href="User.src/M000008.html" target="Code" class="method-signature"
+            onclick="popupCode('User.src/M000008.html');return false;">
+          <span class="method-name">populateMissingGenders</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+Look in the Names DB, find all users with a nil gender, and fill them
+</p>
+        </div>
+      </div>
+
+      <div id="method-M000012" class="method-detail">
+        <a name="M000012"></a>
+
+        <div class="method-heading">
+          <a href="User.src/M000012.html" target="Code" class="method-signature"
+            onclick="popupCode('User.src/M000012.html');return false;">
+          <span class="method-name">profileAlbum</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+calls <a href="User.html#M000013">albums</a>, loops through and finds first
+album where name includes &quot;<a href="Profile.html">Profile</a>&quot;
+</p>
+        </div>
+      </div>
+
+      <div id="method-M000009" class="method-detail">
+        <a name="M000009"></a>
+
+        <div class="method-heading">
+          <a href="User.src/M000009.html" target="Code" class="method-signature"
+            onclick="popupCode('User.src/M000009.html');return false;">
+          <span class="method-name">refreshMyGenderFromFacebook</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+This method calls facebook to retrieve <a
+href="User.html#M000014">friends</a> list from all user&#8216;s who have a
+token Then updates the gender field for all the <a
+href="User.html#M000014">friends</a> This was written because our gender
+matcher screwed up our DB User.all.each do |u|
+u.refreshMyGenderFromFacebook if not u.token.nil? end
+</p>
+        </div>
+      </div>
+
+      <div id="method-M000007" class="method-detail">
+        <a name="M000007"></a>
+
+        <div class="method-heading">
+          <a href="User.src/M000007.html" target="Code" class="method-signature"
+            onclick="popupCode('User.src/M000007.html');return false;">
+          <span class="method-name">reloadMyGender</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+When migrating new default values, it doesnt zero it out for some reason
+</p>
+<p>
+User.all.each do |u| u.update_attributes(:score_network =&gt; 1500,
+:wins_network =&gt; 0, :losses_network =&gt; 0, :win_streak_network =&gt;
+0, :loss_streak_network =&gt; 0) end User.all.each do |u|
+u.update_attributes(:win_streak_max =&gt; 0, :loss_streak_max =&gt; 0,
+:win_streak_max_network =&gt; 0, :loss_streak_max_network =&gt; 0) end
+</p>
+        </div>
+      </div>
+
+
+    </div>
+
+
+  </div>
+
+
+<div id="validator-badges">
+  <p><small><a href="http://validator.w3.org/check/referer">[Validate]</a></small></p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>result (MashController)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File app/controllers/mash_controller.rb, line 312</span>
+  <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">result</span>
+    <span class="ruby-comment cmt"># report a match result to the server </span>
+    <span class="ruby-constant">Rails</span>.<span class="ruby-identifier">logger</span>.<span class="ruby-identifier">info</span> <span class="ruby-identifier">request</span>.<span class="ruby-identifier">query_parameters</span>.<span class="ruby-identifier">inspect</span>
+    
+    <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">request</span>.<span class="ruby-identifier">env</span>[<span class="ruby-value str">&quot;HTTP_X_FACEMASH_SECRET&quot;</span>] <span class="ruby-operator">!=</span> <span class="ruby-value str">&quot;omgwtfbbq&quot;</span>
+      <span class="ruby-identifier">respond_to</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">format</span><span class="ruby-operator">|</span>
+        <span class="ruby-identifier">format</span>.<span class="ruby-identifier">html</span> <span class="ruby-comment cmt"># index.html.erb</span>
+        <span class="ruby-identifier">format</span>.<span class="ruby-identifier">xml</span>  { <span class="ruby-identifier">render</span> <span class="ruby-identifier">:xml</span> =<span class="ruby-operator">&gt;</span> {<span class="ruby-identifier">:error</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value str">&quot;access denied&quot;</span>} }
+        <span class="ruby-identifier">format</span>.<span class="ruby-identifier">json</span>  { <span class="ruby-identifier">render</span> <span class="ruby-identifier">:json</span> =<span class="ruby-operator">&gt;</span> {<span class="ruby-identifier">:error</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value str">&quot;access denied&quot;</span>} }
+      <span class="ruby-keyword kw">end</span>
+      <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">nil</span>
+    <span class="ruby-keyword kw">end</span>
+    
+    <span class="ruby-comment cmt"># puts request.env[&quot;HTTP_X_USER_ID&quot;]</span>
+    <span class="ruby-comment cmt"># puts request.env[&quot;HTTP_X_UDID&quot;]</span>
+    
+    <span class="ruby-comment cmt"># Increment vote count for current user</span>
+    <span class="ruby-comment cmt"># increment_counter</span>
+    <span class="ruby-constant">Profile</span>.<span class="ruby-identifier">increment_counter</span>(<span class="ruby-value str">'votes'</span>,<span class="ruby-constant">Profile</span>.<span class="ruby-identifier">find_by_facebook_id</span>(<span class="ruby-identifier">params</span>[<span class="ruby-identifier">:id</span>]).<span class="ruby-identifier">id</span>)
+    <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">params</span>[<span class="ruby-identifier">:mode</span>] <span class="ruby-operator">==</span> <span class="ruby-value str">&quot;1&quot;</span>
+      <span class="ruby-constant">Profile</span>.<span class="ruby-identifier">increment_counter</span>(<span class="ruby-value str">'votes_network'</span>,<span class="ruby-constant">Profile</span>.<span class="ruby-identifier">find_by_facebook_id</span>(<span class="ruby-identifier">params</span>[<span class="ruby-identifier">:id</span>]).<span class="ruby-identifier">id</span>)
+    <span class="ruby-keyword kw">end</span>
+    
+    <span class="ruby-identifier">winner</span> = <span class="ruby-constant">User</span>.<span class="ruby-identifier">find_by_facebook_id</span>(<span class="ruby-identifier">params</span>[<span class="ruby-identifier">:w</span>])
+    <span class="ruby-identifier">loser</span>  = <span class="ruby-constant">User</span>.<span class="ruby-identifier">find_by_facebook_id</span>(<span class="ruby-identifier">params</span>[<span class="ruby-identifier">:l</span>])
+    
+    <span class="ruby-identifier">winnerBeforeScore</span> = <span class="ruby-identifier">winner</span>[<span class="ruby-identifier">:score</span>]
+    <span class="ruby-identifier">loserBeforeScore</span> = <span class="ruby-identifier">loser</span>[<span class="ruby-identifier">:score</span>]
+    
+    <span class="ruby-identifier">adjustScoresForUsers</span>(<span class="ruby-identifier">winner</span>, <span class="ruby-identifier">loser</span>, <span class="ruby-identifier">params</span>[<span class="ruby-identifier">:mode</span>])
+    
+    <span class="ruby-comment cmt"># Insert a NEW record into Result table to keep track of the fight</span>
+    <span class="ruby-comment cmt"># If left is true, that means left side was DISCARDED</span>
+    <span class="ruby-constant">Delayed</span><span class="ruby-operator">::</span><span class="ruby-constant">Job</span>.<span class="ruby-identifier">enqueue</span> <span class="ruby-constant">GenerateResult</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">params</span>[<span class="ruby-identifier">:id</span>], <span class="ruby-identifier">params</span>[<span class="ruby-identifier">:w</span>], <span class="ruby-identifier">params</span>[<span class="ruby-identifier">:l</span>], <span class="ruby-identifier">params</span>[<span class="ruby-identifier">:left</span>], <span class="ruby-identifier">params</span>[<span class="ruby-identifier">:mode</span>], <span class="ruby-identifier">winnerBeforeScore</span>, <span class="ruby-identifier">loserBeforeScore</span>)
+    
+    <span class="ruby-comment cmt"># Result.create(</span>
+    <span class="ruby-comment cmt">#   :facebook_id =&gt; params[:id],</span>
+    <span class="ruby-comment cmt">#   :winner_id =&gt; params[:w],</span>
+    <span class="ruby-comment cmt">#   :loser_id =&gt; params[:l],</span>
+    <span class="ruby-comment cmt">#   :left =&gt; params[:left],</span>
+    <span class="ruby-comment cmt">#   :mode =&gt; params[:mode],</span>
+    <span class="ruby-comment cmt">#   :winner_score =&gt; winner[:score],</span>
+    <span class="ruby-comment cmt">#   :loser_score =&gt; loser[:score]</span>
+    <span class="ruby-comment cmt"># )</span>
+    
+    <span class="ruby-comment cmt"># Result.new do |r|</span>
+    <span class="ruby-comment cmt">#   r.facebook_id = params[:id]</span>
+    <span class="ruby-comment cmt">#   r.winner_id = params[:w]</span>
+    <span class="ruby-comment cmt">#   r.loser_id = params[:l]</span>
+    <span class="ruby-comment cmt">#   r.left = params[:left]</span>
+    <span class="ruby-comment cmt">#   r.mode = params[:mode]</span>
+    <span class="ruby-comment cmt">#   r.winner_score = winner[:score]</span>
+    <span class="ruby-comment cmt">#   r.loser_score = loser[:score]</span>
+    <span class="ruby-comment cmt">#   r.save</span>
+    <span class="ruby-comment cmt"># end</span>
+    
+    <span class="ruby-identifier">respond_to</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">format</span><span class="ruby-operator">|</span>
+      <span class="ruby-identifier">format</span>.<span class="ruby-identifier">html</span> <span class="ruby-comment cmt"># index.html.erb</span>
+      <span class="ruby-identifier">format</span>.<span class="ruby-identifier">xml</span>  { <span class="ruby-identifier">render</span> <span class="ruby-identifier">:xml</span> =<span class="ruby-operator">&gt;</span> {<span class="ruby-identifier">:success</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value str">&quot;true&quot;</span>} }
+      <span class="ruby-identifier">format</span>.<span class="ruby-identifier">json</span>  { <span class="ruby-identifier">render</span> <span class="ruby-identifier">:json</span> =<span class="ruby-operator">&gt;</span> {<span class="ruby-identifier">:success</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value str">&quot;true&quot;</span>} }
+    <span class="ruby-keyword kw">end</span>
+  <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>calculate_range (MashController)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File app/controllers/mash_controller.rb, line 652</span>
+  <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">calculate_range</span>(<span class="ruby-identifier">score</span>)
+    <span class="ruby-comment cmt"># DEPRECATED</span>
+    <span class="ruby-comment cmt"># SEE calculate_bounds</span>
+    
+    <span class="ruby-comment cmt"># Pass in a desired score</span>
+    <span class="ruby-comment cmt"># We break up the buckets into 10 ranges</span>
+    <span class="ruby-comment cmt"># Based on the score, we then return the desired range back to the SQL query</span>
+    
+    <span class="ruby-comment cmt"># Elo Range</span>
+    <span class="ruby-comment cmt"># 600 &lt;-&gt; 2400</span>
+    <span class="ruby-comment cmt"># 0 ~ 3000 (absolute min/max)    </span>
+    
+    <span class="ruby-identifier">ranges</span> = [<span class="ruby-value">0</span>, <span class="ruby-value">1145</span>, <span class="ruby-value">1263</span>, <span class="ruby-value">1352</span>, <span class="ruby-value">1429</span>, <span class="ruby-value">1500</span>, <span class="ruby-value">1571</span>, <span class="ruby-value">1648</span>, <span class="ruby-value">1735</span>, <span class="ruby-value">1855</span>, <span class="ruby-value">3000</span>]
+    <span class="ruby-identifier">found</span> = <span class="ruby-value">0</span>
+    <span class="ruby-identifier">low</span> = <span class="ruby-value">0</span>
+    <span class="ruby-identifier">high</span> = <span class="ruby-value">10</span>
+    
+    <span class="ruby-identifier">ranges</span>.<span class="ruby-identifier">each_with_index</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">r</span>,<span class="ruby-identifier">i</span><span class="ruby-operator">|</span>
+      <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">score</span> <span class="ruby-operator">&gt;</span> <span class="ruby-identifier">r</span>
+        <span class="ruby-keyword kw">next</span> <span class="ruby-comment cmt"># keep going</span>
+      <span class="ruby-keyword kw">else</span>
+        <span class="ruby-identifier">found</span> = <span class="ruby-value">1</span>
+        <span class="ruby-identifier">low</span> = <span class="ruby-identifier">i</span> <span class="ruby-operator">-</span> <span class="ruby-value">1</span>
+        <span class="ruby-identifier">high</span> = <span class="ruby-identifier">i</span>
+        <span class="ruby-keyword kw">break</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">found</span> <span class="ruby-operator">==</span> <span class="ruby-value">1</span>
+      <span class="ruby-keyword kw">end</span>
+    <span class="ruby-keyword kw">end</span>
+    
+
+    <span class="ruby-identifier">scoreRange</span> = [<span class="ruby-identifier">ranges</span>[<span class="ruby-identifier">low</span>],<span class="ruby-identifier">ranges</span>[<span class="ruby-identifier">high</span>]]
+    <span class="ruby-identifier">p</span> <span class="ruby-identifier">scoreRange</span>
+    <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">scoreRange</span>
+  <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>

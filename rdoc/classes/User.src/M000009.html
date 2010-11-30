@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>refreshMyGenderFromFacebook (User)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File app/models/user.rb, line 68</span>
+  <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">refreshMyGenderFromFacebook</span>
+    <span class="ruby-keyword kw">begin</span>
+      <span class="ruby-identifier">fields</span> = <span class="ruby-constant">Hash</span>.<span class="ruby-identifier">new</span>
+      <span class="ruby-identifier">fields</span>[<span class="ruby-value str">&quot;fields&quot;</span>] = <span class="ruby-value str">&quot;id,name,gender&quot;</span>
+      <span class="ruby-identifier">friends</span> = <span class="ruby-identifier">friends</span>(<span class="ruby-identifier">fields</span>)
+      
+      <span class="ruby-identifier">friends</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span>
+        <span class="ruby-identifier">u</span> = <span class="ruby-constant">User</span>.<span class="ruby-identifier">find_by_facebook_id</span>(<span class="ruby-identifier">f</span>[<span class="ruby-value str">'id'</span>])
+        <span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;updating gender for #{u[:facebook_id]} with #{f['gender']}&quot;</span> <span class="ruby-keyword kw">if</span> <span class="ruby-keyword kw">not</span> <span class="ruby-identifier">f</span>[<span class="ruby-value str">'gender'</span>].<span class="ruby-identifier">nil?</span>
+        <span class="ruby-identifier">u</span>.<span class="ruby-identifier">update_attribute</span>(<span class="ruby-value str">'gender'</span>,<span class="ruby-identifier">f</span>[<span class="ruby-value str">'gender'</span>])
+      <span class="ruby-keyword kw">end</span>
+      <span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;successfully updated friends gender for #{u[:facebook_id]}&quot;</span>
+    <span class="ruby-keyword kw">rescue</span>
+      <span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;something went wrong for user: #{self.facebook_id} with name: #{self.profile.full_name}&quot;</span>
+    <span class="ruby-keyword kw">end</span>
+    <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">nil</span>
+  <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>

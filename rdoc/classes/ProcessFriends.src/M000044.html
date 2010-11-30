@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>process_friends (ProcessFriends)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File lib/process_friends.rb, line 21</span>
+  <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">process_friends</span>(<span class="ruby-identifier">facebook_id</span> = <span class="ruby-keyword kw">nil</span>, <span class="ruby-identifier">friends</span> = <span class="ruby-keyword kw">nil</span>, <span class="ruby-identifier">degree</span> = <span class="ruby-value">1</span>)
+    <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">nil</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">friends</span>.<span class="ruby-identifier">nil?</span> <span class="ruby-operator">||</span> <span class="ruby-identifier">facebook_id</span>.<span class="ruby-identifier">nil?</span>
+
+    <span class="ruby-identifier">friendIdArray</span> = <span class="ruby-constant">Array</span>.<span class="ruby-identifier">new</span>
+
+    <span class="ruby-identifier">friends</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">friend</span><span class="ruby-operator">|</span>
+      <span class="ruby-identifier">create_user</span>(<span class="ruby-identifier">friend</span>)
+
+      <span class="ruby-comment cmt"># Insert friend into friendIdArray</span>
+      <span class="ruby-keyword kw">if</span> <span class="ruby-keyword kw">not</span> <span class="ruby-identifier">facebook_id</span> <span class="ruby-operator">==</span> <span class="ruby-identifier">friend</span>[<span class="ruby-value str">'id'</span>]
+        <span class="ruby-identifier">friendIdArray</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">friend</span>[<span class="ruby-value str">'id'</span>]
+      <span class="ruby-keyword kw">end</span>
+    <span class="ruby-keyword kw">end</span>
+
+    <span class="ruby-comment cmt"># Generate first degree network for this user</span>
+    <span class="ruby-identifier">generate_network</span>(<span class="ruby-identifier">facebook_id</span>, <span class="ruby-identifier">friendIdArray</span>, <span class="ruby-identifier">degree</span>)
+    
+    <span class="ruby-comment cmt"># Populate any missing genders</span>
+    <span class="ruby-constant">Delayed</span><span class="ruby-operator">::</span><span class="ruby-constant">Job</span>.<span class="ruby-identifier">enqueue</span> <span class="ruby-constant">PopulateMissingGenders</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">friendIdArray</span>)
+
+    <span class="ruby-comment cmt"># Calculate the 2nd degree network table for the newly created user</span>
+    <span class="ruby-constant">Delayed</span><span class="ruby-operator">::</span><span class="ruby-constant">Job</span>.<span class="ruby-identifier">enqueue</span> <span class="ruby-constant">GenerateSecondDegree</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">facebook_id</span>)
+  
+    <span class="ruby-comment cmt"># Whenever a new user is created or friends list is processed</span>
+    <span class="ruby-comment cmt"># We should re-calculate the 2nd degree network table </span>
+    <span class="ruby-comment cmt"># for all people who have logged in before (token table) who are friends of this new user</span>
+    <span class="ruby-comment cmt"># </span>
+    <span class="ruby-comment cmt"># Token.select('facebook_id').where(&quot;facebook_id IN ('548430564','1217270')&quot;).map do |x| x.facebook_id end</span>
+    <span class="ruby-identifier">friendIdString</span> = <span class="ruby-value str">&quot;\'&quot;</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">friendIdArray</span>.<span class="ruby-identifier">split</span>(<span class="ruby-value str">','</span>).<span class="ruby-identifier">join</span>(<span class="ruby-value str">&quot;\',\'&quot;</span>) <span class="ruby-operator">+</span> <span class="ruby-value str">&quot;\'&quot;</span>
+    <span class="ruby-identifier">tokenIdArray</span> = <span class="ruby-constant">Token</span>.<span class="ruby-identifier">select</span>(<span class="ruby-value str">'facebook_id'</span>).<span class="ruby-identifier">where</span>(<span class="ruby-node">&quot;facebook_id IN (#{friendIdString})&quot;</span>).<span class="ruby-identifier">map</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">u</span><span class="ruby-operator">|</span> <span class="ruby-identifier">u</span>.<span class="ruby-identifier">facebook_id</span> <span class="ruby-keyword kw">end</span>
+    
+    <span class="ruby-identifier">tokenIdArray</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">tokenId</span><span class="ruby-operator">|</span>
+      <span class="ruby-constant">Delayed</span><span class="ruby-operator">::</span><span class="ruby-constant">Job</span>.<span class="ruby-identifier">enqueue</span> <span class="ruby-constant">GenerateSecondDegree</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">tokenId</span>)
+    <span class="ruby-keyword kw">end</span>
+  <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>

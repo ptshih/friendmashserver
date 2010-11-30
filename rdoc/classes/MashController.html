@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>Class: MashController</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <meta http-equiv="Content-Script-Type" content="text/javascript" />
+  <link rel="stylesheet" href=".././rdoc-style.css" type="text/css" media="screen" />
+  <script type="text/javascript">
+  // <![CDATA[
+
+  function popupCode( url ) {
+    window.open(url, "Code", "resizable=yes,scrollbars=yes,toolbar=no,status=no,height=150,width=400")
+  }
+
+  function toggleCode( id ) {
+    if ( document.getElementById )
+      elem = document.getElementById( id );
+    else if ( document.all )
+      elem = eval( "document.all." + id );
+    else
+      return false;
+
+    elemStyle = elem.style;
+    
+    if ( elemStyle.display != "block" ) {
+      elemStyle.display = "block"
+    } else {
+      elemStyle.display = "none"
+    }
+
+    return true;
+  }
+  
+  // Make codeblocks hidden by default
+  document.writeln( "<style type=\"text/css\">div.method-source-code { display: none }</style>" )
+  
+  // ]]>
+  </script>
+
+</head>
+<body>
+
+
+
+    <div id="classHeader">
+        <table class="header-table">
+        <tr class="top-aligned-row">
+          <td><strong>Class</strong></td>
+          <td class="class-name-in-header">MashController</td>
+        </tr>
+        <tr class="top-aligned-row">
+            <td><strong>In:</strong></td>
+            <td>
+                <a href="../files/app/controllers/mash_controller_rb.html">
+                app/controllers/mash_controller.rb
+                </a>
+        <br />
+            </td>
+        </tr>
+
+        <tr class="top-aligned-row">
+            <td><strong>Parent:</strong></td>
+            <td>
+                <a href="ApplicationController.html">
+                ApplicationController
+               </a>
+            </td>
+        </tr>
+        </table>
+    </div>
+  <!-- banner header -->
+
+  <div id="bodyContent">
+
+
+
+  <div id="contextContent">
+
+    <div id="description">
+      <p>
+CREATING INDEX ActiveRecord::Base.connection.execute(&quot;create unique
+index idx_users_facebook_id on users (facebook_id)&quot;)
+ActiveRecord::Base.connection.execute(&quot;create index
+idx_networks_facebook_id on networks (facebook_id)&quot;)
+ActiveRecord::Base.connection.execute(&quot;create index
+idx_networks_friend_id on networks (friend_id)&quot;)
+ActiveRecord::Base.connection.execute(&quot;create unique index
+idx_profiles_facebook_id on profiles (facebook_id)&quot;)
+</p>
+
+    </div>
+
+
+   </div>
+
+    <div id="method-list">
+      <h3 class="section-bar">Methods</h3>
+
+      <div class="name-list">
+      <a href="#M000063">adjustScoresForUsers</a>&nbsp;&nbsp;
+      <a href="#M000066">calculate_bounds</a>&nbsp;&nbsp;
+      <a href="#M000065">calculate_range</a>&nbsp;&nbsp;
+      <a href="#M000064">expected_outcome</a>&nbsp;&nbsp;
+      <a href="#M000055">find_opponent</a>&nbsp;&nbsp;
+      <a href="#M000058">friends</a>&nbsp;&nbsp;
+      <a href="#M000067">inflate</a>&nbsp;&nbsp;
+      <a href="#M000056">match</a>&nbsp;&nbsp;
+      <a href="#M000060">profile</a>&nbsp;&nbsp;
+      <a href="#M000054">random</a>&nbsp;&nbsp;
+      <a href="#M000062">rankings</a>&nbsp;&nbsp;
+      <a href="#M000059">result</a>&nbsp;&nbsp;
+      <a href="#M000057">token</a>&nbsp;&nbsp;
+      <a href="#M000061">topplayers</a>&nbsp;&nbsp;
+      </div>
+    </div>
+
+  </div>
+
+
+    <!-- if includes -->
+
+    <div id="section">
+
+
+
+
+
+      
+
+
+    <!-- if method_list -->
+    <div id="methods">
+      <h3 class="section-bar">Public Instance methods</h3>
+
+      <div id="method-M000063" class="method-detail">
+        <a name="M000063"></a>
+
+        <div class="method-heading">
+          <a href="MashController.src/M000063.html" target="Code" class="method-signature"
+            onclick="popupCode('MashController.src/M000063.html');return false;">
+          <span class="method-name">adjustScoresForUsers</span><span class="method-args">(winner, loser, mode = 0)</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+Calculations
+</p>
+        </div>
+      </div>
+
+      <div id="method-M000066" class="method-detail">
+        <a name="M000066"></a>
+
+        <div class="method-heading">
+          <a href="MashController.src/M000066.html" target="Code" class="method-signature"
+            onclick="popupCode('MashController.src/M000066.html');return false;">
+          <span class="method-name">calculate_bounds</span><span class="method-args">(userScore, pop, popAverage, popSD, sampleSize)</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+        </div>
+      </div>
+
+      <div id="method-M000065" class="method-detail">
+        <a name="M000065"></a>
+
+        <div class="method-heading">
+          <a href="MashController.src/M000065.html" target="Code" class="method-signature"
+            onclick="popupCode('MashController.src/M000065.html');return false;">
+          <span class="method-name">calculate_range</span><span class="method-args">(score)</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+        </div>
+      </div>
+
+      <div id="method-M000064" class="method-detail">
+        <a name="M000064"></a>
+
+        <div class="method-heading">
+          <a href="MashController.src/M000064.html" target="Code" class="method-signature"
+            onclick="popupCode('MashController.src/M000064.html');return false;">
+          <span class="method-name">expected_outcome</span><span class="method-args">(user, opponent, mode = 0)</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+        </div>
+      </div>
+
+      <div id="method-M000055" class="method-detail">
+        <a name="M000055"></a>
+
+        <div class="method-heading">
+          <a href="MashController.src/M000055.html" target="Code" class="method-signature"
+            onclick="popupCode('MashController.src/M000055.html');return false;">
+          <span class="method-name">find_opponent</span><span class="method-args">(desiredScore, gender, currentId = nil, recentIds = nil, networkIds = nil)</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+        </div>
+      </div>
+
+      <div id="method-M000058" class="method-detail">
+        <a name="M000058"></a>
+
+        <div class="method-heading">
+          <a href="MashController.src/M000058.html" target="Code" class="method-signature"
+            onclick="popupCode('MashController.src/M000058.html');return false;">
+          <span class="method-name">friends</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+Tell the server to process the current user&#8216;s <a
+href="MashController.html#M000058">friends</a>
+</p>
+        </div>
+      </div>
+
+      <div id="method-M000067" class="method-detail">
+        <a name="M000067"></a>
+
+        <div class="method-heading">
+          <a href="MashController.src/M000067.html" target="Code" class="method-signature"
+            onclick="popupCode('MashController.src/M000067.html');return false;">
+          <span class="method-name">inflate</span><span class="method-args">(string)</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p>
+takes a gzipped string and deflates it
+</p>
+        </div>
+      </div>
+
+      <div id="method-M000056" class="method-detail">
+        <a name="M000056"></a>
+
+        <div class="method-heading">
+          <a href="MashController.src/M000056.html" target="Code" class="method-signature"
+            onclick="popupCode('MashController.src/M000056.html');return false;">
+          <span class="method-name">match</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+        </div>
+      </div>
+
+      <div id="method-M000060" class="method-detail">
+        <a name="M000060"></a>
+
+        <div class="method-heading">
+          <a href="MashController.src/M000060.html" target="Code" class="method-signature"
+            onclick="popupCode('MashController.src/M000060.html');return false;">
+          <span class="method-name">profile</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+        </div>
+      </div>
+
+      <div id="method-M000054" class="method-detail">
+        <a name="M000054"></a>
+
+        <div class="method-heading">
+          <a href="MashController.src/M000054.html" target="Code" class="method-signature"
+            onclick="popupCode('MashController.src/M000054.html');return false;">
+          <span class="method-name">random</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+        </div>
+      </div>
+
+      <div id="method-M000062" class="method-detail">
+        <a name="M000062"></a>
+
+        <div class="method-heading">
+          <a href="MashController.src/M000062.html" target="Code" class="method-signature"
+            onclick="popupCode('MashController.src/M000062.html');return false;">
+          <span class="method-name">rankings</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+        </div>
+      </div>
+
+      <div id="method-M000059" class="method-detail">
+        <a name="M000059"></a>
+
+        <div class="method-heading">
+          <a href="MashController.src/M000059.html" target="Code" class="method-signature"
+            onclick="popupCode('MashController.src/M000059.html');return false;">
+          <span class="method-name">result</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+        </div>
+      </div>
+
+      <div id="method-M000057" class="method-detail">
+        <a name="M000057"></a>
+
+        <div class="method-heading">
+          <a href="MashController.src/M000057.html" target="Code" class="method-signature"
+            onclick="popupCode('MashController.src/M000057.html');return false;">
+          <span class="method-name">token</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+        </div>
+      </div>
+
+      <div id="method-M000061" class="method-detail">
+        <a name="M000061"></a>
+
+        <div class="method-heading">
+          <a href="MashController.src/M000061.html" target="Code" class="method-signature"
+            onclick="popupCode('MashController.src/M000061.html');return false;">
+          <span class="method-name">topplayers</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+        </div>
+      </div>
+
+
+    </div>
+
+
+  </div>
+
+
+<div id="validator-badges">
+  <p><small><a href="http://validator.w3.org/check/referer">[Validate]</a></small></p>
+</div>
+
+</body>
+</html>

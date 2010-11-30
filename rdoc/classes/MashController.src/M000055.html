@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>find_opponent (MashController)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File app/controllers/mash_controller.rb, line 109</span>
+  <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">find_opponent</span>(<span class="ruby-identifier">desiredScore</span>, <span class="ruby-identifier">gender</span>, <span class="ruby-identifier">currentId</span> = <span class="ruby-keyword kw">nil</span>, <span class="ruby-identifier">recentIds</span> = <span class="ruby-keyword kw">nil</span>, <span class="ruby-identifier">networkIds</span> = <span class="ruby-keyword kw">nil</span>)
+    <span class="ruby-comment cmt"># First hit the DB with a CSV of excluded IDs and a match_score +/- match_range</span>
+    <span class="ruby-comment cmt"># Fetch an array of valid IDs from DB who match the +/- range from the current user's score</span>
+    <span class="ruby-comment cmt"># Perform a binary search on the array to find the best possible opponent</span>
+    <span class="ruby-comment cmt"># Return a single opponent</span>
+    
+    <span class="ruby-comment cmt"># OLD RANGE CALC FORMULA</span>
+    <span class="ruby-comment cmt"># scoreRange = calculate_range(desiredScore)</span>
+    <span class="ruby-comment cmt"># low = scoreRange[0]</span>
+    <span class="ruby-comment cmt"># high = scoreRange[1]</span>
+    
+    <span class="ruby-comment cmt"># USE NEW DYNAMIC RANGE CALC</span>
+    <span class="ruby-comment cmt"># def calculate_bounds(userScore, pop, popAverage, popSD, sampleSize)</span>
+    <span class="ruby-comment cmt"># userScore = score used to find range</span>
+    <span class="ruby-comment cmt"># pop = total population</span>
+    <span class="ruby-comment cmt"># popAverage = average score of total population</span>
+    <span class="ruby-comment cmt"># popSD = standard deviation of total population scores</span>
+    <span class="ruby-comment cmt"># sampleSize = how many results we want inside our bounds</span>
+    
+    <span class="ruby-comment cmt"># We need to calculate POP, POPAVERAGE, and POPSD from the DB, not everytime</span>
+    <span class="ruby-comment cmt"># Probably calculate it once a day/hour/etc... and store it in a static table/cache</span>
+    
+    <span class="ruby-comment cmt"># for now lets calculate the count on every request</span>
+    <span class="ruby-comment cmt"># female = 903</span>
+    <span class="ruby-comment cmt"># male = 1420</span>
+    
+    
+    
+    <span class="ruby-identifier">bounds</span> = <span class="ruby-identifier">calculate_bounds</span>(<span class="ruby-identifier">desiredScore</span>, <span class="ruby-value">900.0</span>, <span class="ruby-value">1500.0</span>, <span class="ruby-value">282.0</span>, <span class="ruby-value">500.0</span>)
+    <span class="ruby-identifier">low</span> = <span class="ruby-identifier">bounds</span>[<span class="ruby-value">0</span>]
+    <span class="ruby-identifier">high</span> = <span class="ruby-identifier">bounds</span>[<span class="ruby-value">1</span>]
+    
+    <span class="ruby-keyword kw">if</span> <span class="ruby-constant">Rails</span>.<span class="ruby-identifier">env</span> <span class="ruby-operator">==</span> <span class="ruby-value str">&quot;production&quot;</span> <span class="ruby-operator">||</span> <span class="ruby-constant">Rails</span>.<span class="ruby-identifier">env</span> <span class="ruby-operator">==</span> <span class="ruby-value str">&quot;staging&quot;</span>
+      <span class="ruby-identifier">randQuery</span> = <span class="ruby-value str">'RAND()'</span>
+    <span class="ruby-keyword kw">else</span>
+      <span class="ruby-identifier">randQuery</span> = <span class="ruby-value str">'RANDOM()'</span>
+    <span class="ruby-keyword kw">end</span>
+    
+    <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">recentIds</span>.<span class="ruby-identifier">nil?</span>
+      <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">networkIds</span>.<span class="ruby-identifier">nil?</span>
+        <span class="ruby-identifier">bucket</span> = <span class="ruby-constant">User</span>.<span class="ruby-identifier">all</span>(<span class="ruby-identifier">:conditions=</span><span class="ruby-operator">&gt;</span><span class="ruby-node">&quot;score &gt; #{low} AND score &lt;= #{high} AND gender = '#{gender}' AND facebook_id != '#{currentId}'&quot;</span>,<span class="ruby-identifier">:order=</span><span class="ruby-operator">&gt;</span><span class="ruby-identifier">randQuery</span>,<span class="ruby-identifier">:select</span> =<span class="ruby-operator">&gt;</span><span class="ruby-value str">&quot;facebook_id&quot;</span>,<span class="ruby-identifier">:limit=</span><span class="ruby-operator">&gt;</span><span class="ruby-value">1</span>)
+        <span class="ruby-comment cmt"># bucket = User.where([&quot;score &gt;= :lowScore AND score &lt;= :highScore AND gender = :gender AND facebook_id != :currentId&quot;, { :lowScore =&gt; (desiredScore - range), :highScore =&gt; (desiredScore + range), :gender =&gt; gender, :currentId =&gt; currentId }], :order =&gt; randQuery).select(&quot;facebook_id, score&quot;)</span>
+      <span class="ruby-keyword kw">else</span>
+        <span class="ruby-identifier">bucket</span> = <span class="ruby-constant">User</span>.<span class="ruby-identifier">all</span>(<span class="ruby-identifier">:conditions=</span><span class="ruby-operator">&gt;</span><span class="ruby-node">&quot;score_network &gt; #{low} AND score_network &lt;= #{high} AND gender = '#{gender}' AND facebook_id IN (#{networkIds}) AND facebook_id != '#{currentId}'&quot;</span>,<span class="ruby-identifier">:order=</span><span class="ruby-operator">&gt;</span><span class="ruby-identifier">randQuery</span>,<span class="ruby-identifier">:select</span> =<span class="ruby-operator">&gt;</span><span class="ruby-value str">&quot;facebook_id&quot;</span>,<span class="ruby-identifier">:limit=</span><span class="ruby-operator">&gt;</span><span class="ruby-value">1</span>)
+        <span class="ruby-comment cmt"># bucket = User.where([&quot;score_network &gt;= :lowScore AND score_network &lt;= :highScore AND gender = :gender AND facebook_id != :currentId AND facebook_id IN (#{networkIds})&quot;, { :lowScore =&gt; (desiredScore - range), :highScore =&gt; (desiredScore + range), :gender =&gt; gender, :currentId =&gt; currentId }]).select(&quot;facebook_id, score_network&quot;)</span>
+      <span class="ruby-keyword kw">end</span>
+    <span class="ruby-keyword kw">else</span>
+      <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">networkIds</span>.<span class="ruby-identifier">nil?</span>
+        <span class="ruby-identifier">bucket</span> = <span class="ruby-constant">User</span>.<span class="ruby-identifier">all</span>(<span class="ruby-identifier">:conditions=</span><span class="ruby-operator">&gt;</span><span class="ruby-node">&quot;score &gt; #{low} AND score &lt;= #{high} AND gender = '#{gender}' AND facebook_id NOT IN (#{recentIds}) AND facebook_id != '#{currentId}'&quot;</span>,<span class="ruby-identifier">:order=</span><span class="ruby-operator">&gt;</span><span class="ruby-identifier">randQuery</span>,<span class="ruby-identifier">:select</span> =<span class="ruby-operator">&gt;</span><span class="ruby-value str">&quot;facebook_id&quot;</span>,<span class="ruby-identifier">:limit=</span><span class="ruby-operator">&gt;</span><span class="ruby-value">1</span>)
+        <span class="ruby-comment cmt"># bucket = User.where([&quot;score &gt;= :lowScore AND score &lt;= :highScore AND gender = :gender AND facebook_id NOT IN (#{recentIds}) AND facebook_id != :currentId&quot;, { :lowScore =&gt; (desiredScore - range), :highScore =&gt; (desiredScore + range), :gender =&gt; gender, :currentId =&gt; currentId }]).select(&quot;facebook_id, score&quot;)</span>
+      <span class="ruby-keyword kw">else</span>
+        <span class="ruby-identifier">bucket</span> = <span class="ruby-constant">User</span>.<span class="ruby-identifier">all</span>(<span class="ruby-identifier">:conditions=</span><span class="ruby-operator">&gt;</span><span class="ruby-node">&quot;score_network &gt; #{low} AND score_network &lt;= #{high} AND gender = '#{gender}' AND facebook_id NOT IN (#{recentIds}) AND facebook_id IN (#{networkIds}) AND facebook_id != '#{currentId}'&quot;</span>,<span class="ruby-identifier">:order=</span><span class="ruby-operator">&gt;</span><span class="ruby-identifier">randQuery</span>,<span class="ruby-identifier">:select</span> =<span class="ruby-operator">&gt;</span><span class="ruby-value str">&quot;facebook_id&quot;</span>,<span class="ruby-identifier">:limit=</span><span class="ruby-operator">&gt;</span><span class="ruby-value">1</span>)
+        <span class="ruby-comment cmt"># bucket = User.where([&quot;score_network &gt;= :lowScore AND score_network &lt;= :highScore AND gender = :gender AND facebook_id NOT IN (#{recentIds}) AND facebook_id IN (#{networkIds}) AND facebook_id != :currentId&quot;, { :lowScore =&gt; (desiredScore - range), :highScore =&gt; (desiredScore + range), :gender =&gt; gender, :currentId =&gt; currentId }]).select(&quot;facebook_id, score_network&quot;)</span>
+      <span class="ruby-keyword kw">end</span>
+    <span class="ruby-keyword kw">end</span>
+  
+    <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">bucket</span>[<span class="ruby-value">0</span>]
+  <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>
