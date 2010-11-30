@@ -439,6 +439,9 @@ class MashController < ApplicationController
     
     population = User.where("gender = '#{gender}'").count # Get the total population size of the user's table for this gender
     
+    # Perform a score bias when finding opponent
+    desiredScore = desiredScore + 32
+    
     # Calculate the low and high end bounds
     bounds = calculate_bounds(desiredScore, population, 1500.0, 282.0, 500.0)
     low = bounds[0]
