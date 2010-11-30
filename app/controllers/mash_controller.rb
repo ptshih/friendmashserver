@@ -602,7 +602,8 @@ class MashController < ApplicationController
     # This is admin only and should be restricted/authenticated
     Rails.logger.info request.query_parameters.inspect
     
-    # Need to hook up interval parameter
+    # Interval can be any integer > 0
+    # Period can be { hour, day }
     
     if params[:fields].nil? 
       fields = %w(users profiles tokens networks results delayed_jobs employers schools)
@@ -622,12 +623,6 @@ class MashController < ApplicationController
     else
       period = params[:period]
     end
-        # 
-        # if params[:period] == "day" || params[:period] == "hour" 
-        #   period = params[:period]
-        # else
-        #   period = "day"
-        # end
     
     response = {}
     
