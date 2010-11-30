@@ -570,7 +570,7 @@ class MashController < ApplicationController
       count = params[:count]
     end
     
-    if params[:filter].nil?
+    if params[:filter].nil? || params[:filter] == "false"
       results = Result.all(:order=>"created_at desc", :limit=>count)
     else       
       results = Result.all(:conditions =>"facebook_id = '#{params[:id]}'",:order=>"created_at desc", :limit=>count)
@@ -695,6 +695,49 @@ class MashController < ApplicationController
       response["#{mysqlresult['TABLE_NAME']}"] = mysqlresult
     end
     
+    mysqlresults.free
+    
+    respond_to do |format|
+      format.xml  { render :xml => response }
+      format.json  { render :json => response }
+    end
+  end
+  
+  def stats
+    # This API returns a JSON response for mash stats
+    if params[:interval].nil?
+      interval = "24"
+    else
+      interval = params[:interval]
+    end
+    
+    if params[:period].nil?
+      period = "hour"
+    else
+      period = params[:period]
+    end
+  
+    if params[:filter].nil? || params[:filter] == "false"
+      filters = ""
+    else
+      filters = "and facebook_id = '#{params[:id]}'"
+    end
+    
+    response = []
+    
+    query = "select year(created_at) as year, month(created_at) as month, day(created_at) as day, count(*) as data
+  				from results
+  				where created_at>(select max(created_at) from results) - interval #{interval} #{period}
+  				#{filters}
+  				group by year(created_at), month(created_at), day(created_at)
+  				order by year(created_at), month(created_at), day(created_at)"
+  				
+    mysqlresults = ActiveRecord::Base.connection.execute(query)
+
+    while mysqlresult = mysqlresults.fetch_hash do
+      response << mysqlresult
+    end
+
     mysqlresults.free
     
     respond_to do |format|
