@@ -254,7 +254,7 @@ class MashController < ApplicationController
     if Rails.env == "production" || Rails.env == "staging"
       ranksHash = ActiveRecord::Base.connection.execute(query).fetch_hash
     else
-      ranksHash = ActiveRecord::Base.connection.execute(query).first
+      ranksHash = ActiveRecord::Base.connection.execute(query)[0]
     end
     
     profile['rank'] = ranksHash['rankoftotal'].to_i + 1
@@ -263,8 +263,6 @@ class MashController < ApplicationController
     profile['total_network'] = ranksHash['networktotal'].to_i + 1 # need to add 1 for the current user since networks doesnt do a user -> user entry
     profile['votes'] = profile['votes'].to_i
     profile['votes_network'] = profile['votes_network'].to_i
-    
-    ranksHash.free # free the MySQL Result
     
     # ActiveRecord::Base.connection.execute("select sum(case when a.score>c.score then 1 else 0 end) as rankOfTotal,sum(case when a.score>c.score && b.id!=null then 1 else 0 end) as rankAmongFriends,sum(1) as totalCount,sum(case when b.id!=null then 1 else 0 end) as networkCount from users a left outer join networks b on a.facebook_id=b.friend_id left outer join users c where c.id='#{profile['facebook_id']}' and a.gender=c.gender")
     
