@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>perform (ProcessFriends)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File lib/process_friends.rb, line 5</span>
+  <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">perform</span>
+    <span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;ProcessFriends called for user with id: #{facebookId}&quot;</span>
+    
+    <span class="ruby-comment cmt"># get the current user</span>
+    <span class="ruby-identifier">user</span> = <span class="ruby-constant">User</span>.<span class="ruby-identifier">find_by_facebook_id</span>(<span class="ruby-identifier">facebookId</span>)
+    
+    <span class="ruby-comment cmt"># Get first degree friends from FB</span>
+    <span class="ruby-identifier">fields</span> = <span class="ruby-constant">Hash</span>.<span class="ruby-identifier">new</span>
+    <span class="ruby-identifier">fields</span>[<span class="ruby-value str">&quot;fields&quot;</span>] = <span class="ruby-value str">&quot;id,first_name,last_name,name,gender,education,work,locale&quot;</span>
+    <span class="ruby-identifier">firstDegreeFriends</span> = <span class="ruby-identifier">user</span>.<span class="ruby-identifier">friends</span>(<span class="ruby-identifier">fields</span>)
+    
+    <span class="ruby-comment cmt"># insert the first degree friends into the DB as degree 1</span>
+    <span class="ruby-identifier">process_friends</span>(<span class="ruby-identifier">facebookId</span>, <span class="ruby-identifier">firstDegreeFriends</span>, <span class="ruby-value">1</span>)
+    
+  <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>

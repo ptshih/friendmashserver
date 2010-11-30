@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>rankings (MashController)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File app/controllers/mash_controller.rb, line 465</span>
+  <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">rankings</span>
+    <span class="ruby-comment cmt"># return a list of top 25 in each category</span>
+    <span class="ruby-comment cmt"># expects parameters</span>
+    <span class="ruby-comment cmt"># gender</span>
+    <span class="ruby-comment cmt"># mode (all,network)</span>
+    
+    <span class="ruby-constant">Rails</span>.<span class="ruby-identifier">logger</span>.<span class="ruby-identifier">info</span> <span class="ruby-identifier">request</span>.<span class="ruby-identifier">query_parameters</span>.<span class="ruby-identifier">inspect</span>
+    <span class="ruby-comment cmt"># Rails.logger.info request.env.inspect</span>
+    
+    <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">request</span>.<span class="ruby-identifier">env</span>[<span class="ruby-value str">&quot;HTTP_X_FACEMASH_SECRET&quot;</span>] <span class="ruby-operator">!=</span> <span class="ruby-value str">&quot;omgwtfbbq&quot;</span>
+      <span class="ruby-identifier">respond_to</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">format</span><span class="ruby-operator">|</span>
+        <span class="ruby-identifier">format</span>.<span class="ruby-identifier">html</span> <span class="ruby-comment cmt"># index.html.erb</span>
+        <span class="ruby-identifier">format</span>.<span class="ruby-identifier">xml</span>  { <span class="ruby-identifier">render</span> <span class="ruby-identifier">:xml</span> =<span class="ruby-operator">&gt;</span> {<span class="ruby-identifier">:error</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value str">&quot;access denied&quot;</span>} }
+        <span class="ruby-identifier">format</span>.<span class="ruby-identifier">json</span>  { <span class="ruby-identifier">render</span> <span class="ruby-identifier">:json</span> =<span class="ruby-operator">&gt;</span> {<span class="ruby-identifier">:error</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value str">&quot;access denied&quot;</span>} }
+      <span class="ruby-keyword kw">end</span>
+      <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">nil</span>
+    <span class="ruby-keyword kw">end</span>
+    
+    <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">params</span>[<span class="ruby-identifier">:count</span>].<span class="ruby-identifier">nil?</span>
+      <span class="ruby-identifier">count</span> = <span class="ruby-value">99</span>
+    <span class="ruby-keyword kw">else</span>
+      <span class="ruby-identifier">count</span> = <span class="ruby-identifier">params</span>[<span class="ruby-identifier">:count</span>]
+    <span class="ruby-keyword kw">end</span>
+    
+    <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">params</span>[<span class="ruby-identifier">:mode</span>] <span class="ruby-operator">==</span> <span class="ruby-value str">&quot;0&quot;</span>
+      <span class="ruby-identifier">networkIds</span> = <span class="ruby-keyword kw">nil</span>
+    <span class="ruby-keyword kw">else</span>
+      <span class="ruby-identifier">networkIds</span> = []
+      <span class="ruby-constant">Network</span>.<span class="ruby-identifier">where</span>(<span class="ruby-node">&quot;facebook_id = '#{params[:id]}'&quot;</span>).<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">network</span><span class="ruby-operator">|</span>
+        <span class="ruby-identifier">networkIds</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">network</span>.<span class="ruby-identifier">friend_id</span>
+      <span class="ruby-keyword kw">end</span>
+      <span class="ruby-comment cmt"># p networkIds</span>
+      <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">networkIds</span>.<span class="ruby-identifier">empty?</span>
+        <span class="ruby-identifier">networkIds</span> = <span class="ruby-keyword kw">nil</span>
+      <span class="ruby-keyword kw">else</span>
+        <span class="ruby-identifier">networkIds</span> = <span class="ruby-value str">'\''</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">networkIds</span>.<span class="ruby-identifier">split</span>(<span class="ruby-value str">','</span>).<span class="ruby-identifier">join</span>(<span class="ruby-value str">'\',\''</span>)<span class="ruby-operator">+</span><span class="ruby-value str">'\''</span> 
+      <span class="ruby-keyword kw">end</span>
+    <span class="ruby-keyword kw">end</span>
+    
+    <span class="ruby-comment cmt"># Active Record Join Alternative</span>
+    <span class="ruby-comment cmt"># users = User.select('*').all(:conditions=&gt;&quot;gender = '#{params[:gender]}'&quot;,:order=&gt;&quot;score desc&quot;,:limit=&gt;count,:joins=&gt;:profile)</span>
+    <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">networkIds</span>.<span class="ruby-identifier">nil?</span>
+      <span class="ruby-identifier">users</span> = <span class="ruby-constant">User</span>.<span class="ruby-identifier">all</span>(<span class="ruby-identifier">:conditions=</span><span class="ruby-operator">&gt;</span><span class="ruby-node">&quot;gender = '#{params[:gender]}'&quot;</span>,<span class="ruby-identifier">:order=</span><span class="ruby-operator">&gt;</span><span class="ruby-value str">&quot;score desc&quot;</span>,<span class="ruby-identifier">:limit=</span><span class="ruby-operator">&gt;</span><span class="ruby-identifier">count</span>,<span class="ruby-identifier">:include=</span><span class="ruby-operator">&gt;</span><span class="ruby-identifier">:profile</span>)
+    <span class="ruby-keyword kw">else</span>
+      <span class="ruby-identifier">users</span> = <span class="ruby-constant">User</span>.<span class="ruby-identifier">all</span>(<span class="ruby-identifier">:conditions=</span><span class="ruby-operator">&gt;</span><span class="ruby-node">&quot;gender = '#{params[:gender]}' AND facebook_id IN (#{networkIds})&quot;</span>,<span class="ruby-identifier">:order=</span><span class="ruby-operator">&gt;</span><span class="ruby-value str">&quot;score_network desc&quot;</span>,<span class="ruby-identifier">:limit=</span><span class="ruby-operator">&gt;</span><span class="ruby-identifier">count</span>,<span class="ruby-identifier">:include=</span><span class="ruby-operator">&gt;</span><span class="ruby-identifier">:profile</span>)
+    <span class="ruby-keyword kw">end</span>
+    
+    <span class="ruby-identifier">rankings</span> = []
+    
+    <span class="ruby-identifier">users</span>.<span class="ruby-identifier">each_with_index</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">user</span>,<span class="ruby-identifier">rank</span><span class="ruby-operator">|</span>
+      <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">params</span>[<span class="ruby-identifier">:mode</span>] <span class="ruby-operator">==</span> <span class="ruby-value str">&quot;0&quot;</span>
+        <span class="ruby-identifier">actualScore</span> = <span class="ruby-identifier">user</span>[<span class="ruby-identifier">:score</span>]
+        <span class="ruby-identifier">actualWins</span> = <span class="ruby-identifier">user</span>[<span class="ruby-identifier">:wins</span>]
+        <span class="ruby-identifier">actualLosses</span> = <span class="ruby-identifier">user</span>[<span class="ruby-identifier">:losses</span>]
+        <span class="ruby-identifier">actualWinStreak</span> = <span class="ruby-identifier">user</span>[<span class="ruby-identifier">:win_streak</span>]
+        <span class="ruby-identifier">actualLossStreak</span> = <span class="ruby-identifier">user</span>[<span class="ruby-identifier">:loss_streak</span>]
+        <span class="ruby-identifier">actualWinStreakMax</span> = <span class="ruby-identifier">user</span>[<span class="ruby-identifier">:win_streak_max</span>]
+        <span class="ruby-identifier">actualLossStreakMax</span> = <span class="ruby-identifier">user</span>[<span class="ruby-identifier">:loss_streak_max</span>]
+      <span class="ruby-keyword kw">else</span>
+        <span class="ruby-identifier">actualScore</span> = <span class="ruby-identifier">user</span>[<span class="ruby-identifier">:score_network</span>]
+        <span class="ruby-identifier">actualWins</span> = <span class="ruby-identifier">user</span>[<span class="ruby-identifier">:wins_network</span>]
+        <span class="ruby-identifier">actualLosses</span> = <span class="ruby-identifier">user</span>[<span class="ruby-identifier">:losses_network</span>]
+        <span class="ruby-identifier">actualWinStreak</span> = <span class="ruby-identifier">user</span>[<span class="ruby-identifier">:win_streak_network</span>]
+        <span class="ruby-identifier">actualLossStreak</span> = <span class="ruby-identifier">user</span>[<span class="ruby-identifier">:loss_streak_network</span>]
+        <span class="ruby-identifier">actualWinStreakMax</span> = <span class="ruby-identifier">user</span>[<span class="ruby-identifier">:win_streak_max_network</span>]
+        <span class="ruby-identifier">actualLossStreakMax</span> = <span class="ruby-identifier">user</span>[<span class="ruby-identifier">:loss_streak_max_network</span>]
+      <span class="ruby-keyword kw">end</span>
+      <span class="ruby-identifier">rankingsHash</span> = {
+        <span class="ruby-identifier">:facebook_id</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">user</span>[<span class="ruby-identifier">:facebook_id</span>],
+        <span class="ruby-identifier">:full_name</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">user</span>.<span class="ruby-identifier">profile</span>[<span class="ruby-identifier">:full_name</span>],
+        <span class="ruby-identifier">:first_name</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">user</span>.<span class="ruby-identifier">profile</span>[<span class="ruby-identifier">:first_name</span>],
+        <span class="ruby-identifier">:last_name</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">user</span>.<span class="ruby-identifier">profile</span>[<span class="ruby-identifier">:last_name</span>],
+        <span class="ruby-identifier">:score</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">actualScore</span>,
+        <span class="ruby-identifier">:wins</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">actualWins</span>,
+        <span class="ruby-identifier">:losses</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">actualLosses</span>,
+        <span class="ruby-identifier">:win_streak</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">actualWinStreak</span>,
+        <span class="ruby-identifier">:loss_streak</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">actualLossStreak</span>,
+        <span class="ruby-identifier">:win_streak_max</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">actualWinStreakMax</span>,
+        <span class="ruby-identifier">:loss_streak_max</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">actualLossStreakMax</span>,
+        <span class="ruby-identifier">:rank</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">rank</span> <span class="ruby-operator">+</span> <span class="ruby-value">1</span>
+      }
+      <span class="ruby-identifier">rankings</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">rankingsHash</span>
+    <span class="ruby-keyword kw">end</span>
+
+    <span class="ruby-identifier">respond_to</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">format</span><span class="ruby-operator">|</span>
+      <span class="ruby-identifier">format</span>.<span class="ruby-identifier">html</span> <span class="ruby-comment cmt"># index.html.erb</span>
+      <span class="ruby-identifier">format</span>.<span class="ruby-identifier">xml</span>  { <span class="ruby-identifier">render</span> <span class="ruby-identifier">:xml</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">rankings</span> }
+      <span class="ruby-identifier">format</span>.<span class="ruby-identifier">json</span>  { <span class="ruby-identifier">render</span> <span class="ruby-identifier">:json</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">rankings</span> }
+    <span class="ruby-keyword kw">end</span>
+  <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>

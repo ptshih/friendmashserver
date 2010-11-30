@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>profile (MashController)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File app/controllers/mash_controller.rb, line 375</span>
+  <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">profile</span>
+    <span class="ruby-comment cmt"># given a parameter facebookId</span>
+    <span class="ruby-comment cmt"># return a hash of a given user's profile</span>
+    
+    <span class="ruby-constant">Rails</span>.<span class="ruby-identifier">logger</span>.<span class="ruby-identifier">info</span> <span class="ruby-identifier">request</span>.<span class="ruby-identifier">query_parameters</span>.<span class="ruby-identifier">inspect</span>
+    
+    <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">request</span>.<span class="ruby-identifier">env</span>[<span class="ruby-value str">&quot;HTTP_X_FACEMASH_SECRET&quot;</span>] <span class="ruby-operator">!=</span> <span class="ruby-value str">&quot;omgwtfbbq&quot;</span>
+      <span class="ruby-identifier">respond_to</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">format</span><span class="ruby-operator">|</span>
+        <span class="ruby-identifier">format</span>.<span class="ruby-identifier">html</span> <span class="ruby-comment cmt"># index.html.erb</span>
+        <span class="ruby-identifier">format</span>.<span class="ruby-identifier">xml</span>  { <span class="ruby-identifier">render</span> <span class="ruby-identifier">:xml</span> =<span class="ruby-operator">&gt;</span> {<span class="ruby-identifier">:error</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value str">&quot;access denied&quot;</span>} }
+        <span class="ruby-identifier">format</span>.<span class="ruby-identifier">json</span>  { <span class="ruby-identifier">render</span> <span class="ruby-identifier">:json</span> =<span class="ruby-operator">&gt;</span> {<span class="ruby-identifier">:error</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value str">&quot;access denied&quot;</span>} }
+      <span class="ruby-keyword kw">end</span>
+      <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">nil</span>
+    <span class="ruby-keyword kw">end</span>
+    
+    <span class="ruby-identifier">profile</span> = <span class="ruby-constant">User</span>.<span class="ruby-identifier">select</span>(<span class="ruby-value str">'*'</span>).<span class="ruby-identifier">where</span>(<span class="ruby-value str">'facebook_id'</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">params</span>[<span class="ruby-identifier">:id</span>]).<span class="ruby-identifier">joins</span>(<span class="ruby-identifier">:profile</span>).<span class="ruby-identifier">first</span>
+    
+    <span class="ruby-identifier">query</span> = <span class="ruby-node">&quot;select sum(case when a.score&gt;b.score then 1 else 0 end) as rankoftotal, sum(case when a.score&gt;b.score AND c.friend_id is not null then 1 else 0 end) as rankofnetwork, sum(case when c.friend_id is not null then 1 else 0 end) as networktotal, count(*) as total from users a left join users b on 1=1 and b.facebook_id='#{profile['facebook_id']}' left join networks c on c.friend_id = a.facebook_id and c.facebook_id=b.facebook_id where a.gender = b.gender&quot;</span>
+    
+    <span class="ruby-keyword kw">if</span> <span class="ruby-constant">Rails</span>.<span class="ruby-identifier">env</span> <span class="ruby-operator">==</span> <span class="ruby-value str">&quot;production&quot;</span> <span class="ruby-operator">||</span> <span class="ruby-constant">Rails</span>.<span class="ruby-identifier">env</span> <span class="ruby-operator">==</span> <span class="ruby-value str">&quot;staging&quot;</span>
+      <span class="ruby-identifier">ranksHash</span> = <span class="ruby-constant">ActiveRecord</span><span class="ruby-operator">::</span><span class="ruby-constant">Base</span>.<span class="ruby-identifier">connection</span>.<span class="ruby-identifier">execute</span>(<span class="ruby-identifier">query</span>).<span class="ruby-identifier">fetch_hash</span>
+    <span class="ruby-keyword kw">else</span>
+      <span class="ruby-identifier">ranksHash</span> = <span class="ruby-constant">ActiveRecord</span><span class="ruby-operator">::</span><span class="ruby-constant">Base</span>.<span class="ruby-identifier">connection</span>.<span class="ruby-identifier">execute</span>(<span class="ruby-identifier">query</span>)[<span class="ruby-value">0</span>]
+    <span class="ruby-keyword kw">end</span>
+    
+    <span class="ruby-identifier">profile</span>[<span class="ruby-value str">'rank'</span>] = <span class="ruby-identifier">ranksHash</span>[<span class="ruby-value str">'rankoftotal'</span>].<span class="ruby-identifier">to_i</span>
+    <span class="ruby-identifier">profile</span>[<span class="ruby-value str">'rank_network'</span>] = <span class="ruby-identifier">ranksHash</span>[<span class="ruby-value str">'rankofnetwork'</span>].<span class="ruby-identifier">to_i</span>
+    <span class="ruby-identifier">profile</span>[<span class="ruby-value str">'total'</span>] = <span class="ruby-identifier">ranksHash</span>[<span class="ruby-value str">'total'</span>].<span class="ruby-identifier">to_i</span>
+    <span class="ruby-identifier">profile</span>[<span class="ruby-value str">'total_network'</span>] = <span class="ruby-identifier">ranksHash</span>[<span class="ruby-value str">'networktotal'</span>].<span class="ruby-identifier">to_i</span>
+    <span class="ruby-comment cmt"># ActiveRecord::Base.connection.execute(&quot;select sum(case when a.score&gt;c.score then 1 else 0 end) as rankOfTotal,sum(case when a.score&gt;c.score &amp;&amp; b.id!=null then 1 else 0 end) as rankAmongFriends,sum(1) as totalCount,sum(case when b.id!=null then 1 else 0 end) as networkCount from users a left outer join networks b on a.facebook_id=b.friend_id left outer join users c where c.id='#{profile['facebook_id']}' and a.gender=c.gender&quot;)</span>
+    
+    <span class="ruby-comment cmt"># profile['rank'] = ActiveRecord::Base.connection.execute(&quot;SELECT count(*) from Users where score &gt; #{profile['score']} AND gender = '#{profile['gender']}'&quot;)[0][0].to_i + 1</span>
+    <span class="ruby-comment cmt"># profile['rank_network'] = 0;</span>
+    <span class="ruby-comment cmt"># profile['total'] = User.count(:conditions=&gt;&quot;gender = '#{profile['gender']}'&quot;).to_i</span>
+    <span class="ruby-comment cmt"># profile['total_network'] = profile['total']</span>
+        
+    <span class="ruby-identifier">profile</span>[<span class="ruby-value str">'votes'</span>] = <span class="ruby-identifier">profile</span>[<span class="ruby-value str">'votes'</span>].<span class="ruby-identifier">to_i</span>
+    <span class="ruby-identifier">profile</span>[<span class="ruby-value str">'votes_network'</span>] = <span class="ruby-identifier">profile</span>[<span class="ruby-value str">'votes_network'</span>].<span class="ruby-identifier">to_i</span>
+    
+    <span class="ruby-comment cmt"># send response</span>
+    <span class="ruby-identifier">respond_to</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">format</span><span class="ruby-operator">|</span>
+      <span class="ruby-identifier">format</span>.<span class="ruby-identifier">html</span> <span class="ruby-comment cmt"># index.html.erb</span>
+      <span class="ruby-identifier">format</span>.<span class="ruby-identifier">xml</span>  { <span class="ruby-identifier">render</span> <span class="ruby-identifier">:xml</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">profile</span> }
+      <span class="ruby-identifier">format</span>.<span class="ruby-identifier">json</span>  { <span class="ruby-identifier">render</span> <span class="ruby-identifier">:json</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">profile</span> }
+    <span class="ruby-keyword kw">end</span>
+  <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>

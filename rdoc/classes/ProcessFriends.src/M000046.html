@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>generate_network (ProcessFriends)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File lib/process_friends.rb, line 116</span>
+  <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">generate_network</span>(<span class="ruby-identifier">facebookId</span>, <span class="ruby-identifier">friendIdArray</span>, <span class="ruby-identifier">degree</span> = <span class="ruby-value">1</span>)
+<span class="ruby-comment cmt">#    friendIdArray = [&quot;1217270&quot;,&quot;1217767&quot;,&quot;1209924&quot;]</span>
+    <span class="ruby-comment cmt"># This method generates a network link table of user -&gt; friend with degree = 1</span>
+    <span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;Generate #{degree} degree network link table for user with id: #{facebookId}&quot;</span>
+
+    <span class="ruby-identifier">friendIdArray</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">friendId</span><span class="ruby-operator">|</span>
+      <span class="ruby-keyword kw">if</span> <span class="ruby-constant">Network</span>.<span class="ruby-identifier">where</span>([<span class="ruby-value str">&quot;facebook_id = :facebook_id AND friend_id = :friend_id&quot;</span>, { <span class="ruby-identifier">:facebook_id</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">facebookId</span>, <span class="ruby-identifier">:friend_id</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">friendId</span> }]).<span class="ruby-identifier">empty?</span>
+        <span class="ruby-identifier">network</span> = <span class="ruby-constant">Network</span>.<span class="ruby-identifier">create</span>(
+          <span class="ruby-identifier">:facebook_id</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">facebookId</span>,
+          <span class="ruby-identifier">:friend_id</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">friendId</span>, 
+          <span class="ruby-identifier">:degree</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">degree</span>
+        )
+      <span class="ruby-keyword kw">end</span>
+    <span class="ruby-keyword kw">end</span>
+  <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>

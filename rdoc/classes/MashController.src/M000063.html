@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>adjustScoresForUsers (MashController)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File app/controllers/mash_controller.rb, line 558</span>
+  <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">adjustScoresForUsers</span>(<span class="ruby-identifier">winner</span>, <span class="ruby-identifier">loser</span>, <span class="ruby-identifier">mode</span> = <span class="ruby-value">0</span>)
+    <span class="ruby-identifier">winnerExpected</span> = <span class="ruby-identifier">expected_outcome</span>(<span class="ruby-identifier">winner</span>, <span class="ruby-identifier">loser</span>, <span class="ruby-identifier">mode</span>)
+    <span class="ruby-identifier">loserExpected</span> = <span class="ruby-identifier">expected_outcome</span>(<span class="ruby-identifier">loser</span>, <span class="ruby-identifier">winner</span>, <span class="ruby-identifier">mode</span>)
+    
+    <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">mode</span> <span class="ruby-operator">==</span> <span class="ruby-value str">&quot;0&quot;</span>
+      <span class="ruby-comment cmt"># Adjust the winner score</span>
+      <span class="ruby-identifier">winner</span>.<span class="ruby-identifier">update_attributes</span>(
+        <span class="ruby-identifier">:wins</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">winner</span>[<span class="ruby-identifier">:wins</span>] <span class="ruby-operator">+</span> <span class="ruby-value">1</span>,
+        <span class="ruby-identifier">:win_streak</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">winner</span>[<span class="ruby-identifier">:win_streak</span>] <span class="ruby-operator">+</span> <span class="ruby-value">1</span>,
+        <span class="ruby-identifier">:loss_streak</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>,
+        <span class="ruby-identifier">:score</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">winner</span>[<span class="ruby-identifier">:score</span>] <span class="ruby-operator">+</span> (<span class="ruby-value">32</span> <span class="ruby-operator">*</span> (<span class="ruby-value">1</span> <span class="ruby-operator">-</span> <span class="ruby-identifier">winnerExpected</span>)),
+        <span class="ruby-identifier">:win_streak_max</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">winner</span>[<span class="ruby-identifier">:win_streak</span>] <span class="ruby-operator">&gt;</span> <span class="ruby-identifier">winner</span>[<span class="ruby-identifier">:win_streak_max</span>] <span class="ruby-operator">?</span> <span class="ruby-identifier">winner</span>[<span class="ruby-identifier">:win_streak</span>] <span class="ruby-operator">:</span> <span class="ruby-identifier">winner</span>[<span class="ruby-identifier">:win_streak_max</span>]
+      )
+      
+      <span class="ruby-comment cmt"># winner.update_attributes(:wins =&gt; winner[:wins] + 1)</span>
+      <span class="ruby-comment cmt"># winner.update_attributes(:win_streak =&gt; winner[:win_streak] + 1)</span>
+      <span class="ruby-comment cmt"># winner.update_attributes(:loss_streak =&gt; 0)</span>
+      <span class="ruby-comment cmt"># winner.update_attributes(:score =&gt; winner[:score] + (32 * (1 - winnerExpected)))</span>
+      
+      <span class="ruby-comment cmt"># if winner[:win_streak] &gt; winner[:win_streak_max]</span>
+      <span class="ruby-comment cmt">#   winner.update_attributes(:win_streak_max =&gt; winner[:win_streak])</span>
+      <span class="ruby-comment cmt"># end</span>
+
+      <span class="ruby-comment cmt"># Adjust the loser score</span>
+      <span class="ruby-identifier">loser</span>.<span class="ruby-identifier">update_attributes</span>(
+        <span class="ruby-identifier">:losses</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">loser</span>[<span class="ruby-identifier">:losses</span>] <span class="ruby-operator">+</span> <span class="ruby-value">1</span>,
+        <span class="ruby-identifier">:loss_streak</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">loser</span>[<span class="ruby-identifier">:loss_streak</span>] <span class="ruby-operator">+</span> <span class="ruby-value">1</span>,
+        <span class="ruby-identifier">:win_streak</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>,
+        <span class="ruby-identifier">:score</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">loser</span>[<span class="ruby-identifier">:score</span>] <span class="ruby-operator">+</span> (<span class="ruby-value">32</span> <span class="ruby-operator">*</span> (<span class="ruby-value">0</span> <span class="ruby-operator">-</span> <span class="ruby-identifier">loserExpected</span>)),
+        <span class="ruby-identifier">:loss_streak_max</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">loser</span>[<span class="ruby-identifier">:loss_streak</span>] <span class="ruby-operator">&gt;</span> <span class="ruby-identifier">loser</span>[<span class="ruby-identifier">:loss_streak_max</span>] <span class="ruby-operator">?</span> <span class="ruby-identifier">loser</span>[<span class="ruby-identifier">:loss_streak</span>] <span class="ruby-operator">:</span> <span class="ruby-identifier">loser</span>[<span class="ruby-identifier">:loss_streak_max</span>]
+      )
+      
+      <span class="ruby-comment cmt"># loser.update_attributes(:losses =&gt; loser[:losses] + 1)</span>
+      <span class="ruby-comment cmt"># loser.update_attributes(:loss_streak =&gt; loser[:loss_streak] + 1)</span>
+      <span class="ruby-comment cmt"># loser.update_attributes(:win_streak =&gt; 0)</span>
+      <span class="ruby-comment cmt"># loser.update_attributes(:score =&gt; loser[:score] + (32 * (0 - loserExpected)))</span>
+      <span class="ruby-comment cmt"># </span>
+      <span class="ruby-comment cmt"># if loser[:loss_streak] &gt; loser[:loss_streak_max]</span>
+      <span class="ruby-comment cmt">#   loser.update_attributes(:loss_streak_max =&gt; loser[:loss_streak])</span>
+      <span class="ruby-comment cmt"># end</span>
+    <span class="ruby-keyword kw">else</span>
+      <span class="ruby-comment cmt"># Adjust the winner score</span>
+      <span class="ruby-identifier">winner</span>.<span class="ruby-identifier">update_attributes</span>(
+        <span class="ruby-identifier">:wins_network</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">winner</span>[<span class="ruby-identifier">:wins_network</span>] <span class="ruby-operator">+</span> <span class="ruby-value">1</span>,
+        <span class="ruby-identifier">:win_streak_network</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">winner</span>[<span class="ruby-identifier">:win_streak_network</span>] <span class="ruby-operator">+</span> <span class="ruby-value">1</span>,
+        <span class="ruby-identifier">:loss_streak_network</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>,
+        <span class="ruby-identifier">:score_network</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">winner</span>[<span class="ruby-identifier">:score_network</span>] <span class="ruby-operator">+</span> (<span class="ruby-value">32</span> <span class="ruby-operator">*</span> (<span class="ruby-value">1</span> <span class="ruby-operator">-</span> <span class="ruby-identifier">winnerExpected</span>)),
+        <span class="ruby-identifier">:win_streak_max_network</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">winner</span>[<span class="ruby-identifier">:win_streak_network</span>] <span class="ruby-operator">&gt;</span> <span class="ruby-identifier">winner</span>[<span class="ruby-identifier">:win_streak_max_network</span>] <span class="ruby-operator">?</span> <span class="ruby-identifier">winner</span>[<span class="ruby-identifier">:win_streak_network</span>] <span class="ruby-operator">:</span> <span class="ruby-identifier">winner</span>[<span class="ruby-identifier">:win_streak_max_network</span>]
+      )
+      
+      <span class="ruby-comment cmt"># winner.update_attributes(:wins_network =&gt; winner[:wins_network] + 1)</span>
+      <span class="ruby-comment cmt"># winner.update_attributes(:win_streak_network =&gt; winner[:win_streak_network] + 1)</span>
+      <span class="ruby-comment cmt"># winner.update_attributes(:loss_streak_network =&gt; 0)</span>
+      <span class="ruby-comment cmt"># winner.update_attributes(:score_network =&gt; winner[:score_network] + (32 * (1 - winnerExpected)))</span>
+      <span class="ruby-comment cmt"># </span>
+      <span class="ruby-comment cmt"># if winner[:win_streak_network] &gt; winner[:win_streak_max_network]</span>
+      <span class="ruby-comment cmt">#   winner.update_attributes(:win_streak_max_network =&gt; winner[:win_streak_network])</span>
+      <span class="ruby-comment cmt"># end</span>
+
+      <span class="ruby-comment cmt"># Adjust the loser score</span>
+      <span class="ruby-identifier">loser</span>.<span class="ruby-identifier">update_attributes</span>(
+        <span class="ruby-identifier">:losses_network</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">loser</span>[<span class="ruby-identifier">:losses_network</span>] <span class="ruby-operator">+</span> <span class="ruby-value">1</span>,
+        <span class="ruby-identifier">:loss_streak_network</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">loser</span>[<span class="ruby-identifier">:loss_streak_network</span>] <span class="ruby-operator">+</span> <span class="ruby-value">1</span>,
+        <span class="ruby-identifier">:win_streak_network</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>,
+        <span class="ruby-identifier">:score_network</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">loser</span>[<span class="ruby-identifier">:score_network</span>] <span class="ruby-operator">+</span> (<span class="ruby-value">32</span> <span class="ruby-operator">*</span> (<span class="ruby-value">0</span> <span class="ruby-operator">-</span> <span class="ruby-identifier">loserExpected</span>)),
+        <span class="ruby-identifier">:loss_streak_max_network</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">loser</span>[<span class="ruby-identifier">:loss_streak_network</span>] <span class="ruby-operator">&gt;</span> <span class="ruby-identifier">loser</span>[<span class="ruby-identifier">:loss_streak_max_network</span>] <span class="ruby-operator">?</span> <span class="ruby-identifier">loser</span>[<span class="ruby-identifier">:loss_streak_network</span>] <span class="ruby-operator">:</span> <span class="ruby-identifier">loser</span>[<span class="ruby-identifier">:loss_streak_max_network</span>]
+      )
+      
+      <span class="ruby-comment cmt"># loser.update_attributes(:losses_network =&gt; loser[:losses_network] + 1)</span>
+      <span class="ruby-comment cmt"># loser.update_attributes(:loss_streak_network =&gt; loser[:loss_streak_network] + 1)</span>
+      <span class="ruby-comment cmt"># loser.update_attributes(:win_streak_network =&gt; 0)</span>
+      <span class="ruby-comment cmt"># loser.update_attributes(:score_network =&gt; loser[:score_network] + (32 * (0 - loserExpected)))</span>
+      <span class="ruby-comment cmt"># </span>
+      <span class="ruby-comment cmt"># if loser[:loss_streak_network] &gt; loser[:loss_streak_max_network]</span>
+      <span class="ruby-comment cmt">#   loser.update_attributes(:loss_streak_max_network =&gt; loser[:loss_streak_network])</span>
+      <span class="ruby-comment cmt"># end</span>
+    <span class="ruby-keyword kw">end</span>
+  <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>
