@@ -564,7 +564,30 @@ class MashController < ApplicationController
   def recents
     Rails.logger.info request.query_parameters.inspect
     
-    response = ""
+    if params[:count].nil?
+      count = 50
+    else
+      count = params[:count]
+    end
+    
+    if params[:filter].nil?
+      results = Result.all(:order=>"created_at desc", :limit=>count)
+    else       
+      results = Result.all(:conditions =>"facebook_id = '#{params[:id]}'",:order=>"created_at desc", :limit=>count)
+    end
+    
+    response = []
+    results.each do |result|
+      responseHash = { 
+        :facebook_id => result[:facebook_id],
+        :winner_id => result[:winner_id],
+        :loser_id => result[:loser_id],
+        :winner_score => result[:winner_score],
+        :loser_score => result[:loser_score],
+        :created_at => result[:created_at]
+      }
+      response << responseHash
+    end
     
     respond_to do |format|
       format.xml  { render :xml => response }
