@@ -628,21 +628,21 @@ class MashController < ApplicationController
     
     fields.each do |field|
       if period == "day"
-        query = "select year(dt) as year, month(dt) as month, day(dt) as day,
-                  sum(case when a.created_at is not null then 1 else 0 end) as data
-                  from #{field} a
-                  right join calendar b on year(created_at)=year(dt) and month(created_at)=month(dt) and day(created_at)=day(dt) and hour(dt)=0
-                  where dt between (select now()) - interval #{interval} #{period} and (select now())
-                  group by year(dt), month(dt), day(dt)
-                  order by year(dt), month(dt), day(dt)"
+        query = "select year(dt) as year, month(dt) as month, day(dt) as day, coalesce(b.data,0) as data
+                  from calendar a
+                  left join (select date(created_at) as date, sum(case when created_at is not null then 1 else 0 end) as data
+                            from #{field} where created_at > (select now() - interval #{interval} #{period})
+                            group by date(created_at)) b
+                  on date(a.dt) = b.date
+                  where dt between (select now()- interval #{interval} #{period}) and (select now()) and hour(a.dt)=0"
       else
-        query = "select year(dt) as year, month(dt) as month, day(dt) as day, hour(dt) as hour,
-                  sum(case when a.created_at is not null then 1 else 0 end) as data
-                  from #{field} a
-                  right join calendar b on year(created_at)=year(dt) and month(created_at)=month(dt) and day(created_at)=day(dt) and hour(created_at)=hour(dt)
-                  where dt between (select now()) - interval #{interval} #{period} and (select now())
-                  group by year(dt), month(dt), day(dt), hour(dt)
-                  order by year(dt), month(dt), day(dt), hour(dt)"        
+        query = "select year(dt) as year, month(dt) as month, day(dt) as day, hour(dt) as hour, coalesce(b.data,0) as data
+                  from calendar a
+                  left join (select date(created_at) as date, hour(created_at) as hour, sum(case when created_at is not null then 1 else 0 end) as data
+                            from #{field} where created_at > (select now() - interval #{interval} #{period})
+                            group by date(created_at), hour(created_at)) b
+                  on date(a.dt) = b.date and hour(a.dt) = b.hour
+                  where dt between (select now()- interval #{interval} #{period}) and (select now())"        
       end
                 
       mysqlresults = ActiveRecord::Base.connection.execute(query)
