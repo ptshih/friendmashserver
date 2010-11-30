@@ -611,15 +611,39 @@ class MashController < ApplicationController
       fields = params[:fields].split(',')
     end
     
+    if params[:interval].nil?
+      interval = "24"
+    else
+      interval = params[:interval]
+    end
+    
+    if params[:period]=="day" || params[:period]=="hour" 
+      period = [:period]
+    else
+      period = "day"
+    end
+    
     response = {}
     
     fields.each do |field|
-      query = "select year(dt), month(dt), day(dt), sum(case when a.created_at is not null then 1 else 0 end) as data
-                from #{field} a
-                right join calendar b on year(created_at)=year(dt) and month(created_at)=month(dt) and day(created_at)=day(dt) and hour(dt)=0
-                where dt between (select now()) - interval 24 day and (select now())
-                group by year(dt), month(dt), day(dt)
-                order by year(dt), month(dt), day(dt)"
+      if period="day"
+        query = "select year(dt) as year, month(dt) as month, day(dt) as day,
+                  sum(case when a.created_at is not null then 1 else 0 end) as data
+                  from #{field} a
+                  right join calendar b on year(created_at)=year(dt) and month(created_at)=month(dt) and day(created_at)=day(dt) and hour(dt)=0
+                  where dt between (select now()) - interval #{interval} #{period} and (select now())
+                  group by year(dt), month(dt), day(dt)
+                  order by year(dt), month(dt), day(dt)"
+      else
+        query = "select year(dt) as year, month(dt) as month, day(dt) as day, hour(dt) as hour,
+                  sum(case when a.created_at is not null then 1 else 0 end) as data
+                  from #{field} a
+                  right join calendar b on year(created_at)=year(dt) and month(created_at)=month(dt) and day(created_at)=day(dt) and hour(created_at)=hour(dt)
+                  where dt between (select now()) - interval #{interval} #{period} and (select now())
+                  group by year(dt), month(dt), day(dt), hour(dt)
+                  order by year(dt), month(dt), day(dt), hour(dt)"        
+      end
+                
       mysqlresults = ActiveRecord::Base.connection.execute(query)
       
       response["#{field}"] = {}
