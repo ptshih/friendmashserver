@@ -256,6 +256,8 @@ class MashController < ApplicationController
     profile['votes'] = profile['votes'].to_i
     profile['votes_network'] = profile['votes_network'].to_i
     
+    ranksHash.free # free the MySQL Result
+    
     # ActiveRecord::Base.connection.execute("select sum(case when a.score>c.score then 1 else 0 end) as rankOfTotal,sum(case when a.score>c.score && b.id!=null then 1 else 0 end) as rankAmongFriends,sum(1) as totalCount,sum(case when b.id!=null then 1 else 0 end) as networkCount from users a left outer join networks b on a.facebook_id=b.friend_id left outer join users c where c.id='#{profile['facebook_id']}' and a.gender=c.gender")
     
     # profile['rank'] = ActiveRecord::Base.connection.execute("SELECT count(*) from Users where score > #{profile['score']} AND gender = '#{profile['gender']}'")[0][0].to_i + 1
@@ -571,10 +573,47 @@ class MashController < ApplicationController
   end
   
   def activity
+    # THIS ONLY works in MYSQL
+    
     # This API returns a JSON response for recent server activity for the Web client to render.
     # This is admin only and should be restricted/authenticated
     Rails.logger.info request.query_parameters.inspect
     
+    # Need to hook up interval parameter
+    
+    if params[:fields].nil? 
+      fields = %w(users profiles tokens networks results delayed_jobs, employers, schools)
+      # fields = %w(users profiles)
+    else
+      fields = params[:fields].split(',')
+    end
+    
+    response = {}
+    
+    fields.each do |field|
+      query = "select year(dt), month(dt), day(dt), sum(case when a.created_at is not null then 1 else 0 end) as data
+      					from #{field} a
+      					right join calendar b on year(created_at)=year(dt) and month(created_at)=month(dt) and day(created_at)=day(dt) and hour(dt)=0
+      					where dt between (select now()) - interval 24 day and (select now())
+      					group by year(dt), month(dt), day(dt)
+      					order by year(dt), month(dt), day(dt)"
+      mysqlresults = ActiveRecord::Base.connection.execute(query)
+      
+      response["#{field}"] = {}
+      response["#{field}"]['values'] = []
+      response["#{field}"]['count'] = mysqlresults.num_rows
+      
+      while mysqlresult = mysqlresults.fetch_hash do
+        response["#{field}"]['values'] << mysqlresult
+      end
+      
+      mysqlresults.free
+    end
+
+    respond_to do |format|
+      format.xml  { render :xml => response }
+      format.json  { render :json => response }
+    end
   end
   
   def serverstats
