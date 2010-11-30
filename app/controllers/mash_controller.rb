@@ -617,7 +617,7 @@ class MashController < ApplicationController
     # Period can be { hour, day }
     
     if params[:fields].nil? 
-      fields = %w(users profiles tokens networks results delayed_jobs employers schools)
+      fields = %w(users profiles tokens networks results employers schools)
       # fields = %w(users profiles)
     else
       fields = params[:fields].split(',')
@@ -681,7 +681,7 @@ class MashController < ApplicationController
     Rails.logger.info request.query_parameters.inspect
     
     if params[:fields].nil? 
-      fields = %w(users profiles tokens networks results delayed_jobs, employers, schools)
+      fields = %w(users profiles tokens networks results employers schools)
     else
       fields = params[:fields].split(',')
     end
