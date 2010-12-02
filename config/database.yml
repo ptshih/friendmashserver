@@ -8,10 +8,10 @@
   
 development:
   adapter: mysql
-  host: friendmash-production.clhyg7sm4xmb.us-east-1.rds.amazonaws.com
+  host: friendmash-staging.clhyg7sm4xmb.us-east-1.rds.amazonaws.com
   reconnect: false
-  database: facemash
-  username: facemash
+  database: friendmash
+  username: friendmash
   password: Lik3aG6
     
 # Warning: The database defined as "test" will be erased and
@@ -30,14 +30,14 @@ production:
   adapter: mysql
   host: friendmash-production.clhyg7sm4xmb.us-east-1.rds.amazonaws.com
   reconnect: false
-  database: facemash
-  username: facemash
+  database: friendmash
+  username: friendmash
   password: Lik3aG6
   
 staging:
   adapter: mysql
-  host: friendmash-production.clhyg7sm4xmb.us-east-1.rds.amazonaws.com
+  host: friendmash-staging.clhyg7sm4xmb.us-east-1.rds.amazonaws.com
   reconnect: false
-  database: facemash
-  username: facemash
+  database: friendmash
+  username: friendmash
   password: Lik3aG6
