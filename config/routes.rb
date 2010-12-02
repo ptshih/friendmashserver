@@ -13,7 +13,7 @@ Facemash::Application.routes.draw do
   
   match 'mash/token/:id' => 'mash#token', :via => :post
   
-  match 'mash/result/:id' => 'mash#result', :via => :get
+  match 'mash/result/:id' => 'mash#result', :via => :post
   
   match 'mash/profile/:id' => 'mash#profile', :via => :get
   
