@@ -16,7 +16,7 @@ class MashController < ApplicationController
     
     Rails.logger.info request.query_parameters.inspect
     
-    if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
+    if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
       respond_to do |format|
         format.xml  { render :xml => {:error => "access denied"} }
         format.json  { render :json => {:error => "access denied"} }
@@ -96,7 +96,7 @@ class MashController < ApplicationController
     # CURRENTLY UNUSED, GAME MODE DISABLED
     Rails.logger.info request.query_parameters.inspect
     
-    if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
+    if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
       respond_to do |format|
         format.xml  { render :xml => {:error => "access denied"} }
         format.json  { render :json => {:error => "access denied"} }
@@ -118,7 +118,7 @@ class MashController < ApplicationController
     # Then it will call a delayed job to process the user's friends list
     
     # Rails.logger.info request.query_parameters.inspect
-    if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
+    if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
       respond_to do |format|
         format.xml  { render :xml => {:error => "access denied"} }
         format.json  { render :json => {:error => "access denied"} }
@@ -193,7 +193,7 @@ class MashController < ApplicationController
     
     Rails.logger.info request.query_parameters.inspect
     
-    if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
+    if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
       respond_to do |format|
         format.xml  { render :xml => {:error => "access denied"} }
         format.json  { render :json => {:error => "access denied"} }
@@ -238,7 +238,7 @@ class MashController < ApplicationController
     
     Rails.logger.info request.query_parameters.inspect
     
-    if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
+    if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
       respond_to do |format|
         format.html # index.html.erb
         format.xml  { render :xml => {:error => "access denied"} }
@@ -284,7 +284,7 @@ class MashController < ApplicationController
     
     Rails.logger.info request.query_parameters.inspect
     
-    if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
+    if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
       respond_to do |format|
         format.xml  { render :xml => {:error => "access denied"} }
         format.json  { render :json => {:error => "access denied"} }
@@ -330,7 +330,7 @@ class MashController < ApplicationController
     Rails.logger.info request.query_parameters.inspect
     # Rails.logger.info request.env.inspect
     
-    if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
+    if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
       respond_to do |format|
         format.xml  { render :xml => {:error => "access denied"} }
         format.json  { render :json => {:error => "access denied"} }
@@ -695,7 +695,7 @@ class MashController < ApplicationController
               concat(data_length + index_length) total_size,
               round(index_length/data_length,2) idx_frac
               from information_schema.TABLES s
-              where table_schema = 'facemash'
+              where table_schema = 'friendmash'
               order by data_length+index_length desc"
               
     mysqlresults = ActiveRecord::Base.connection.execute(query)
