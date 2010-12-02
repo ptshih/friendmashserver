@@ -34,11 +34,12 @@ class MashController < ApplicationController
     
     # MySQL uses RAND, SQLLite uses RANDOM
     # Apparently MySQL-RDS has to use RAND() but PostgreSQL and SQLite use RANDOM()
-    if Rails.env == "production" || Rails.env == "staging"
-      randQuery = 'RAND()'
-    else
-      randQuery = 'RANDOM()'
-    end
+    # if Rails.env == "production" || Rails.env == "staging"
+    #   randQuery = 'RAND()'
+    # else
+    #   randQuery = 'RANDOM()'
+    # end
+    randQuery = 'RAND()'
     
     excludedIds = params[:recents].split(',') # split on comma
     
@@ -445,11 +446,12 @@ class MashController < ApplicationController
     low = bounds[0]
     high = bounds[1]
     
-    if Rails.env == "production" || Rails.env == "staging"
-      randQuery = 'RAND()'
-    else
-      randQuery = 'RANDOM()'
-    end
+    # if Rails.env == "production" || Rails.env == "staging"
+    #   randQuery = 'RAND()'
+    # else
+    #   randQuery = 'RANDOM()'
+    # end
+    randQuery = 'RAND()'
     
     excludedString = "'" + excludedIds.join('\',\'') + "'" # SQL string for excludedIds
     
