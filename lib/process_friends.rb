@@ -1,5 +1,5 @@
 class ProcessFriends < Struct.new(:facebookId) 
-  require 'generate_second_degree'
+  # require 'generate_second_degree'
   require 'populate_missing_genders'
   
   def perform
@@ -39,7 +39,8 @@ class ProcessFriends < Struct.new(:facebookId)
     Delayed::Job.enqueue PopulateMissingGenders.new(friendIdArray)
 
     # Calculate the 2nd degree network table for the newly created user
-    Delayed::Job.enqueue GenerateSecondDegree.new(facebookId)
+    generate_second_degree(facebookId)
+    # Delayed::Job.enqueue GenerateSecondDegree.new(facebookId)
   
     # Whenever a new user is created or friends list is processed
     # We should re-calculate the 2nd degree network table 
@@ -51,7 +52,8 @@ class ProcessFriends < Struct.new(:facebookId)
     
     tokenIdArray.each do |tokenId|
       if not tokenId == facebookId
-        Delayed::Job.enqueue GenerateSecondDegree.new(tokenId)
+        generate_network(tokenId, friendIdArray, 2)
+        # Delayed::Job.enqueue GenerateSecondDegree.new(tokenId)
       end
     end
   end
@@ -129,4 +131,41 @@ class ProcessFriends < Struct.new(:facebookId)
       end
     end
   end
+  
+  def generate_second_degree(facebookId)  
+    puts "Generate 2nd degree network table for user with id: #{facebookId}"
+
+    # Find the current user's 1st degree friends
+    firstDegree = Network.where(["facebook_id = :facebook_id AND degree = 1", { :facebook_id => facebookId } ])
+
+    firstHash = {}
+    secondHash = {}
+
+    firstDegree.each do |firstDegreeFriend|
+      firstHash.store(firstDegreeFriend.friend_id, 1)
+    end
+
+    firstDegree.each do |firstDegreeFriend|
+      secondDegree = Network.where(["facebook_id = :first_id AND degree = 1", { :first_id => firstDegreeFriend.friend_id } ])
+
+      secondDegree.each do |secondDegreeFriend|
+        if not firstHash.has_key?(secondDegreeFriend.friend_id)
+          secondHash.store(secondDegreeFriend.friend_id, 2)
+        end
+
+      end
+    end
+
+    secondHash.each do |key, value|
+      if Network.where(["facebook_id = :facebook_id AND friend_id = :friend_id", { :facebook_id => facebookId, :friend_id => key }]).empty?
+        network = Network.create(
+          :facebook_id => facebookId,
+          :friend_id => key, 
+          :degree => value
+        )
+      end
+    end
+    return nil
+  end
+  
 end
