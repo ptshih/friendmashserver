@@ -1,18 +1,18 @@
 # SQLite version 3.x
 #   gem install sqlite3-ruby (not necessary on OS X Leopard)
-development:
-  adapter: sqlite3
-  database: db/development.sqlite3
-  pool: 5
-  timeout: 5000
-  
 # development:
-#   adapter: mysql
-#   host: facemashlarge.clhyg7sm4xmb.us-east-1.rds.amazonaws.com
-#   reconnect: false
-#   database: facemash
-#   username: facemash
-#   password: Lik3aG6
+#   adapter: sqlite3
+#   database: db/development.sqlite3
+#   pool: 5
+#   timeout: 5000
+  
+development:
+  adapter: mysql
+  host: friendmash-production.clhyg7sm4xmb.us-east-1.rds.amazonaws.com
+  reconnect: false
+  database: facemash
+  username: facemash
+  password: Lik3aG6
     
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".
@@ -28,7 +28,7 @@ test:
 
 production:
   adapter: mysql
-  host: facemashlarge.clhyg7sm4xmb.us-east-1.rds.amazonaws.com
+  host: friendmash-production.clhyg7sm4xmb.us-east-1.rds.amazonaws.com
   reconnect: false
   database: facemash
   username: facemash
@@ -36,7 +36,7 @@ production:
   
 staging:
   adapter: mysql
-  host: facemash.clhyg7sm4xmb.us-east-1.rds.amazonaws.com
+  host: friendmash-production.clhyg7sm4xmb.us-east-1.rds.amazonaws.com
   reconnect: false
   database: facemash
   username: facemash
