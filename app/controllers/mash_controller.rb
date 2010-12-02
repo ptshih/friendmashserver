@@ -639,7 +639,7 @@ class MashController < ApplicationController
       if period == "day"
         query = "select year(dt) as year, month(dt) as month, day(dt) as day, coalesce(b.data,0) as data
                   from calendar a
-                  left join (select date(created_at) as date, sum(case when created_at is not null then 1 else 0 end) as data
+                  left join (select date(created_at) as date, count(*) as data
                             from #{field} where created_at > (select now() - interval #{interval} #{period})
                             group by date(created_at)) b
                   on date(a.dt) = b.date
@@ -647,7 +647,7 @@ class MashController < ApplicationController
       else
         query = "select year(dt) as year, month(dt) as month, day(dt) as day, hour(dt) as hour, coalesce(b.data,0) as data
                   from calendar a
-                  left join (select date(created_at) as date, hour(created_at) as hour, sum(case when created_at is not null then 1 else 0 end) as data
+                  left join (select date(created_at) as date, hour(created_at) as hour, count(*) as data
                             from #{field} where created_at > (select now() - interval #{interval} #{period})
                             group by date(created_at), hour(created_at)) b
                   on date(a.dt) = b.date and hour(a.dt) = b.hour
@@ -733,13 +733,14 @@ class MashController < ApplicationController
     end
     
     response = []
-    
-    query = "select year(created_at) as year, month(created_at) as month, day(created_at) as day, count(*) as data
-  				from results
-  				where created_at>(select max(created_at) from results) - interval #{interval} #{period}
-  				#{filters}
-  				group by year(created_at), month(created_at), day(created_at)
-  				order by year(created_at), month(created_at), day(created_at)"
+
+    query = "select year(dt) as year, month(dt) as month, day(dt) as day, coalesce(b.data,0) as data
+              from calendar a
+              left join (select date(created_at) as date, count(*) as data
+                        from results where created_at > (select now() - interval #{interval} #{period})
+                        group by date(created_at)) b
+              on date(a.dt) = b.date
+              where dt between (select now()- interval #{interval} #{period}) and (select now()) and hour(a.dt)=0"
   				
     mysqlresults = ActiveRecord::Base.connection.execute(query)
 
