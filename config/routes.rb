@@ -28,6 +28,8 @@ Facemash::Application.routes.draw do
   match 'mash/serverstats/:id' => 'mash#serverstats', :via => :get
 
   match 'mash/stats/:id' => 'mash#stats', :via => :get
+  
+  match 'mash/globalstats/:id' => 'mash#globalstats', :via => :get
     
   # The priority is based upon order of creation:
   # first created -> highest priority.

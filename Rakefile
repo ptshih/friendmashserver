@@ -7,5 +7,6 @@ require 'generate_second_degree'
 require 'process_friends'
 require 'populate_missing_genders'
 require 'generate_result'
+require 'update_statistic_summary'
 
 Facemash::Application.load_tasks
