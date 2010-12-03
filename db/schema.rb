@@ -10,7 +10,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20101127075744) do
+ActiveRecord::Schema.define(:version => 20101202095225) do
 
   create_table "delayed_jobs", :force => true do |t|
     t.integer  "priority",   :default => 0
@@ -44,11 +44,9 @@ ActiveRecord::Schema.define(:version => 20101127075744) do
   end
 
   create_table "networks", :force => true do |t|
-    t.string   "facebook_id"
-    t.string   "friend_id"
-    t.integer  "degree",      :default => 0
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.string  "facebook_id"
+    t.string  "friend_id"
+    t.integer "degree",      :default => 0
   end
 
   add_index "networks", ["facebook_id"], :name => "idx_networks_facebook_id"

@@ -1,5 +1,5 @@
 class ProcessFriends < Struct.new(:facebookId) 
-  require 'generate_second_degree'
+  # require 'generate_second_degree'
   require 'populate_missing_genders'
   
   def perform
@@ -14,16 +14,16 @@ class ProcessFriends < Struct.new(:facebookId)
     firstDegreeFriends = user.friends(fields)
     
     # insert the first degree friends into the DB as degree 1
-    process_friends(facebookId, firstDegreeFriends, 1)
-    
+    process_friends(facebookId, firstDegreeFriends)
   end
   
-  def process_friends(facebookId = nil, friends = nil, degree = 1)
+  def process_friends(facebookId = nil, friends = nil)
     return nil if friends.nil? || facebookId.nil?
 
     friendIdArray = Array.new
 
     friends.each do |friend|
+      # Create a User entity for each friend
       create_user(friend)
 
       # Insert friend into friendIdArray if not myself
@@ -33,27 +33,33 @@ class ProcessFriends < Struct.new(:facebookId)
     end
 
     # Generate first degree network for this user
-    generate_network(facebookId, friendIdArray, degree)
+    generate_network(facebookId, friendIdArray, 1)
     
     # Populate any missing genders
     Delayed::Job.enqueue PopulateMissingGenders.new(friendIdArray)
 
     # Calculate the 2nd degree network table for the newly created user
-    Delayed::Job.enqueue GenerateSecondDegree.new(facebookId)
+    # DISABLED
+    generate_second_degree(facebookId)
+    # Delayed::Job.enqueue GenerateSecondDegree.new(facebookId)
   
     # Whenever a new user is created or friends list is processed
     # We should re-calculate the 2nd degree network table 
     #   for all people who have logged in before (token table) who are friends of this new user
     # 
     # Token.select('facebook_id').where("facebook_id IN ('548430564','1217270')").map do |x| x.facebook_id end
+    
+    # DISABLED
     friendIdString = "\'" + friendIdArray.split(',').join("\',\'") + "\'"
     tokenIdArray = Token.select('facebook_id').where("facebook_id IN (#{friendIdString})").map do |u| u.facebook_id end
     
     tokenIdArray.each do |tokenId|
       if not tokenId == facebookId
-        Delayed::Job.enqueue GenerateSecondDegree.new(tokenId)
+        generate_network(tokenId, friendIdArray, 2)
+        # Delayed::Job.enqueue GenerateSecondDegree.new(tokenId)
       end
     end
+    
   end
   
   def create_user(fbUser)
@@ -129,4 +135,41 @@ class ProcessFriends < Struct.new(:facebookId)
       end
     end
   end
+  
+  def generate_second_degree(facebookId)  
+    puts "Generate full 2nd degree network table for user with id: #{facebookId}"
+
+    # Find the current user's 1st degree friends
+    firstDegree = Network.where(["facebook_id = :facebook_id AND degree = 1", { :facebook_id => facebookId } ])
+
+    firstHash = {}
+    secondHash = {}
+
+    firstDegree.each do |firstDegreeFriend|
+      firstHash.store(firstDegreeFriend.friend_id, 1)
+    end
+
+    firstDegree.each do |firstDegreeFriend|
+      secondDegree = Network.where(["facebook_id = :first_id AND degree = 1", { :first_id => firstDegreeFriend.friend_id } ])
+
+      secondDegree.each do |secondDegreeFriend|
+        if not firstHash.has_key?(secondDegreeFriend.friend_id)
+          secondHash.store(secondDegreeFriend.friend_id, 2)
+        end
+
+      end
+    end
+
+    secondHash.each do |key, value|
+      if Network.where(["facebook_id = :facebook_id AND friend_id = :friend_id", { :facebook_id => facebookId, :friend_id => key }]).empty?
+        network = Network.create(
+          :facebook_id => facebookId,
+          :friend_id => key, 
+          :degree => value
+        )
+      end
+    end
+    return nil
+  end
+  
 end

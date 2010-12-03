@@ -28,11 +28,11 @@ GEM
       activemodel (= 3.0.3)
       activesupport (= 3.0.3)
     activesupport (3.0.3)
-    arel (2.0.4)
+    arel (2.0.6)
     builder (2.1.2)
     daemons (1.1.0)
     dalli (1.0.0)
-    delayed_job (2.1.1)
+    delayed_job (2.1.2)
       activesupport (~> 3.0)
       daemons
     erubis (2.6.6)

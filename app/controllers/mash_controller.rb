@@ -16,7 +16,7 @@ class MashController < ApplicationController
     
     Rails.logger.info request.query_parameters.inspect
     
-    if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
+    if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
       respond_to do |format|
         format.xml  { render :xml => {:error => "access denied"} }
         format.json  { render :json => {:error => "access denied"} }
@@ -34,11 +34,12 @@ class MashController < ApplicationController
     
     # MySQL uses RAND, SQLLite uses RANDOM
     # Apparently MySQL-RDS has to use RAND() but PostgreSQL and SQLite use RANDOM()
-    if Rails.env == "production" || Rails.env == "staging"
-      randQuery = 'RAND()'
-    else
-      randQuery = 'RANDOM()'
-    end
+    # if Rails.env == "production" || Rails.env == "staging"
+    #   randQuery = 'RAND()'
+    # else
+    #   randQuery = 'RANDOM()'
+    # end
+    randQuery = 'RAND()'
     
     excludedIds = params[:recents].split(',') # split on comma
     
@@ -96,7 +97,7 @@ class MashController < ApplicationController
     # CURRENTLY UNUSED, GAME MODE DISABLED
     Rails.logger.info request.query_parameters.inspect
     
-    if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
+    if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
       respond_to do |format|
         format.xml  { render :xml => {:error => "access denied"} }
         format.json  { render :json => {:error => "access denied"} }
@@ -118,7 +119,7 @@ class MashController < ApplicationController
     # Then it will call a delayed job to process the user's friends list
     
     # Rails.logger.info request.query_parameters.inspect
-    if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
+    if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
       respond_to do |format|
         format.xml  { render :xml => {:error => "access denied"} }
         format.json  { render :json => {:error => "access denied"} }
@@ -193,7 +194,7 @@ class MashController < ApplicationController
     
     Rails.logger.info request.query_parameters.inspect
     
-    if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
+    if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
       respond_to do |format|
         format.xml  { render :xml => {:error => "access denied"} }
         format.json  { render :json => {:error => "access denied"} }
@@ -238,7 +239,7 @@ class MashController < ApplicationController
     
     Rails.logger.info request.query_parameters.inspect
     
-    if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
+    if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
       respond_to do |format|
         format.html # index.html.erb
         format.xml  { render :xml => {:error => "access denied"} }
@@ -251,11 +252,13 @@ class MashController < ApplicationController
     
     query = "select sum(case when a.score>b.score then 1 else 0 end) as rankoftotal, sum(case when a.score>b.score AND c.friend_id is not null then 1 else 0 end) as rankofnetwork, sum(case when c.friend_id is not null then 1 else 0 end) as networktotal, count(*) as total from users a left join users b on 1=1 and b.facebook_id='#{profile['facebook_id']}' left join networks c on c.friend_id = a.facebook_id and c.facebook_id=b.facebook_id where a.gender = b.gender"
     
-    if Rails.env == "production" || Rails.env == "staging"
-      ranksHash = ActiveRecord::Base.connection.execute(query).fetch_hash
-    else
-      ranksHash = ActiveRecord::Base.connection.execute(query)[0]
-    end
+    # if Rails.env == "production" || Rails.env == "staging"
+    #   ranksHash = ActiveRecord::Base.connection.execute(query).fetch_hash
+    # else
+    #   ranksHash = ActiveRecord::Base.connection.execute(query)[0]
+    # end
+    
+    ranksHash = ActiveRecord::Base.connection.execute(query).fetch_hash
     
     profile['rank'] = ranksHash['rankoftotal'].to_i + 1
     profile['rank_network'] = ranksHash['rankofnetwork'].to_i + 1
@@ -284,7 +287,7 @@ class MashController < ApplicationController
     
     Rails.logger.info request.query_parameters.inspect
     
-    if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
+    if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
       respond_to do |format|
         format.xml  { render :xml => {:error => "access denied"} }
         format.json  { render :json => {:error => "access denied"} }
@@ -330,7 +333,7 @@ class MashController < ApplicationController
     Rails.logger.info request.query_parameters.inspect
     # Rails.logger.info request.env.inspect
     
-    if request.env["HTTP_X_FACEMASH_SECRET"] != "omgwtfbbq"
+    if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
       respond_to do |format|
         format.xml  { render :xml => {:error => "access denied"} }
         format.json  { render :json => {:error => "access denied"} }
@@ -445,11 +448,12 @@ class MashController < ApplicationController
     low = bounds[0]
     high = bounds[1]
     
-    if Rails.env == "production" || Rails.env == "staging"
-      randQuery = 'RAND()'
-    else
-      randQuery = 'RANDOM()'
-    end
+    # if Rails.env == "production" || Rails.env == "staging"
+    #   randQuery = 'RAND()'
+    # else
+    #   randQuery = 'RANDOM()'
+    # end
+    randQuery = 'RAND()'
     
     excludedString = "'" + excludedIds.join('\',\'') + "'" # SQL string for excludedIds
     
@@ -695,7 +699,7 @@ class MashController < ApplicationController
               concat(data_length + index_length) total_size,
               round(index_length/data_length,2) idx_frac
               from information_schema.TABLES s
-              where table_schema = 'facemash'
+              where table_schema = 'friendmash'
               order by data_length+index_length desc"
               
     mysqlresults = ActiveRecord::Base.connection.execute(query)
