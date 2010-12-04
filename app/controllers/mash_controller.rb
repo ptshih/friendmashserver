@@ -57,9 +57,9 @@ class MashController < ApplicationController
       randomUser = User.all(:conditions=>"score >= #{lowerBound} AND gender = '#{params[:gender]}' AND facebook_id NOT IN (#{excludedString}) AND facebook_id IN (#{networkString})",:order=>randQuery,:limit=>1).first
     end
     
-    excludedIds << "#{randomUser.facebook_id}" # add the random user into the excludedIds array
-    
     if not randomUser.nil?
+      excludedIds << "#{randomUser.facebook_id}" # add the random user into the excludedIds array
+      
       # Find an opponent for the randomly selected user
       opponent = find_opponent(randomUser.score, params[:gender], excludedIds, networkIds)
       
