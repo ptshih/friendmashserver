@@ -119,6 +119,17 @@ class MashController < ApplicationController
     # Then it will call a delayed job to process the user's friends list
     
     # Rails.logger.info request.query_parameters.inspect
+    
+    if Rails.env == "production" || Rails.env == "staging"
+      if not request.ssl?
+        respond_to do |format|
+          format.xml  { render :xml => {:error => "access denied"} }
+          format.json  { render :json => {:error => "access denied"} }
+        end
+        return nil
+      end
+    end
+    
     if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
       respond_to do |format|
         format.xml  { render :xml => {:error => "access denied"} }
@@ -194,10 +205,14 @@ class MashController < ApplicationController
     
     Rails.logger.info request.query_parameters.inspect
     
-    if request.ssl?
-      puts "SSL"
-    else
-      puts "NO SSL"
+    if Rails.env == "production" || Rails.env == "staging"
+      if not request.ssl?
+        respond_to do |format|
+          format.xml  { render :xml => {:error => "access denied"} }
+          format.json  { render :json => {:error => "access denied"} }
+        end
+        return nil
+      end
     end
     
     if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
