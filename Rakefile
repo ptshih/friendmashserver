@@ -6,6 +6,7 @@ require 'rake'
 require 'process_friends'
 require 'populate_missing_genders'
 require 'generate_result'
+require 'update_statistic_summary'
 # require 'generate_second_degree'
 
 Facemash::Application.load_tasks
