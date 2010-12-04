@@ -194,6 +194,12 @@ class MashController < ApplicationController
     
     Rails.logger.info request.query_parameters.inspect
     
+    if request.ssl?
+      puts "SSL"
+    else
+      puts "NO SSL"
+    end
+    
     if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
       respond_to do |format|
         format.xml  { render :xml => {:error => "access denied"} }
