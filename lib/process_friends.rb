@@ -37,86 +37,43 @@ class ProcessFriends < Struct.new(:facebookId)
     
     # Populate any missing genders
     Delayed::Job.enqueue PopulateMissingGenders.new(friendIdArray)
-
-    # Calculate the 2nd degree network table for the newly created user
-    # DISABLED
-    generate_second_degree(facebookId)
-    # Delayed::Job.enqueue GenerateSecondDegree.new(facebookId)
-  
-    # Whenever a new user is created or friends list is processed
-    # We should re-calculate the 2nd degree network table 
-    #   for all people who have logged in before (token table) who are friends of this new user
-    # 
-    # Token.select('facebook_id').where("facebook_id IN ('548430564','1217270')").map do |x| x.facebook_id end
-    
-    # DISABLED
-    friendIdString = "\'" + friendIdArray.split(',').join("\',\'") + "\'"
-    tokenIdArray = Token.select('facebook_id').where("facebook_id IN (#{friendIdString})").map do |u| u.facebook_id end
-    
-    tokenIdArray.each do |tokenId|
-      if not tokenId == facebookId
-        generate_network(tokenId, friendIdArray, 2)
-        # Delayed::Job.enqueue GenerateSecondDegree.new(tokenId)
-      end
-    end
-    
   end
   
   def create_user(fbUser)
     user = User.find_by_facebook_id(fbUser['id'])
     if user.nil?
-      User.new do |u|
-        u.facebook_id = fbUser['id']
-        u.gender = fbUser['gender'].nil? ? nil : fbUser['gender']
-        u.score = 1500
-        u.wins = 0
-        u.wins_network = 0
-        u.losses = 0
-        u.losses_network = 0
-        u.win_streak = 0
-        u.win_streak_network = 0
-        u.loss_streak = 0
-        u.loss_streak_network = 0
-        u.win_streak_max = 0
-        u.loss_streak_max = 0
-        u.win_streak_max_network = 0
-        u.loss_streak_max_network = 0
-        u.save
-      end
-      profile = Profile.find_by_facebook_id(fbUser['id'])
-      if profile.nil?
-        Profile.new do |p|
-          p.facebook_id = fbUser['id']
-          p.first_name = fbUser['first_name'].nil? ? nil : fbUser['first_name']
-          p.last_name = fbUser['last_name'].nil? ? nil : fbUser['last_name']
-          p.full_name = fbUser['name']
-          p.votes = 0
-          p.votes_network = 0
-          p.save
-        end
-      end
-
+      # If user with this facebookId does not exist, create a new one
+      user = User.create(
+        :facebook_id => fbUser['id'],
+        :gender => fbUser['gender'].nil? ? nil : fbUser['gender']
+      )
+      # Create a profile for the user
+      profile = user.create_profile(
+        :first_name => fbUser['first_name'].nil? ? nil : fbUser['first_name'],
+        :last_name => fbUser['last_name'].nil? ? nil : fbUser['last_name'],
+        :full_name => fbUser['name']
+      )
+      # Create Schools for user if exists
       fbUser['education'].each do |education|
-        School.new do |s|
-          s.facebook_id = fbUser['id']
-          s.school_id = education['school']['id']
-          s.school_name = education['school']['name']
-          s.save
-        end
+        school = user.schools.create(
+          :school_id => education['school']['id'],
+          :school_name => education['school']['name']
+        )
       end if not fbUser['education'].nil?
-
+      # Create Employers for user if exists
       fbUser['work'].each do |work|
-        Employer.new do |e|
-          e.facebook_id = fbUser['id']
-          e.employer_id = work['employer']['id']
-          e.employer_name = work['employer']['name']
-          e.save
-        end
+        employer = user.employers.create(
+          :employer_id => work['employer']['id'],
+          :employer_name => work['employer']['name']
+        )
       end if not fbUser['work'].nil?
     else
+      # If user already exists, update their gender
       user.update_attributes(
-      :gender => fbUser['gender']
+        :gender => fbUser['gender']
       )
+      # Update schools
+      # Update employers
     end
   end
 
@@ -134,42 +91,6 @@ class ProcessFriends < Struct.new(:facebookId)
         )
       end
     end
-  end
-  
-  def generate_second_degree(facebookId)  
-    puts "Generate full 2nd degree network table for user with id: #{facebookId}"
-
-    # Find the current user's 1st degree friends
-    firstDegree = Network.where(["facebook_id = :facebook_id AND degree = 1", { :facebook_id => facebookId } ])
-
-    firstHash = {}
-    secondHash = {}
-
-    firstDegree.each do |firstDegreeFriend|
-      firstHash.store(firstDegreeFriend.friend_id, 1)
-    end
-
-    firstDegree.each do |firstDegreeFriend|
-      secondDegree = Network.where(["facebook_id = :first_id AND degree = 1", { :first_id => firstDegreeFriend.friend_id } ])
-
-      secondDegree.each do |secondDegreeFriend|
-        if not firstHash.has_key?(secondDegreeFriend.friend_id)
-          secondHash.store(secondDegreeFriend.friend_id, 2)
-        end
-
-      end
-    end
-
-    secondHash.each do |key, value|
-      if Network.where(["facebook_id = :facebook_id AND friend_id = :friend_id", { :facebook_id => facebookId, :friend_id => key }]).empty?
-        network = Network.create(
-          :facebook_id => facebookId,
-          :friend_id => key, 
-          :degree => value
-        )
-      end
-    end
-    return nil
   end
   
 end

@@ -59,9 +59,9 @@ class MashController < ApplicationController
       randomUser = User.all(:conditions=>"score >= #{lowerBound} AND gender = '#{params[:gender]}' AND facebook_id NOT IN (#{excludedString}) AND facebook_id IN (#{networkString})",:order=>randQuery,:limit=>1).first
     end
     
-    excludedIds << "#{randomUser.facebook_id}" # add the random user into the excludedIds array
-    
     if not randomUser.nil?
+      excludedIds << "#{randomUser.facebook_id}" # add the random user into the excludedIds array
+      
       # Find an opponent for the randomly selected user
       opponent = find_opponent(randomUser.score, params[:gender], excludedIds, networkIds)
       
@@ -121,6 +121,17 @@ class MashController < ApplicationController
     # Then it will call a delayed job to process the user's friends list
     
     # Rails.logger.info request.query_parameters.inspect
+    
+    if Rails.env == "production" || Rails.env == "staging"
+      if not request.ssl?
+        respond_to do |format|
+          format.xml  { render :xml => {:error => "access denied"} }
+          format.json  { render :json => {:error => "access denied"} }
+        end
+        return nil
+      end
+    end
+    
     if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
       respond_to do |format|
         format.xml  { render :xml => {:error => "access denied"} }
@@ -145,42 +156,10 @@ class MashController < ApplicationController
       )
     end
     
-    user = User.find_by_facebook_id(params["id"])
-    if user.nil?
-      # Create a new user for the current user
-      User.create(
-        :facebook_id => params["id"],
-        :gender => params["gender"],
-        :score => 1500,
-        :wins => 0,
-        :wins_network => 0,
-        :losses => 0,
-        :losses_network => 0,
-        :win_streak => 0,
-        :win_streak_network => 0,
-        :loss_streak => 0,
-        :loss_streak_network => 0,
-        :win_streak_max => 0,
-        :loss_streak_max => 0,
-        :win_streak_max_network => 0,
-        :loss_streak_max_network => 0
-      )
-      # Create a new profile for the current user
-      Profile.create(
-        :facebook_id => params["id"],
-        :first_name => params["first_name"].nil? ? nil : params["first_name"],
-        :last_name => params["last_name"].nil? ? nil : params["last_name"],
-        :full_name => params["name"].nil? ? nil : params["name"],
-        :votes => 0,
-        :votes_network => 0
-      )
-    else
-      user.update_attributes(
-        :gender => params["gender"]
-      )
-    end
+    # Process current user
+    ProcessFriends.new.create_user(params)
     
-    # Process friends in a delayed job
+    # Process friends of the current user in a delayed job
     Delayed::Job.enqueue ProcessFriends.new(params["id"])
     
     respond_to do |format|
@@ -195,6 +174,16 @@ class MashController < ApplicationController
     # Response is a simple JSON "success" => "true" that is ignored by the client
     
     Rails.logger.info request.query_parameters.inspect
+    
+    if Rails.env == "production" || Rails.env == "staging"
+      if not request.ssl?
+        respond_to do |format|
+          format.xml  { render :xml => {:error => "https required, access denied"} }
+          format.json  { render :json => {:error => "https required, access denied"} }
+        end
+        return nil
+      end
+    end
     
     if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
       respond_to do |format|

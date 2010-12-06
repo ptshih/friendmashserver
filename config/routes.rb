@@ -11,9 +11,9 @@ Facemash::Application.routes.draw do
   
   match 'mash/random/:id' => 'mash#random', :via => :get
   
-  match 'mash/token/:id' => 'mash#token', :via => :post
+  match 'mash/token/:id' => 'mash#token', :via => :post, :requirements => { :protocol => 'https' }
   
-  match 'mash/result/:id' => 'mash#result', :via => :post
+  match 'mash/result/:id' => 'mash#result', :via => :post, :requirements => { :protocol => 'https' }
   
   match 'mash/profile/:id' => 'mash#profile', :via => :get
   
