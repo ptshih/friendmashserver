@@ -1,36 +1,35 @@
 Facemash::Application.routes.draw do
-  # resources :names
-  # 
-  # resources :tokens
-  # 
-  # resources :networks
-  # 
-  # resources :profiles
-  # 
-  # resources :users
   
-  match 'mash/random/:id' => 'mash#random', :via => :get
+  # Require SSL for all APIs
+  # :constraints => { :protocol => "https" }
+  if Rails.env == "production" || Rails.env == "staging"
+    scope :protocol => 'https://', :constraints => { :protocol => 'https://' } do
+      match 'mash/random/:id' => 'mash#random', :via => :get, :constraints => { :protocol => "https" }
+      match 'mash/token/:id' => 'mash#token', :via => :post, :constraints => { :protocol => 'https' }
+      match 'mash/result/:id' => 'mash#result', :via => :post, :constraints => { :protocol => 'https' }
+      match 'mash/profile/:id' => 'mash#profile', :via => :get, :constraints => { :protocol => 'https' }
+      match 'mash/topplayers/:id' => 'mash#topplayers', :via => :get, :constraints => { :protocol => 'https' }
+      match 'mash/rankings/:id' => 'mash#rankings', :via => :get, :constraints => { :protocol => 'https' }
+      match 'mash/recents/:id' => 'mash#recents', :via => :get, :constraints => { :protocol => 'https' }
+      match 'mash/activity/:id' => 'mash#activity', :via => :get, :constraints => { :protocol => 'https' }
+      match 'mash/serverstats/:id' => 'mash#serverstats', :via => :get, :constraints => { :protocol => 'https' }
+      match 'mash/stats/:id' => 'mash#stats', :via => :get, :constraints => { :protocol => 'https' }
+      match 'mash/globalstats/:id' => 'mash#globalstats', :via => :get, :constraints => { :protocol => 'https' }
+    end
+  else
+    match 'mash/random/:id' => 'mash#random', :via => :get
+    match 'mash/token/:id' => 'mash#token', :via => :post
+    match 'mash/result/:id' => 'mash#result', :via => :post
+    match 'mash/profile/:id' => 'mash#profile', :via => :get
+    match 'mash/topplayers/:id' => 'mash#topplayers', :via => :get
+    match 'mash/rankings/:id' => 'mash#rankings', :via => :get
+    match 'mash/recents/:id' => 'mash#recents', :via => :get
+    match 'mash/activity/:id' => 'mash#activity', :via => :get
+    match 'mash/serverstats/:id' => 'mash#serverstats', :via => :get
+    match 'mash/stats/:id' => 'mash#stats', :via => :get
+    match 'mash/globalstats/:id' => 'mash#globalstats', :via => :get
+  end
   
-  match 'mash/token/:id' => 'mash#token', :via => :post, :requirements => { :protocol => 'https' }
-  
-  match 'mash/result/:id' => 'mash#result', :via => :post, :requirements => { :protocol => 'https' }
-  
-  match 'mash/profile/:id' => 'mash#profile', :via => :get
-  
-  match 'mash/topplayers/:id' => 'mash#topplayers', :via => :get
-  
-  match 'mash/rankings/:id' => 'mash#rankings', :via => :get
-  
-  match 'mash/recents/:id' => 'mash#recents', :via => :get
-
-  match 'mash/activity/:id' => 'mash#activity', :via => :get
-  
-  match 'mash/serverstats/:id' => 'mash#serverstats', :via => :get
-
-  match 'mash/stats/:id' => 'mash#stats', :via => :get
-  
-  match 'mash/globalstats/:id' => 'mash#globalstats', :via => :get
-    
   # The priority is based upon order of creation:
   # first created -> highest priority.
 
