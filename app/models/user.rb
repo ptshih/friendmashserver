@@ -1,10 +1,10 @@
 class User < ActiveRecord::Base
-  has_one :profile, :foreign_key => 'facebook_id', :primary_key => 'facebook_id'
-  has_one :token, :foreign_key => 'facebook_id', :primary_key => 'facebook_id'
-  has_many :network, :foreign_key => 'facebook_id', :primary_key => 'facebook_id'
-  has_many :employer, :foreign_key => 'facebook_id', :primary_key => 'facebook_id'
-  has_many :school, :foreign_key => 'facebook_id', :primary_key => 'facebook_id'
-  has_many :result, :foreign_key => 'facebook_id', :primary_key => 'facebook_id'
+  has_one :profile, :foreign_key => 'facebook_id', :primary_key => 'facebook_id', :inverse_of => :user
+  has_one :token, :foreign_key => 'facebook_id', :primary_key => 'facebook_id', :inverse_of => :user
+  has_many :networks, :foreign_key => 'facebook_id', :primary_key => 'facebook_id', :inverse_of => :user
+  has_many :employers, :foreign_key => 'facebook_id', :primary_key => 'facebook_id', :inverse_of => :user
+  has_many :schools, :foreign_key => 'facebook_id', :primary_key => 'facebook_id', :inverse_of => :user
+  has_many :results, :foreign_key => 'facebook_id', :primary_key => 'facebook_id', :inverse_of => :user
   
   # When migrating new default values, it doesnt zero it out for some reason
   #
