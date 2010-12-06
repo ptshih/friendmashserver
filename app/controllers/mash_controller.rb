@@ -784,11 +784,11 @@ class MashController < ApplicationController
 
       updateStatisticSummary
 
-      query = "select id, name, value from statistic_summary;"
+      query = "select concat(name,' : ', cast(format(value,0) as char)) as stat from statistic_summary;"
       mysqlresults = ActiveRecord::Base.connection.execute(query)    
 
       while mysqlresult = mysqlresults.fetch_hash do
-       response << mysqlresult
+       response << mysqlresult['stat']
       end
       mysqlresults.free
 
