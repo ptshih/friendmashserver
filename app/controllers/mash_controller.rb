@@ -751,29 +751,29 @@ class MashController < ApplicationController
     end
   end
   
+  # def globalstats
+  #   # This API returns a JSON response for server stats for the Web client to render.
+  #   # This is admin only and should be restricted/authenticated
+  #   Rails.logger.info request.query_parameters.inspect
+  #   
+  #   response = []
+  #   
+  #   query = "select id, name, value from statistic_summary;"
+  #   mysqlresults = ActiveRecord::Base.connection.execute(query)    
+  # 
+  #   while mysqlresult = mysqlresults.fetch_hash do
+  #     response << mysqlresult
+  #   end
+  # 
+  #   mysqlresults.free
+  #   
+  #   respond_to do |format|
+  #     format.xml  { render :xml => response }
+  #     format.json  { render :json => response }
+  #   end
+  # end
+
   def globalstats
-    # This API returns a JSON response for server stats for the Web client to render.
-    # This is admin only and should be restricted/authenticated
-    Rails.logger.info request.query_parameters.inspect
-    
-    response = []
-    
-    query = "select id, name, value from statistic_summary;"
-    mysqlresults = ActiveRecord::Base.connection.execute(query)    
-
-    while mysqlresult = mysqlresults.fetch_hash do
-      response << mysqlresult
-    end
-
-    mysqlresults.free
-    
-    respond_to do |format|
-      format.xml  { render :xml => response }
-      format.json  { render :json => response }
-    end
-  end
-
-  def pullGlobalStats
 
     dc = Dalli::Client.new('127.0.0.1:11211',{:expires_in=>30.seconds})
 
