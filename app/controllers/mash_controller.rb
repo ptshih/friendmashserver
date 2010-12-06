@@ -1,6 +1,8 @@
 class MashController < ApplicationController
   require 'process_friends'
   require 'generate_result'
+  require 'dalli'
+  require 'update_statistic_summary'
   
   #
   # APIs for Client
@@ -780,6 +782,37 @@ class MashController < ApplicationController
       format.xml  { render :xml => response }
       format.json  { render :json => response }
     end
+  end
+
+  def pullGlobalStats
+
+    dc = Dalli::Client.new('127.0.0.1:11211',{:expires_in=>30.seconds})
+
+    globalstats = dc.get('globalstats')
+    response = []
+
+    if globalstats == nil
+
+      updateStatisticSummary
+
+      query = "select id, name, value from statistic_summary;"
+      mysqlresults = ActiveRecord::Base.connection.execute(query)    
+
+      while mysqlresult = mysqlresults.fetch_hash do
+       response << mysqlresult
+      end
+      mysqlresults.free
+
+      globalstats = dc.set('globalstats', response)
+    else
+      response = globalstats
+    end
+
+    respond_to do |format|
+      format.xml  { render :xml => response }
+      format.json  { render :json => response }
+    end
+
   end
 
 end
