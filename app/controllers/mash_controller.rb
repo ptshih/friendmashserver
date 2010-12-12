@@ -27,7 +27,7 @@ class MashController < ApplicationController
     end
     
     networkIds = []
-    if params[:mode] == "1"
+    if params[:mode].to_i>0
       
       dc = Dalli::Client.new('127.0.0.1:11211',{:expires_in=>300.seconds})
       networkString = dc.get("'#{params[:id]}'")
