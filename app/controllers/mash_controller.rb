@@ -28,10 +28,16 @@ class MashController < ApplicationController
     
     networkIds = []
     if params[:mode] == "1"
-      Network.where("facebook_id = '#{params[:id]}'").each do |network|
-        networkIds << network.friend_id
+      
+      dc = Dalli::Client.new('127.0.0.1:11211',{:expires_in=>5.minutes})
+      networkString = dc.get("'#{params[:id]}'")
+      
+      if networkString == nil
+            Network.where("facebook_id = '#{params[:id]}'").each do |network|
+              networkIds << network.friend_id
+            end
+            networkString = "'" + networkIds.join('\',\'') + "'"
       end
-      networkString = "'" + networkIds.join('\',\'') + "'"
     end
     
     # MySQL uses RAND, SQLLite uses RANDOM
@@ -791,6 +797,7 @@ class MashController < ApplicationController
        response << mysqlresult['stat']
       end
       mysqlresults.free
+
 
       globalstats = dc.set('globalstats', response)
     else
