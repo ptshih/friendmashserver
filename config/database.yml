@@ -37,7 +37,7 @@ test:
 production:
   adapter: mysql
   host: friendmash-production.clhyg7sm4xmb.us-east-1.rds.amazonaws.com
-  reconnect: false
+  reconnect: true
   database: friendmash
   username: friendmash
   password: Lik3aG6
@@ -45,7 +45,7 @@ production:
 staging:
   adapter: mysql
   host: friendmash-staging.clhyg7sm4xmb.us-east-1.rds.amazonaws.com
-  reconnect: false
+  reconnect: true
   database: friendmash
   username: friendmash
   password: Lik3aG6

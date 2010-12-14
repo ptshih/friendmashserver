@@ -27,7 +27,8 @@ class MashController < ApplicationController
     end
     
     networkIds = []
-    if params[:mode].to_i>0
+    
+    if params[:mode].to_i == 1
       
       dc = Dalli::Client.new('127.0.0.1:11211',{:expires_in=>300.seconds})
       networkString = dc.get("'#{params[:id]}'")
@@ -39,7 +40,12 @@ class MashController < ApplicationController
         networkString = "'" + networkIds.join('\',\'') + "'"
       end
       networkString = dc.set("'#{params[:id]}'",networkString,300)
-    
+      
+    elsif params[:mode].to_i == 2
+      
+      networkIds = network_cache(params[:id])
+      networkString = "'" + networkIds.join('\',\'') + "'"
+      
     end
     
     # MySQL uses RAND, SQLLite uses RANDOM
@@ -207,7 +213,7 @@ class MashController < ApplicationController
     # Increment vote count for current user
     # If network only mode, increment votes_network also
     Profile.increment_counter('votes',Profile.find_by_facebook_id(params[:id]).id)
-    if params[:mode] == "1"
+    if params[:mode].to_i > 0
       Profile.increment_counter('votes_network',Profile.find_by_facebook_id(params[:id]).id)
     end
     
@@ -349,11 +355,13 @@ class MashController < ApplicationController
     
     # if network only is on, generate the sql string
     networkIds = []
-    if params[:mode] == "1"
+    if params[:mode].to_i == 1
       Network.where("facebook_id = '#{params[:id]}'").each do |network|
         networkIds << network.friend_id
       end
       networkString = "'" + networkIds.join('\',\'') + "'"
+    elsif params[:mode].to_i == 2
+      networkIds = network_cache(params[:id])
     end
     
     # Active Record Join Alternative
@@ -409,6 +417,20 @@ class MashController < ApplicationController
   #
   # NON-API Internal Methods
   #
+  
+  def network_cache(facebookId)
+    # This wrapper uses an RDS table as a cache for 2nd degree network generation
+    # Each row is keyed off facebook_id and has a TEXT BLOB value for a CSV of friend_id and an expire
+    # If the cache misses, execute the SQL query and insert into cache
+    #
+    # Arguments: facebook_id
+    # Return: array of friend_id
+    #
+
+    friendIdArray = []
+    
+    return friendIdArray
+  end
   
   def find_opponent(desiredScore, gender, excludedIds = [], networkIds = [])
     # This API finds an opponent close to the desired score who is not:
