@@ -14,11 +14,11 @@ gem 'dalli'
 
 gem 'hoptoad_notifier'
 
-gem 'mongo'
+#gem 'mongo'
 
-gem 'bson_ext'
+#gem 'bson_ext'
 
-gem 'mongo_mapper'
+#gem 'mongo_mapper'
 
 # gem 'logworm_client'
 
