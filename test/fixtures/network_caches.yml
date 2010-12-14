@@ -1,0 +1,11 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  facebook_id: MyString
+  friends: MyText
+  expires_at: 2010-12-13 23:41:25
+
+two:
+  facebook_id: MyString
+  friends: MyText
+  expires_at: 2010-12-13 23:41:25

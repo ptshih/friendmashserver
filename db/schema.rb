@@ -10,7 +10,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20101202095225) do
+ActiveRecord::Schema.define(:version => 20101214074124) do
 
   create_table "delayed_jobs", :force => true do |t|
     t.integer  "priority",   :default => 0
@@ -41,6 +41,12 @@ ActiveRecord::Schema.define(:version => 20101202095225) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.float    "score"
+  end
+
+  create_table "network_caches", :force => true do |t|
+    t.string   "facebook_id"
+    t.text     "network",     :limit => 16777216
+    t.datetime "expires_at"
   end
 
   create_table "networks", :force => true do |t|
