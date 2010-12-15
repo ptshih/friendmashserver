@@ -31,20 +31,20 @@ class MashController < ApplicationController
     if params[:mode].to_i == 1
       
       dc = Dalli::Client.new('127.0.0.1:11211',{:expires_in=>300.seconds})
-      networkString = dc.get("'#{params[:id]}'")
+      networkString = dc.get("#{params[:id]}")
       
       if networkString == nil
-        Network.where("facebook_id = '#{params[:id]}'").each do |network|
+        Network.where("facebook_id = #{params[:id]}").each do |network|
           networkIds << network.friend_id
         end
-        networkString = "'" + networkIds.join('\',\'') + "'"
+        networkString = networkIds.join(',')
       end
-      networkString = dc.set("'#{params[:id]}'",networkString,300)
+      networkString = dc.set("#{params[:id]}",networkString,300)
       
     elsif params[:mode].to_i == 2
-      
+      puts "network mode"
       networkIds = network_cache(params[:id])
-      networkString = "'" + networkIds.join('\',\'') + "'"
+      networkString = networkIds.join(',')
       
     end
     
@@ -61,7 +61,7 @@ class MashController < ApplicationController
     
     excludedIds << "#{params[:id]}" # add currentId to excludedIds
     
-    excludedString = "'" + excludedIds.join('\',\'') + "'" # SQL string for excludedIds
+    excludedString = excludedIds.join(',') # SQL string for excludedIds
     
     # perform score bias
     lowerBound = rand(900) + 600 # random between 600 and 1500
@@ -74,7 +74,7 @@ class MashController < ApplicationController
     end
     
     if not randomUser.nil?
-      excludedIds << "#{randomUser.facebook_id}" # add the random user into the excludedIds array
+      excludedIds << randomUser.facebook_id # add the random user into the excludedIds array
       
       # Find an opponent for the randomly selected user
       opponent = find_opponent(randomUser.score, params[:gender], excludedIds, networkIds)
@@ -226,11 +226,11 @@ class MashController < ApplicationController
     loserBeforeScore = loser[:score]
     
     # Adjust scores for winner/loser for this mash
-    adjustScoresForUsers(winner, loser, params[:mode])
+    adjustScoresForUsers(winner, loser, params[:mode].to_i)
     
     # Insert a NEW record into Result table to keep track of the fight
     # If left is true, that means left side was DISCARDED
-    Delayed::Job.enqueue GenerateResult.new(params[:id], params[:w], params[:l], params[:left], params[:mode], winnerBeforeScore, loserBeforeScore)
+    Delayed::Job.enqueue GenerateResult.new(params[:id], params[:w], params[:l], params[:left], params[:mode].to_i, winnerBeforeScore, loserBeforeScore)
     
     respond_to do |format|
       format.xml  { render :xml => {:success => "true"} }
@@ -255,7 +255,7 @@ class MashController < ApplicationController
     
     profile = User.select('*').where('facebook_id' => params[:id]).joins(:profile).first
     
-    query = "select sum(case when a.score>b.score then 1 else 0 end) as rankoftotal, sum(case when a.score>b.score AND c.friend_id is not null then 1 else 0 end) as rankofnetwork, sum(case when c.friend_id is not null then 1 else 0 end) as networktotal, count(*) as total from users a left join users b on 1=1 and b.facebook_id='#{profile['facebook_id']}' left join networks c on c.friend_id = a.facebook_id and c.facebook_id=b.facebook_id where a.gender = b.gender"
+    query = "select sum(case when a.score>b.score then 1 else 0 end) as rankoftotal, sum(case when a.score>b.score AND c.friend_id is not null then 1 else 0 end) as rankofnetwork, sum(case when c.friend_id is not null then 1 else 0 end) as networktotal, count(*) as total from users a left join users b on 1=1 and b.facebook_id=#{profile['facebook_id']} left join networks c on c.friend_id = a.facebook_id and c.facebook_id=b.facebook_id where a.gender = b.gender"
     
     # if Rails.env == "production" || Rails.env == "staging"
     #   ranksHash = ActiveRecord::Base.connection.execute(query).fetch_hash
@@ -356,10 +356,10 @@ class MashController < ApplicationController
     # if network only is on, generate the sql string
     networkIds = []
     if params[:mode].to_i == 1
-      Network.where("facebook_id = '#{params[:id]}'").each do |network|
+      Network.where("facebook_id = #{params[:id]}").each do |network|
         networkIds << network.friend_id
       end
-      networkString = "'" + networkIds.join('\',\'') + "'"
+      networkString = networkIds.join(',')
     elsif params[:mode].to_i == 2
       networkIds = network_cache(params[:id])
     end
@@ -376,7 +376,7 @@ class MashController < ApplicationController
     
     users.each_with_index do |user,rank|
       actualScore = user[:score]
-      if params[:mode] == "0"
+      if params[:mode].to_i == 0
         actualWins = user[:wins]
         actualLosses = user[:losses]
         actualWinStreak = user[:win_streak]
@@ -476,20 +476,20 @@ class MashController < ApplicationController
     # end
     randQuery = 'RAND()'
     
-    excludedString = "'" + excludedIds.join('\',\'') + "'" # SQL string for excludedIds
+    excludedString = excludedIds.join(',') # SQL string for excludedIds
     
     # Network only mode should only search in a restricted SET of Users
     if networkIds.empty?
       opponent = User.all(:conditions=>"score > #{low} AND score <= #{high} AND gender = '#{gender}' AND facebook_id NOT IN (#{excludedString})",:order=>randQuery,:select =>"facebook_id",:limit=>1)
     else
-      networkString = "'" + networkIds.join('\',\'') + "'"
+      networkString = networkIds.join(',') 
       opponent = User.all(:conditions=>"score > #{low} AND score <= #{high} AND gender = '#{gender}' AND facebook_id NOT IN (#{excludedString}) AND facebook_id IN (#{networkString})",:order=>randQuery,:select =>"facebook_id",:limit=>1)
     end
   
     return opponent.first
   end
   
-  def adjustScoresForUsers(winner, loser, mode = "0")
+  def adjustScoresForUsers(winner, loser, mode = 0)
     # This method calculates and adjusts the score and stats for the winner and loser
     
     winnerExpected = expected_outcome(winner, loser)
@@ -497,28 +497,28 @@ class MashController < ApplicationController
     
     # Adjust the winner score
     winner.update_attributes(
-      :wins => (mode == "0") ? winner[:wins] + 1 : winner[:wins],
-      :wins_network => (mode == "1") ? winner[:wins_network] + 1 : winner[:wins_network],
-      :win_streak => (mode == "0") ? winner[:win_streak] + 1 : winner[:win_streak],
-      :win_streak_network => (mode == "1")? winner[:win_streak_network] + 1 : winner[:win_streak_network],
-      :loss_streak => (mode == "0") ? 0 : winner[:loss_streak],
-      :loss_streak_network => (mode == "1") ? 0 : winner[:loss_streak_network],
+      :wins => (mode == 0) ? winner[:wins] + 1 : winner[:wins],
+      :wins_network => (mode == 1) ? winner[:wins_network] + 1 : winner[:wins_network],
+      :win_streak => (mode == 0) ? winner[:win_streak] + 1 : winner[:win_streak],
+      :win_streak_network => (mode == 1)? winner[:win_streak_network] + 1 : winner[:win_streak_network],
+      :loss_streak => (mode == 0) ? 0 : winner[:loss_streak],
+      :loss_streak_network => (mode == 1) ? 0 : winner[:loss_streak_network],
       :score => winner[:score] + (32 * (1 - winnerExpected)),
-      :win_streak_max => (mode == "0") ? ( winner[:win_streak] + 1 > winner[:win_streak_max] ? winner[:win_streak] + 1: winner[:win_streak_max] ) : winner[:win_streak_max],
-      :win_streak_max_network => (mode == "1") ? ( winner[:win_streak_network] + 1 > winner[:win_streak_max_network] ? winner[:win_streak_network] + 1 : winner[:win_streak_max_network] ) : winner[:win_streak_max_network]
+      :win_streak_max => (mode == 0) ? ( winner[:win_streak] + 1 > winner[:win_streak_max] ? winner[:win_streak] + 1: winner[:win_streak_max] ) : winner[:win_streak_max],
+      :win_streak_max_network => (mode == 1) ? ( winner[:win_streak_network] + 1 > winner[:win_streak_max_network] ? winner[:win_streak_network] + 1 : winner[:win_streak_max_network] ) : winner[:win_streak_max_network]
     )
     
     # Adjust the loser score
     loser.update_attributes(
-      :losses => (mode == "0") ? loser[:losses] + 1 : loser[:losses],
-      :losses_network => (mode == "1") ? loser[:losses_network] + 1 : loser[:losses_network],
-      :loss_streak => (mode == "0") ? loser[:loss_streak] + 1 : loser[:loss_streak],
-      :loss_streak_network => (mode == "1") ? loser[:loss_streak_network] + 1 : loser[:loss_streak_network],
-      :win_streak => (mode == "0") ? 0 : loser[:win_streak],
-      :win_streak_network => (mode == "1") ? 0 : loser[:win_streak_network],
+      :losses => (mode == 0) ? loser[:losses] + 1 : loser[:losses],
+      :losses_network => (mode == 1) ? loser[:losses_network] + 1 : loser[:losses_network],
+      :loss_streak => (mode == 0) ? loser[:loss_streak] + 1 : loser[:loss_streak],
+      :loss_streak_network => (mode == 1) ? loser[:loss_streak_network] + 1 : loser[:loss_streak_network],
+      :win_streak => (mode == 0) ? 0 : loser[:win_streak],
+      :win_streak_network => (mode == 1) ? 0 : loser[:win_streak_network],
       :score => loser[:score] + (32 * (0 - loserExpected)),
-      :loss_streak_max => (mode == "0") ? ( loser[:loss_streak] + 1 > loser[:loss_streak_max] ? loser[:loss_streak] + 1 : loser[:loss_streak_max] ) : loser[:loss_streak_max],
-      :loss_streak_max_network => (mode == "1") ? ( loser[:loss_streak_network]  + 1 > loser[:loss_streak_max_network] ? loser[:loss_streak_network] + 1 : loser[:loss_streak_max_network] ) : loser[:loss_streak_max_network]
+      :loss_streak_max => (mode == 0) ? ( loser[:loss_streak] + 1 > loser[:loss_streak_max] ? loser[:loss_streak] + 1 : loser[:loss_streak_max] ) : loser[:loss_streak_max],
+      :loss_streak_max_network => (mode == 1) ? ( loser[:loss_streak_network]  + 1 > loser[:loss_streak_max_network] ? loser[:loss_streak_network] + 1 : loser[:loss_streak_max_network] ) : loser[:loss_streak_max_network]
     )
     
     return nil
@@ -607,7 +607,7 @@ class MashController < ApplicationController
     if params[:filter].nil? || params[:filter] == "false"
       results = Result.all(:order=>"created_at desc", :limit=>count)
     else       
-      results = Result.all(:conditions =>"facebook_id = '#{params[:id]}'",:order=>"created_at desc", :limit=>count)
+      results = Result.all(:conditions =>"facebook_id = #{params[:id]}",:order=>"created_at desc", :limit=>count)
     end
     
     response = []
@@ -754,7 +754,7 @@ class MashController < ApplicationController
     if params[:filter].nil? || params[:filter] == "false"
       filters = ""
     else
-      filters = "and facebook_id = '#{params[:id]}'"
+      filters = "and facebook_id = #{params[:id]}"
     end
     
     response = []
