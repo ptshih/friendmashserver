@@ -29,8 +29,9 @@ class MashController < ApplicationController
     networkIds = []
     
     if params[:mode].to_i == 1
-      dc = Dalli::Client.new('127.0.0.1:11211',{:expires_in=>300.seconds})
-      networkString = dc.get("#{params[:id].to_i}")
+      # dc = Dalli::Client.new('127.0.0.1:11211',{:expires_in=>300.seconds})
+      # networkString = dc.get("#{params[:id].to_i}")
+      networkString =  nil
       
       if networkString.nil?
         Network.where("facebook_id = #{params[:id].to_i}").each do |network|
@@ -38,7 +39,7 @@ class MashController < ApplicationController
         end
         networkString = networkIds.join(',')
       end
-      dc.set("#{params[:id].to_i}",networkString,300)
+      # dc.set("#{params[:id].to_i}",networkString,300)
       
     elsif params[:mode].to_i == 2
       networkIds = network_cache(params[:id].to_i)
