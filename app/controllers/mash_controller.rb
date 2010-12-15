@@ -30,18 +30,18 @@ class MashController < ApplicationController
     
     if params[:mode].to_i == 1
       dc = Dalli::Client.new('127.0.0.1:11211',{:expires_in=>300.seconds})
-      networkString = dc.get("#{params[:id]}")
+      networkString = dc.get("#{params[:id].to_i}")
       
       if networkString.nil?
-        Network.where("facebook_id = #{params[:id]}").each do |network|
+        Network.where("facebook_id = #{params[:id].to_i}").each do |network|
           networkIds << network.friend_id
         end
         networkString = networkIds.join(',')
       end
-      dc.set("#{params[:id]}",networkString,300)
+      dc.set("#{params[:id].to_i}",networkString,300)
       
     elsif params[:mode].to_i == 2
-      networkIds = network_cache(params[:id])
+      networkIds = network_cache(params[:id].to_i)
       networkString = networkIds.join(',')
     end
     
@@ -56,7 +56,7 @@ class MashController < ApplicationController
     
     excludedIds = params[:recents].split(',') # split on comma
     
-    excludedIds << "#{params[:id]}" # add currentId to excludedIds
+    excludedIds << "#{params[:id].to_i}" # add currentId to excludedIds
     
     excludedString = excludedIds.join(',') # SQL string for excludedIds
     
@@ -142,10 +142,10 @@ class MashController < ApplicationController
     end
     
     # Store the user's access token
-    token = Token.find_by_facebook_id(params["id"])
+    token = Token.find_by_facebook_id(params["id"].to_i)
     if token.nil?
       token = Token.create(
-        :facebook_id => params["id"],
+        :facebook_id => params["id"].to_i,
         :access_token => params["access_token"],
         :udid => request.env["HTTP_X_UDID"]
       )
@@ -161,7 +161,7 @@ class MashController < ApplicationController
     ProcessFriends.new.create_user(params)
     
     # Process friends of the current user in a delayed job
-    Delayed::Job.enqueue ProcessFriends.new(params["id"])
+    Delayed::Job.enqueue ProcessFriends.new(params["id"].to_i)
     
     respond_to do |format|
       format.xml  { render :xml => {:success => "true"} }
@@ -189,13 +189,13 @@ class MashController < ApplicationController
     
     # Increment vote count for current user
     # If network only mode, increment votes_network also
-    Profile.increment_counter('votes',Profile.find_by_facebook_id(params[:id]).id)
+    Profile.increment_counter('votes',Profile.find_by_facebook_id(params[:id].to_i).id)
     if params[:mode].to_i > 0
-      Profile.increment_counter('votes_network',Profile.find_by_facebook_id(params[:id]).id)
+      Profile.increment_counter('votes_network',Profile.find_by_facebook_id(params[:id].to_i).id)
     end
     
-    winner = User.find_by_facebook_id(params[:w])
-    loser  = User.find_by_facebook_id(params[:l])
+    winner = User.find_by_facebook_id(params[:w].to_i)
+    loser  = User.find_by_facebook_id(params[:l].to_i)
     
     # Store the score of the winner/loser before we calculate the new scores
     # These old scores get passed into the Results table
@@ -207,7 +207,7 @@ class MashController < ApplicationController
     
     # Insert a NEW record into Result table to keep track of the fight
     # If left is true, that means left side was DISCARDED
-    Delayed::Job.enqueue GenerateResult.new(params[:id], params[:w], params[:l], params[:left], params[:mode].to_i, winnerBeforeScore, loserBeforeScore)
+    Delayed::Job.enqueue GenerateResult.new(params[:id].to_i, params[:w].to_i, params[:l].to_i, params[:left], params[:mode].to_i, winnerBeforeScore, loserBeforeScore)
     
     respond_to do |format|
       format.xml  { render :xml => {:success => "true"} }
@@ -232,7 +232,7 @@ class MashController < ApplicationController
     
     profileHash = {}
     
-    user = User.select('*').where('facebook_id' => params[:id]).joins(:profile).first
+    user = User.select('*').where('facebook_id' => params[:id].to_i).joins(:profile).first
     
     # Section 0 in client
     profileHash['full_name'] = user['full_name']
@@ -336,12 +336,12 @@ class MashController < ApplicationController
     # if network only is on, generate the sql string
     networkIds = []
     if params[:mode].to_i == 1
-      Network.where("facebook_id = #{params[:id]}").each do |network|
+      Network.where("facebook_id = #{params[:id].to_i}").each do |network|
         networkIds << network.friend_id
       end
       networkString = networkIds.join(',')
     elsif params[:mode].to_i == 2
-      networkIds = network_cache(params[:id])
+      networkIds = network_cache(params[:id].to_i)
     end
     
     # Active Record Join Alternative
@@ -647,7 +647,7 @@ class MashController < ApplicationController
     if params[:filter].nil? || params[:filter] == "false"
       results = Result.all(:order=>"created_at desc", :limit=>count)
     else       
-      results = Result.all(:conditions =>"facebook_id = #{params[:id]}",:order=>"created_at desc", :limit=>count)
+      results = Result.all(:conditions =>"facebook_id = #{params[:id].to_i}",:order=>"created_at desc", :limit=>count)
     end
     
     response = []
@@ -794,7 +794,7 @@ class MashController < ApplicationController
     if params[:filter].nil? || params[:filter] == "false"
       filters = ""
     else
-      filters = "and facebook_id = #{params[:id]}"
+      filters = "and facebook_id = #{params[:id].to_i}"
     end
     
     response = []

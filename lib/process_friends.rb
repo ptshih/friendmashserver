@@ -40,11 +40,11 @@ class ProcessFriends < Struct.new(:facebookId)
   end
   
   def create_user(fbUser)
-    user = User.find_by_facebook_id(fbUser['id'])
+    user = User.find_by_facebook_id(fbUser['id'].to_i)
     if user.nil?
       # If user with this facebookId does not exist, create a new one
       user = User.create(
-        :facebook_id => fbUser['id'],
+        :facebook_id => fbUser['id'].to_i,
         :gender => fbUser['gender'].nil? ? nil : fbUser['gender']
       )
       # Create a profile for the user
@@ -56,14 +56,14 @@ class ProcessFriends < Struct.new(:facebookId)
       # Create Schools for user if exists
       fbUser['education'].each do |education|
         school = user.schools.create(
-          :school_id => education['school']['id'],
+          :school_id => education['school']['id'].to_i,
           :school_name => education['school']['name']
         )
       end if not fbUser['education'].nil?
       # Create Employers for user if exists
       fbUser['work'].each do |work|
         employer = user.employers.create(
-          :employer_id => work['employer']['id'],
+          :employer_id => work['employer']['id'].to_i,
           :employer_name => work['employer']['name']
         )
       end if not fbUser['work'].nil?
