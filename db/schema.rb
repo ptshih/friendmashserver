@@ -10,7 +10,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20101215031631) do
+ActiveRecord::Schema.define(:version => 20101215032201) do
 
   create_table "calendar", :primary_key => "dt", :force => true do |t|
   end
@@ -161,6 +161,6 @@ ActiveRecord::Schema.define(:version => 20101215031631) do
   end
 
   add_index "users", ["facebook_id"], :name => "idx_users_facebook_id", :unique => true
-  add_index "users", ["gender"], :name => "idx_gender"
+  add_index "users", ["gender"], :name => "index_users_on_gender"
 
 end
