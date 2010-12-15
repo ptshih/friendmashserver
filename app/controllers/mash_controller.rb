@@ -79,9 +79,9 @@ class MashController < ApplicationController
       if not opponent.nil?
         # 50/50 chance for left/right position
         if rand(2).zero?
-          response = [randomUser.facebook_id, opponent.facebook_id]
+          response = [randomUser.facebook_id.to_s, opponent.facebook_id.to_s]
         else
-          response = [opponent.facebook_id, randomUser.facebook_id]
+          response = [opponent.facebook_id.to_s, randomUser.facebook_id.to_s]
         end
         respond_to do |format|
           format.xml  { render :xml => response }
@@ -294,7 +294,7 @@ class MashController < ApplicationController
     
     topPlayers.each_with_index do |profile,rank|
       rankingsHash = {
-        :facebook_id => profile[:facebook_id],
+        :facebook_id => profile[:facebook_id].to_s,
         :full_name => profile[:full_name],
         :first_name => profile[:first_name],
         :last_name => profile[:last_name],
@@ -372,7 +372,7 @@ class MashController < ApplicationController
         actualLossStreakMax = user[:loss_streak_max_network]
       end
       rankingsHash = {
-        :facebook_id => user[:facebook_id],
+        :facebook_id => user[:facebook_id].to_s,
         :full_name => user.profile[:full_name],
         :first_name => user.profile[:first_name],
         :last_name => user.profile[:last_name],
@@ -653,9 +653,9 @@ class MashController < ApplicationController
     response = []
     results.each do |result|
       responseHash = { 
-        :facebook_id => result[:facebook_id],
-        :winner_id => result[:winner_id],
-        :loser_id => result[:loser_id],
+        :facebook_id => result[:facebook_id].to_s,
+        :winner_id => result[:winner_id].to_s,
+        :loser_id => result[:loser_id].to_s,
         :winner_score => result[:winner_score],
         :loser_score => result[:loser_score],
         :created_at => result[:created_at]
