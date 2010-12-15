@@ -136,16 +136,6 @@ class MashController < ApplicationController
     
     # Rails.logger.info request.query_parameters.inspect
     
-    if Rails.env == "production" || Rails.env == "staging"
-      if not request.ssl?
-        respond_to do |format|
-          format.xml  { render :xml => {:error => "access denied"} }
-          format.json  { render :json => {:error => "access denied"} }
-        end
-        return nil
-      end
-    end
-    
     if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
       respond_to do |format|
         format.xml  { render :xml => {:error => "access denied"} }
@@ -188,16 +178,6 @@ class MashController < ApplicationController
     # Response is a simple JSON "success" => "true" that is ignored by the client
     
     Rails.logger.info request.query_parameters.inspect
-    
-    if Rails.env == "production" || Rails.env == "staging"
-      if not request.ssl?
-        respond_to do |format|
-          format.xml  { render :xml => {:error => "https required, access denied"} }
-          format.json  { render :json => {:error => "https required, access denied"} }
-        end
-        return nil
-      end
-    end
     
     if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
       respond_to do |format|
@@ -253,36 +233,39 @@ class MashController < ApplicationController
       return nil
     end
     
-    profile = User.select('*').where('facebook_id' => params[:id]).joins(:profile).first
+    profileHash = {}
     
-    query = "select sum(case when a.score>b.score then 1 else 0 end) as rankoftotal, sum(case when a.score>b.score AND c.friend_id is not null then 1 else 0 end) as rankofnetwork, sum(case when c.friend_id is not null then 1 else 0 end) as networktotal, count(*) as total from users a left join users b on 1=1 and b.facebook_id=#{profile['facebook_id']} left join networks c on c.friend_id = a.facebook_id and c.facebook_id=b.facebook_id where a.gender = b.gender"
+    user = User.select('*').where('facebook_id' => params[:id]).joins(:profile).first
+    
+    # Section 0 in client
+    profileHash['full_name'] = user['full_name']
+    profileHash['votes'] = user['votes'].to_i
+    profileHash['votes_network'] = user['votes_network'].to_i
+    
+    # Section 1 in client
+    profileHash['stats'] = []
+    
+    query = "select sum(case when a.score>b.score then 1 else 0 end) as rankoftotal, sum(case when a.score>b.score AND c.friend_id is not null then 1 else 0 end) as rankofnetwork, sum(case when c.friend_id is not null then 1 else 0 end) as networktotal, count(*) as total from users a left join users b on 1=1 and b.facebook_id='#{user['facebook_id']}' left join networks c on c.friend_id = a.facebook_id and c.facebook_id=b.facebook_id where a.gender = b.gender"
     
     # if Rails.env == "production" || Rails.env == "staging"
     #   ranksHash = ActiveRecord::Base.connection.execute(query).fetch_hash
     # else
     #   ranksHash = ActiveRecord::Base.connection.execute(query)[0]
     # end
-    
     ranksHash = ActiveRecord::Base.connection.execute(query).fetch_hash
     
-    profile['rank'] = ranksHash['rankoftotal'].to_i + 1
-    profile['rank_network'] = ranksHash['rankofnetwork'].to_i + 1
-    profile['total'] = ranksHash['total'].to_i
-    profile['total_network'] = ranksHash['networktotal'].to_i + 1 # need to add 1 for the current user since networks doesnt do a user -> user entry
-    profile['votes'] = profile['votes'].to_i
-    profile['votes_network'] = profile['votes_network'].to_i
-    
-    # ActiveRecord::Base.connection.execute("select sum(case when a.score>c.score then 1 else 0 end) as rankOfTotal,sum(case when a.score>c.score && b.id!=null then 1 else 0 end) as rankAmongFriends,sum(1) as totalCount,sum(case when b.id!=null then 1 else 0 end) as networkCount from users a left outer join networks b on a.facebook_id=b.friend_id left outer join users c where c.id='#{profile['facebook_id']}' and a.gender=c.gender")
-    
-    # profile['rank'] = ActiveRecord::Base.connection.execute("SELECT count(*) from Users where score > #{profile['score']} AND gender = '#{profile['gender']}'")[0][0].to_i + 1
-    # profile['rank_network'] = 0;
-    # profile['total'] = User.count(:conditions=>"gender = '#{profile['gender']}'").to_i
-    # profile['total_network'] = profile['total']
+    profileHash['stats'] << { :name => "Ranking in Friendmash", :value => "#{ranksHash['rankoftotal'].to_i + 1} / #{ranksHash['total']}" }
+    profileHash['stats'] << { :name => "Ranking among Friends", :value => "#{ranksHash['rankofnetwork'].to_i + 1} / #{ranksHash['networktotal'].to_i + 1}" }
+    profileHash['stats'] << { :name => "Likes Received", :value => "#{user['wins']}" }
+    profileHash['stats'] << { :name => "Longest Like Streak", :value => "#{user['win_streak_max']}" }
+    profileHash['stats'] << { :name => "Total Time Played", :value => "5" }
+    profileHash['stats'] << { :name => "Mashes in Last 24 Hours", :value => "1" }
+    profileHash['stats'] << { :name => "Mashes in Last 7 Days", :value => "2" }
     
     # send response
     respond_to do |format|
-      format.xml  { render :xml => profile }
-      format.json  { render :json => profile }
+      format.xml  { render :xml => profileHash }
+      format.json  { render :json => profileHash }
     end
   end
   
