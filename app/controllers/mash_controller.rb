@@ -408,9 +408,69 @@ class MashController < ApplicationController
     #
     # Arguments: facebook_id
     # Return: array of friend_id
+    
+    
+    # if network only is on, generate the sql string
+    # networkIds = []
+    # if params[:mode].to_i == 1
+    #   Network.where("facebook_id = #{params[:id]}").each do |network|
+    #     networkIds << network.friend_id
+    #   end
+    #   networkString = networkIds.join(',')
+    # elsif params[:mode].to_i == 2
+    #   networkIds = network_cache(params[:id])
+    # end
     #
-
-    friendIdArray = []
+    
+    friendIdArray = []    
+    
+    # User.count(["last_time >= ?", 7.days.ago])
+    
+    cache = NetworkCache.where("facebook_id = #{facebookId} AND expires_at > ?", Time.now).first
+    
+    if cache.nil?
+      # if we had a cache miss, we need to execute the fetch/insert query
+      puts "Cache miss"
+      
+      # fetch first degree friends
+      firstDegreeIds = []
+      Network.where("facebook_id = #{facebookId}").each do |network|
+        firstDegreeIds << network.friend_id
+      end
+      
+      # fetch second degree friends
+      secondDegreeIds = []
+      
+      query = "select distinct b.friend_id
+      from networks a
+      join networks b on a.friend_id = b.facebook_id
+      where a.facebook_id=#{facebookId}"
+      
+      items = ActiveRecord::Base.connection.execute(query)
+      
+      items.each_hash do |item|
+        secondDegreeIds << item["friend_id"]
+      end
+      
+      items.free
+      
+      
+      networkIds = firstDegreeIds + secondDegreeIds
+      friendIdArray = networkIds.uniq
+      
+      # Create or update cache
+      cache = NetworkCache.find_or_initialize_by_facebook_id(facebookId)
+      cache.network = friendIdArray.join(',')
+      cache.expires_at = Time.now + 1.days
+      cache.save
+      
+    else
+      puts "Cache hit"
+      friendIdArray = cache[:network].split(',')
+    end
+    
+    # puts "Found friend id array"
+    # p friendIdArray
     
     return friendIdArray
   end
