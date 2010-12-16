@@ -74,6 +74,9 @@ class MashController < ApplicationController
     if not randomUser.nil?
       excludedIds << randomUser.facebook_id # add the random user into the excludedIds array
       
+      # Use randomUser stats to find an optimal opponent
+      # Was previous win? get a higher scored user. loss? get a lowered score user.
+      
       # Find an opponent for the randomly selected user
       opponent = find_opponent(randomUser.score, params[:gender], excludedIds, networkIds)
       
@@ -201,10 +204,25 @@ class MashController < ApplicationController
     # Store the score of the winner/loser before we calculate the new scores
     # These old scores get passed into the Results table
     winnerBeforeScore = winner[:score]
-    loserBeforeScore = loser[:score]
+    loserBeforeScore = loser[:score] 
     
     # Adjust scores for winner/loser for this mash
     adjustScoresForUsers(winner, loser, params[:mode].to_i)
+    
+    # Adjust judge-factor of player; only adjust if there's an expected winner; range of judge-factor is 1600-2400
+    player = User.find_by_facebook_id(params[:id].to_i)
+    if winnerBeforeScore!=loserBeforeScore
+      if winnerBeforeScore>loserBeforeScore
+        newJudgeFactor = player.judge_factor + 32*(1-expected_outcome(winnerBeforeScore, loserBeforeScore))* 100.0/(1.0+10.0**([winner.k_factor, loser.k_factor].max/24.0))
+        newJudgeFactor = [newJudgeFactor, 2000].min
+      else
+        newJudgeFactor = player.judge_factor - 32*(0.5-expected_outcome(winnerBeforeScore, loserBeforeScore))* 100.0/(1.0+10.0**([winner.k_factor, loser.k_factor].max/24.0))
+        newJudgeFactor = [newJudgeFactor, 1000].max
+      end
+      player.update_attributes(
+        :judge_factor => newJudgeFactor
+      )
+    end
     
     # Insert a NEW record into Result table to keep track of the fight
     # If left is true, that means left side was DISCARDED
@@ -535,6 +553,13 @@ class MashController < ApplicationController
     
     winnerExpected = expected_outcome(winner, loser)
     loserExpected = expected_outcome(loser, winner)
+    
+    winnerNewScore = winner[:score] + (32 * (1 - winnerExpected))
+    loserNewSocre = loser[:score] + (32 * (0 - loserExpected))
+    
+    # Change k-factor based on the winner and loser attributes (range from 16-24-32)
+    # TODO
+    
     
     # Adjust the winner score
     winner.update_attributes(
