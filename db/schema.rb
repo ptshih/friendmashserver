@@ -158,6 +158,10 @@ ActiveRecord::Schema.define(:version => 20101215032201) do
     t.integer  "loss_streak_max",                      :default => 0
     t.integer  "win_streak_max_network",               :default => 0
     t.integer  "loss_streak_max_network",              :default => 0
+    t.integer  "k_factor",                             :default => 32
+    t.integer  "last_opponent_score",                  :default => 1500
+    t.integer  "last_result_id",                       :default => 0
+    t.integer  "judge_factor",                         :default => 1500
   end
 
   add_index "users", ["facebook_id"], :name => "idx_users_facebook_id", :unique => true
