@@ -1,4 +1,4 @@
-class GenerateResult < Struct.new(:id, :winnerId, :loserId, :left, :mode, :winnerBeforeScore, :loserBeforeScore)
+class GenerateResult < Struct.new(:id, :winnerId, :loserId, :left, :mode, :winnerBeforeScore, :loserBeforeScore, :judgeFactor, :gender)
   # This delayed job class creates a Result entry for a given mash result
   def perform
     Result.create(
@@ -8,7 +8,9 @@ class GenerateResult < Struct.new(:id, :winnerId, :loserId, :left, :mode, :winne
       :left => left,
       :mode => mode,
       :winner_score => winnerBeforeScore,
-      :loser_score => loserBeforeScore
+      :loser_score => loserBeforeScore,
+      :judge_factor => judgeFactor,
+      :gender => gender
     )
   end
 end
