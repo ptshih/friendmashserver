@@ -565,8 +565,10 @@ class MashController < ApplicationController
     winnerExpected = expected_outcome(winner, loser)
     loserExpected = expected_outcome(loser, winner)
     
-    winnerNewScore = winner[:score] + (32 * winner[:std] / 242.0 * (1 - winnerExpected))
-    loserNewScore = loser[:score] + (32 * loser[:std] / 242.0 *(0 - loserExpected))
+    # Weighs in users standard deviation (ie credibility of opponent)
+    stdDiv = ( (winner[:std])**2 + (loser[:std])**2 ) ** 0.5
+    winnerNewScore = winner[:score] + (32 * (winner[:std])**2 / (stdDiv * 216.0) * (1 - winnerExpected))
+    loserNewScore = loser[:score] + (32 * (loser[:std])**2 / (stdDiv * 216.0) * (0 - loserExpected))
     
     # Change standard dev of scores; condition if expected results decrease std; else unexpected results increase std
     # games with little difference between players do not skew standard deviation
