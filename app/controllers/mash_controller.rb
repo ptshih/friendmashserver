@@ -67,11 +67,6 @@ class MashController < ApplicationController
     # Randomly choose a user from the DB with a CSV of excluded IDs
     if networkIds.empty?
       
-      # override lower bound for latest users; targeting the apple employees and any new accts they sign-up
-      if Token.find_by_facebook_id(params["id"].to_i).id >= 34 
-        lowerBound = 1600
-      end
-      
       randomUser = User.all(:conditions=>"score >= #{lowerBound} AND gender = '#{params[:gender]}' AND facebook_id NOT IN (#{excludedString})",:order=>randQuery,:limit=>1).first
     else
       randomUser = User.all(:conditions=>"score >= #{lowerBound} AND gender = '#{params[:gender]}' AND facebook_id NOT IN (#{excludedString}) AND facebook_id IN (#{networkString})",:order=>randQuery,:limit=>1).first
