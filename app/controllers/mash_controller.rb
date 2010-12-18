@@ -450,35 +450,18 @@ class MashController < ApplicationController
     
     # User.count(["last_time >= ?", 7.days.ago])
     
-    cache = NetworkCache.where("facebook_id = #{facebookId} AND expires_at > ?", Time.now).first
+    cache = NetworkCache.where("facebook_id = #{facebookId} AND expires_at < ?", Time.now).first
     
     if cache.nil?
       # if we had a cache miss, we need to execute the fetch/insert query
       puts "Cache miss"
-      
-      # fetch first degree friends
-      firstDegreeIds = []
-      Network.where("facebook_id = #{facebookId}").each do |network|
-        firstDegreeIds << network.friend_id
-      end
-      
-      # fetch second degree friends
-      secondDegreeIds = []
-      
-      query = "select distinct b.friend_id
-      from networks a
-      join networks b on a.friend_id = b.facebook_id
-      where a.facebook_id=#{facebookId}"
-      
-      networks = Network.find_by_sql(query)
-      
-      networks.each do |network|
-        secondDegreeIds << network.friend_id
-      end      
-      
-      networkIds = firstDegreeIds + secondDegreeIds
-      friendIdArray = networkIds.uniq
-      
+  
+      query = "select distinct friend_id
+      from networks where facebook_id in (select friend_id from networks where facebooK_id=#{facebookId})
+      or facebook_id in (#{facebookId})"
+      friendIdArray = ActiveRecord::Base.connection.select_values(query)      
+
+      #       
       # Create or update cache
       cache = NetworkCache.find_or_initialize_by_facebook_id(facebookId)
       cache.network = friendIdArray.join(',')
