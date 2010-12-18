@@ -1,0 +1,14 @@
+ALTER TABLE `friendmash`.`users`
+ADD COLUMN `last_opponent_score` INT(11) NULL DEFAULT 1500  AFTER `loss_streak_max_network` ,
+ADD COLUMN `judge_factor` INT(5) NULL DEFAULT 1500  AFTER `last_opponent_score` ,
+ADD COLUMN `last_result_id` BIGINT NULL  AFTER `loss_streak_max_network` ,
+ADD COLUMN `std` INT(5) NOT NULL DEFAULT 242  AFTER `loss_streak_max_network` ;
+
+ALTER TABLE `friendmash`.`results`
+ADD COLUMN `gender` ENUM('male','female') NULL  AFTER `loser_score` ,
+ADD COLUMN `judge_factor` INT(5) NULL  AFTER `loser_score` ;
+
+# update last opponent score to users own score
+# this is baseline for getting next opp score
+update users
+set last_opponent_score = score;

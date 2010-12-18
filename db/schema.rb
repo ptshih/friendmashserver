@@ -83,6 +83,8 @@ ActiveRecord::Schema.define(:version => 20101215032201) do
     t.integer  "mode"
     t.integer  "winner_score"
     t.integer  "loser_score"
+    t.integer  "judge_factor"
+    t.string   "gender",                  :limit => 0
   end
 
   create_table "schools", :force => true do |t|
@@ -158,6 +160,10 @@ ActiveRecord::Schema.define(:version => 20101215032201) do
     t.integer  "loss_streak_max",                      :default => 0
     t.integer  "win_streak_max_network",               :default => 0
     t.integer  "loss_streak_max_network",              :default => 0
+    t.integer  "std",                             :default => 242
+    t.integer  "last_opponent_score",                  :default => 1500
+    t.integer  "last_result_id",                       :default => 0
+    t.integer  "judge_factor",                         :default => 1500
   end
 
   add_index "users", ["facebook_id"], :name => "idx_users_facebook_id", :unique => true

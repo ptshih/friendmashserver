@@ -63,9 +63,10 @@ class MashController < ApplicationController
     
     # perform score bias
     lowerBound = rand(900) + 600 # random between 600 and 1500
-    
+  
     # Randomly choose a user from the DB with a CSV of excluded IDs
     if networkIds.empty?
+      
       randomUser = User.all(:conditions=>"score >= #{lowerBound} AND gender = '#{params[:gender]}' AND facebook_id NOT IN (#{excludedString})",:order=>randQuery,:limit=>1).first
     else
       randomUser = User.all(:conditions=>"score >= #{lowerBound} AND gender = '#{params[:gender]}' AND facebook_id NOT IN (#{excludedString}) AND facebook_id IN (#{networkString})",:order=>randQuery,:limit=>1).first
@@ -73,9 +74,17 @@ class MashController < ApplicationController
     
     if not randomUser.nil?
       excludedIds << randomUser.facebook_id # add the random user into the excludedIds array
-      
-      # Find an opponent for the randomly selected user
-      opponent = find_opponent(randomUser.score, params[:gender], excludedIds, networkIds)
+
+      # Previous way was just to use the user's score
+      # opponent = find_opponent(randomUser.score, params[:gender], excludedIds, networkIds)
+      # Now to use the last opponent's score as a measure
+      # Find an opponent for the randomly selected user; lost to last opponent than take lower score, won take higher
+      if randomUser.win_streak>0
+        opponentScoreToMatch = randomUser.last_opponent_score+50
+      else
+        opponentScoreToMatch = randomUser.last_opponent_score-50
+      end
+      opponent = find_opponent(opponentScoreToMatch, params[:gender], excludedIds, networkIds)
       
       if not opponent.nil?
         # 50/50 chance for left/right position
@@ -201,15 +210,30 @@ class MashController < ApplicationController
     # Store the score of the winner/loser before we calculate the new scores
     # These old scores get passed into the Results table
     winnerBeforeScore = winner[:score]
-    loserBeforeScore = loser[:score]
+    loserBeforeScore = loser[:score] 
     
     # Adjust scores for winner/loser for this mash
     adjustScoresForUsers(winner, loser, params[:mode].to_i)
     
+    # Adjust judge-factor of player; only adjust if it's decisive enough for user to make a choice
+    player = User.find_by_facebook_id(params[:id].to_i)
+    outcomeChance = expected_outcome_by_score(winnerBeforeScore, loserBeforeScore)
+    judgeFactorBefore = player.judge_factor
+    if (0.50-outcomeChance).abs > 0.03 && (winner.wins + winner.losses)>5 && (loser.wins+loser.losses)>5
+      if winnerBeforeScore>loserBeforeScore
+        judgeFactorAfter = judgeFactorBefore + ( 32-(1500-judgeFactorBefore).abs/15.0)
+      else
+        judgeFactorAfter = judgeFactorBefore - ( 32-(1500-judgeFactorBefore).abs/15.0)
+      end
+      player.update_attributes(
+        :judge_factor => judgeFactorAfter
+      )
+    end
+    
     # Insert a NEW record into Result table to keep track of the fight
     # If left is true, that means left side was DISCARDED
-    Delayed::Job.enqueue GenerateResult.new(params[:id].to_i, params[:w].to_i, params[:l].to_i, params[:left], params[:mode].to_i, winnerBeforeScore, loserBeforeScore)
-    
+    Delayed::Job.enqueue GenerateResult.new(params[:id].to_i, params[:w].to_i, params[:l].to_i, params[:left], params[:mode].to_i, winnerBeforeScore, loserBeforeScore, judgeFactorBefore, winner.gender)
+
     respond_to do |format|
       format.xml  { render :xml => {:success => "true"} }
       format.json  { render :json => {:success => "true"} }
@@ -536,6 +560,24 @@ class MashController < ApplicationController
     winnerExpected = expected_outcome(winner, loser)
     loserExpected = expected_outcome(loser, winner)
     
+    # Weighs in users standard deviation (ie credibility of opponent)
+    stdDiv = ( (winner[:std])**2 + (loser[:std])**2 ) ** 0.5
+    winnerNewScore = winner[:score] + (32 * (winner[:std])**2 / (stdDiv * 216.0) * (1 - winnerExpected))
+    loserNewScore = loser[:score] + (32 * (loser[:std])**2 / (stdDiv * 216.0) * (0 - loserExpected))
+    
+    # Change standard dev of scores; condition if expected results decrease std; else unexpected results increase std
+    # games with little difference between players do not skew standard deviation
+    if winnerExpected >= 0.53
+      loserStd = [loser.std - 242.0 * (winnerExpected - loserExpected) * loserExpected / winnerExpected, 121].max
+      winnerStd = [winner.std - 242.0 * (winnerExpected - loserExpected) * loserExpected / winnerExpected, 121].max
+    elsif winnerExpected <=0.47
+      loserStd = [loser.std + 242.0 * (loserExpected - winnerExpected), 242].min
+      winnerStd = [winner.std + 242.0 * (loserExpected - winnerExpected), 242].min
+    else
+      loserStd = loser.std
+      winnerStd = winner.std
+    end
+    
     # Adjust the winner score
     winner.update_attributes(
       :wins => (mode == 0) ? winner[:wins] + 1 : winner[:wins],
@@ -544,9 +586,10 @@ class MashController < ApplicationController
       :win_streak_network => (mode == 1)? winner[:win_streak_network] + 1 : winner[:win_streak_network],
       :loss_streak => (mode == 0) ? 0 : winner[:loss_streak],
       :loss_streak_network => (mode == 1) ? 0 : winner[:loss_streak_network],
-      :score => winner[:score] + (32 * (1 - winnerExpected)),
+      :score => winnerNewScore,
       :win_streak_max => (mode == 0) ? ( winner[:win_streak] + 1 > winner[:win_streak_max] ? winner[:win_streak] + 1: winner[:win_streak_max] ) : winner[:win_streak_max],
-      :win_streak_max_network => (mode == 1) ? ( winner[:win_streak_network] + 1 > winner[:win_streak_max_network] ? winner[:win_streak_network] + 1 : winner[:win_streak_max_network] ) : winner[:win_streak_max_network]
+      :win_streak_max_network => (mode == 1) ? ( winner[:win_streak_network] + 1 > winner[:win_streak_max_network] ? winner[:win_streak_network] + 1 : winner[:win_streak_max_network] ) : winner[:win_streak_max_network],
+      :std => winnerStd
     )
     
     # Adjust the loser score
@@ -557,9 +600,10 @@ class MashController < ApplicationController
       :loss_streak_network => (mode == 1) ? loser[:loss_streak_network] + 1 : loser[:loss_streak_network],
       :win_streak => (mode == 0) ? 0 : loser[:win_streak],
       :win_streak_network => (mode == 1) ? 0 : loser[:win_streak_network],
-      :score => loser[:score] + (32 * (0 - loserExpected)),
+      :score => loserNewScore,
       :loss_streak_max => (mode == 0) ? ( loser[:loss_streak] + 1 > loser[:loss_streak_max] ? loser[:loss_streak] + 1 : loser[:loss_streak_max] ) : loser[:loss_streak_max],
-      :loss_streak_max_network => (mode == 1) ? ( loser[:loss_streak_network]  + 1 > loser[:loss_streak_max_network] ? loser[:loss_streak_network] + 1 : loser[:loss_streak_max_network] ) : loser[:loss_streak_max_network]
+      :loss_streak_max_network => (mode == 1) ? ( loser[:loss_streak_network]  + 1 > loser[:loss_streak_max_network] ? loser[:loss_streak_network] + 1 : loser[:loss_streak_max_network] ) : loser[:loss_streak_max_network],
+      :std => loserStd
     )
     
     return nil
@@ -569,6 +613,15 @@ class MashController < ApplicationController
     # Calculate the expected outcomes of a mash between two users
     
     exponent = 10.0 ** ((opponent[:score] - user[:score]) / 400.0)
+    expected = 1.0 / (1.0 + exponent)
+    
+    return expected
+  end
+  
+  def expected_outcome_by_score(user, opponent)    
+    # Calculate the expected outcomes of a mash between two users
+    
+    exponent = 10.0 ** ((opponent - user) / 400.0)
     expected = 1.0 / (1.0 + exponent)
     
     return expected
