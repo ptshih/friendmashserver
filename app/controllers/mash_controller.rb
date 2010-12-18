@@ -76,7 +76,7 @@ class MashController < ApplicationController
       excludedIds << randomUser.facebook_id # add the random user into the excludedIds array
 
       # Previous way was just to use the user's score
-       opponent = find_opponent(randomUser.score, params[:gender], excludedIds, networkIds)
+       opponent = find_opponent(randomUser.score, params[:gender], excludedIds, networkIds, params[:id].to_i, params[:mode].to_i)
       
       # Now to use the last opponent's score as a measure
       # Find an opponent for the randomly selected user; lost to last opponent than take lower score, won take higher
@@ -498,7 +498,7 @@ class MashController < ApplicationController
     return friendIdArray
   end
   
-  def find_opponent(desiredScore, gender, excludedIds = [], networkIds = [])
+  def find_opponent(desiredScore, gender, excludedIds = [], networkIds = [], facebookId = nil, mode = 0)
     # This API finds an opponent close to the desired score who is not:
     # Part of the excludedIds
     # If network only mode is on, the opponent in the set of networkIds
@@ -524,8 +524,15 @@ class MashController < ApplicationController
     
     # We need to calculate POP, POPAVERAGE, and POPSD from the DB, not everytime
     # Probably calculate it once a day/hour/etc... and store it in a static table/cache
-    
-    population = User.where("gender = '#{gender}'").count # Get the total population size of the user's table for this gender
+    #
+    # Need to add a count in the future that handles mode=2 social network count
+    if mode == 0
+      population = User.where("gender = '#{gender}'").count # Get the total population size of the user's table for this gender
+    else
+      # Because we don't store gender in the network table, we can't filter on gender for now
+      # population = Network.where("facebook_id = #{facebookId} AND gender = '#{gender}'").count
+      population = Network.where("facebook_id = #{facebookId}").count
+    end
     
     # Perform a score bias when finding opponent
     desiredScore = desiredScore + 32
