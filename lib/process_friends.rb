@@ -31,7 +31,6 @@ class ProcessFriends < Struct.new(:facebookId)
         friendIdArray << friend['id']
       end
     end
-
     # Generate first degree network for this user
     generate_network(facebookId, friendIdArray, 1)
     
@@ -51,21 +50,25 @@ class ProcessFriends < Struct.new(:facebookId)
       profile = user.create_profile(
         :first_name => fbUser['first_name'].nil? ? nil : fbUser['first_name'],
         :last_name => fbUser['last_name'].nil? ? nil : fbUser['last_name'],
-        :full_name => fbUser['name']
+        :full_name => fbUser['name'].nil? ? nil : fbUser['name']
       )
       # Create Schools for user if exists
       fbUser['education'].each do |education|
-        school = user.schools.create(
-          :school_id => education['school']['id'].to_i,
-          :school_name => education['school']['name']
-        )
+        if not education['school'].nil?
+          school = user.schools.create(
+            :school_id => education['school']['id'].nil? ? nil : education['school']['id'].to_i,
+            :school_name => education['school']['name'].nil? ? nil : education['school']['name']
+          )
+        end
       end if not fbUser['education'].nil?
       # Create Employers for user if exists
       fbUser['work'].each do |work|
-        employer = user.employers.create(
-          :employer_id => work['employer']['id'].to_i,
-          :employer_name => work['employer']['name']
-        )
+        if not work['employer'].nil?
+          employer = user.employers.create(
+            :employer_id => work['employer']['id'].nil? ? nil : work['employer']['id'].to_i,
+            :employer_name => work['employer']['name'].nil? ? nil : work['employer']['name']
+          )
+        end
       end if not fbUser['work'].nil?
     else
       # If user already exists, update their gender
