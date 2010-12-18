@@ -281,9 +281,9 @@ class MashController < ApplicationController
     profileHash['stats'] << { :name => "Ranking among Friends", :value => "#{ranksHash['rankofnetwork'].to_i + 1} / #{ranksHash['networktotal'].to_i + 1}" }
     profileHash['stats'] << { :name => "Likes Received", :value => "#{user['wins']}" }
     profileHash['stats'] << { :name => "Longest Like Streak", :value => "#{user['win_streak_max']}" }
-    profileHash['stats'] << { :name => "Total Time Played", :value => "5" }
-    profileHash['stats'] << { :name => "Mashes in Last 24 Hours", :value => "1" }
-    profileHash['stats'] << { :name => "Mashes in Last 7 Days", :value => "2" }
+    # profileHash['stats'] << { :name => "Total Time Played", :value => "5" }
+    # profileHash['stats'] << { :name => "Mashes in Last 24 Hours", :value => "1" }
+    # profileHash['stats'] << { :name => "Mashes in Last 7 Days", :value => "2" }
     
     # send response
     respond_to do |format|
