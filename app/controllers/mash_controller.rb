@@ -908,7 +908,7 @@ class MashController < ApplicationController
 
   def globalstats
 
-    dc = Dalli::Client.new('127.0.0.1:11211',{:expires_in=>30.seconds})
+    dc = Dalli::Client.new('127.0.0.1:11211',{:expires_in=>15.minutes})
 
     globalstats = dc.get('globalstats')
     response = []
