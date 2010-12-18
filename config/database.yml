@@ -14,6 +14,7 @@ development:
   username: root
   password:
   socket: /tmp/mysql.sock
+  collation: utf8_general_ci
 # development:
 #   adapter: mysql
 #   host: friendmash-staging.clhyg7sm4xmb.us-east-1.rds.amazonaws.com
@@ -41,6 +42,8 @@ production:
   database: friendmash
   username: friendmash
   password: Lik3aG6
+  encoding: utf8
+  collation: utf8_general_ci
   
 staging:
   adapter: mysql
@@ -49,3 +52,5 @@ staging:
   database: friendmash
   username: friendmash
   password: Lik3aG6
+  encoding: utf8
+  collation: utf8_general_ci
