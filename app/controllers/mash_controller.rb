@@ -450,7 +450,7 @@ class MashController < ApplicationController
     
     # User.count(["last_time >= ?", 7.days.ago])
     
-    cache = NetworkCache.where("facebook_id = #{facebookId} AND expires_at < ?", Time.now).first
+    cache = NetworkCache.where("facebook_id = #{facebookId} AND expires_at > ?", Time.now).first
     
     if cache.nil?
       # if we had a cache miss, we need to execute the fetch/insert query
