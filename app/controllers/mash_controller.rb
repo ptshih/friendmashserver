@@ -76,7 +76,8 @@ class MashController < ApplicationController
       excludedIds << randomUser.facebook_id # add the random user into the excludedIds array
 
       # Previous way was just to use the user's score
-      # opponent = find_opponent(randomUser.score, params[:gender], excludedIds, networkIds)
+       opponent = find_opponent(randomUser.score, params[:gender], excludedIds, networkIds)
+      
       # Now to use the last opponent's score as a measure
       # Find an opponent for the randomly selected user; lost to last opponent than take lower score, won take higher
       # if randomUser.win_streak>0
@@ -84,7 +85,7 @@ class MashController < ApplicationController
       # else
       #   opponentScoreToMatch = randomUser.last_opponent_score-50
       # end
-      opponent = find_opponent(opponentScoreToMatch, params[:gender], excludedIds, networkIds)
+      # opponent = find_opponent(opponentScoreToMatch, params[:gender], excludedIds, networkIds)
       
       if not opponent.nil?
         # 50/50 chance for left/right position
