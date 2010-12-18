@@ -62,7 +62,7 @@ class MashController < ApplicationController
     excludedString = excludedIds.join(',') # SQL string for excludedIds
     
     # perform score bias
-    lowerBound = rand(900) + 600 # random between 600 and 1500
+    lowerBound = rand(900) + 400 # random between 600 and 1500
   
     # Randomly choose a user from the DB with a CSV of excluded IDs
     if networkIds.empty?
