@@ -469,14 +469,11 @@ class MashController < ApplicationController
       join networks b on a.friend_id = b.facebook_id
       where a.facebook_id=#{facebookId}"
       
-      items = ActiveRecord::Base.connection.execute(query)
+      networks = Network.find_by_sql(query)
       
-      items.each_hash do |item|
-        secondDegreeIds << item["friend_id"]
-      end
-      
-      items.free
-      
+      networks.each do |network|
+        secondDegreeIds << network.friend_id
+      end      
       
       networkIds = firstDegreeIds + secondDegreeIds
       friendIdArray = networkIds.uniq
