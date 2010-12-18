@@ -37,13 +37,11 @@ class MashController < ApplicationController
         Network.where("facebook_id = #{params[:id].to_i}").each do |network|
           networkIds << network.friend_id
         end
-        networkString = networkIds.join(',')
       end
       # dc.set("#{params[:id].to_i}",networkString,300)
       
     elsif params[:mode].to_i == 2
       networkIds = network_cache(params[:id].to_i)
-      networkString = networkIds.join(',')
     end
     
     # MySQL uses RAND, SQLLite uses RANDOM
@@ -55,21 +53,24 @@ class MashController < ApplicationController
     # end
     randQuery = 'RAND()'
     
+    # Handle excluded recent IDs
     excludedIds = params[:recents].split(',') # split on comma
-    
     excludedIds << "#{params[:id].to_i}" # add currentId to excludedIds
-    
-    excludedString = excludedIds.join(',') # SQL string for excludedIds
-    
+    excludedIds = excludedIds.map do |ex| ex.to_i end # convert excludedIds array to store integers instead of strings
+
     # perform score bias
     lowerBound = rand(900) + 400 # random between 600 and 1500
   
     # Randomly choose a user from the DB with a CSV of excluded IDs
     if networkIds.empty?
-      
+      excludedString = excludedIds.join(',') # SQL string for excludedIds
       randomUser = User.all(:conditions=>"score >= #{lowerBound} AND gender = '#{params[:gender]}' AND facebook_id NOT IN (#{excludedString})",:order=>randQuery,:select =>"facebook_id, score",:limit=>1).first
     else
-      randomUser = User.all(:conditions=>"score >= #{lowerBound} AND gender = '#{params[:gender]}' AND facebook_id NOT IN (#{excludedString}) AND facebook_id IN (#{networkString})",:order=>randQuery,:select =>"facebook_id, score",:limit=>1).first
+      # If we are in network mode, instead of passing both excluded and IN network, we do an array diff
+      # So that we only have to pass an IN network array which is IN - EXCLUDED
+      networkIds = networkIds - excludedIds
+      networkString = networkIds.join(',')
+      randomUser = User.all(:conditions=>"score >= #{lowerBound} AND gender = '#{params[:gender]}' AND facebook_id IN (#{networkString})",:order=>randQuery,:select =>"facebook_id, score",:limit=>1).first
     end
     
     if not randomUser.nil?
@@ -546,14 +547,13 @@ class MashController < ApplicationController
     # end
     randQuery = 'RAND()'
     
-    excludedString = excludedIds.join(',') # SQL string for excludedIds
-    
     # Network only mode should only search in a restricted SET of Users
     if networkIds.empty?
+      excludedString = excludedIds.join(',') # SQL string for excludedIds
       opponent = User.all(:conditions=>"score > #{low} AND score <= #{high} AND gender = '#{gender}' AND facebook_id NOT IN (#{excludedString})",:order=>randQuery,:select =>"facebook_id",:limit=>1)
     else
       networkString = networkIds.join(',') 
-      opponent = User.all(:conditions=>"score > #{low} AND score <= #{high} AND gender = '#{gender}' AND facebook_id NOT IN (#{excludedString}) AND facebook_id IN (#{networkString})",:order=>randQuery,:select =>"facebook_id",:limit=>1)
+      opponent = User.all(:conditions=>"score > #{low} AND score <= #{high} AND gender = '#{gender}' AND facebook_id IN (#{networkString})",:order=>randQuery,:select =>"facebook_id",:limit=>1)
     end
   
     return opponent.first
