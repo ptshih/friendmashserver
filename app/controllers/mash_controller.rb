@@ -79,11 +79,11 @@ class MashController < ApplicationController
       # opponent = find_opponent(randomUser.score, params[:gender], excludedIds, networkIds)
       # Now to use the last opponent's score as a measure
       # Find an opponent for the randomly selected user; lost to last opponent than take lower score, won take higher
-      if randomUser.win_streak>0
-        opponentScoreToMatch = randomUser.last_opponent_score+50
-      else
-        opponentScoreToMatch = randomUser.last_opponent_score-50
-      end
+      # if randomUser.win_streak>0
+      #   opponentScoreToMatch = randomUser.last_opponent_score+50
+      # else
+      #   opponentScoreToMatch = randomUser.last_opponent_score-50
+      # end
       opponent = find_opponent(opponentScoreToMatch, params[:gender], excludedIds, networkIds)
       
       if not opponent.nil?
