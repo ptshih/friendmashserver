@@ -75,6 +75,10 @@ class MashController < ApplicationController
     
     if not randomUser.nil?
       excludedIds << randomUser.facebook_id # add the random user into the excludedIds array
+      
+      if params[:mode].to_i > 0
+        networkIds = networkIds - excludedIds
+      end
 
       # Previous way was just to use the user's score
        opponent = find_opponent(randomUser.score, params[:gender], excludedIds, networkIds, params[:id].to_i, params[:mode].to_i)
@@ -536,9 +540,14 @@ class MashController < ApplicationController
     
     # Calculate the low and high end bounds
     # NOTE: MAKE SURE WE ARE PASSING IN FLOATS AND NOT INTEGERS!!!!! OMGWTFBBQ
-    bounds = calculate_bounds(desiredScore, population, 1500.0, 282.0, 2500.0)
-    low = bounds[0] - 50
-    high = bounds[1] + 50
+    if mode == 1
+      low = 600
+      high = 2400
+    else
+      bounds = calculate_bounds(desiredScore, population, 1500.0, 282.0, 2500.0)
+      low = bounds[0] - 50
+      high = bounds[1] + 50
+    end
     
     # if Rails.env == "production" || Rails.env == "staging"
     #   randQuery = 'RAND()'
