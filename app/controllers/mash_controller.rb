@@ -532,7 +532,7 @@ class MashController < ApplicationController
     
     standardDeviation = 282.0
     if desiredScore < 1520 && desiredScore > 1480 && mode == 0
-      standardDeviation = 28.2
+      standardDeviation = 141.0
     end
     
     # Calculate the low and high end bounds
