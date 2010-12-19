@@ -528,7 +528,7 @@ class MashController < ApplicationController
     desiredScore = desiredScore + 32
     
     # Approx sample size
-    sampleSize = 1000.0
+    sampleSize = 2500.0
     
     standardDeviation = 282.0
     if desiredScore <= 1532 && desiredScore >= 1468 && mode == 0
