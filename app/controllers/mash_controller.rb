@@ -512,11 +512,11 @@ class MashController < ApplicationController
     #
     # Need to add a count in the future that handles mode=2 social network count
     if mode == 0
-      population = User.where("gender = '#{gender}'").count # Get the total population size of the user's table for this gender
+      population = User.where("gender = '#{gender}'").count.to_f # Get the total population size of the user's table for this gender
     else
       # Because we don't store gender in the network table, we can't filter on gender for now
       # population = Network.where("facebook_id = #{facebookId} AND gender = '#{gender}'").count
-      population = Network.where("facebook_id = #{facebookId}").count
+      population = Network.where("facebook_id = #{facebookId}").count.to_f
     end
     
     # Perform a score bias when finding opponent
@@ -530,13 +530,15 @@ class MashController < ApplicationController
       standardDeviation = 28.2
     end
     
-    population = population.to_f
+    p population
+    p standardDeviation
+    p sampleSize
     
     # Calculate the low and high end bounds
     # NOTE: MAKE SURE WE ARE PASSING IN FLOATS AND NOT INTEGERS!!!!! OMGWTFBBQ
-    bounds = calculate_bounds(desiredScore, 5000.0, 1500.0, 282.0, 2500.0)
-    low = bounds[0]
-    high = bounds[1]
+    bounds = calculate_bounds(desiredScore, population, 1500.0, 282.0, 2500.0)
+    low = bounds[0] - 50
+    high = bounds[1] + 50
     
     # if Rails.env == "production" || Rails.env == "staging"
     #   randQuery = 'RAND()'
@@ -640,11 +642,11 @@ class MashController < ApplicationController
     k_high = (1 * (sampleSize / pop))
 
     array_returns_low = (600..userScore).map { |i|
-      (k_low + Math.erf((userScore-popAverage)/(popSD*(2.0**0.5))) - Math.erf((i-popAverage)/(popSD*(2.0**0.5)))).abs
+      (k_low + Math.erf((userScore.to_f-popAverage)/(popSD*(2.0**0.5))) - Math.erf((i-popAverage)/(popSD*(2.0**0.5)))).abs
     }
 
     array_returns_high = (userScore..2400).map { |i|
-      (k_high + Math.erf((userScore-popAverage)/(popSD*(2.0**0.5))) - Math.erf((i-popAverage)/(popSD*(2.0**0.5)))).abs
+      (k_high + Math.erf((userScore.to_f-popAverage)/(popSD*(2.0**0.5))) - Math.erf((i-popAverage)/(popSD*(2.0**0.5)))).abs
     }
 
     return [(600..userScore).map[array_returns_low.index(array_returns_low.min)], (userScore..2400).map[array_returns_high.index(array_returns_high.min)]]
