@@ -534,7 +534,7 @@ class MashController < ApplicationController
     
     # Calculate the low and high end bounds
     # NOTE: MAKE SURE WE ARE PASSING IN FLOATS AND NOT INTEGERS!!!!! OMGWTFBBQ
-    bounds = calculate_bounds(desiredScore, 5000.0, 1500.0, 282.0, 500.0)
+    bounds = calculate_bounds(desiredScore, 5000.0, 1500.0, 282.0, 2500.0)
     low = bounds[0]
     high = bounds[1]
     
