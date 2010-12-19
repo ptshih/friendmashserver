@@ -59,7 +59,7 @@ class MashController < ApplicationController
     excludedIds = excludedIds.map do |ex| ex.to_i end # convert excludedIds array to store integers instead of strings
 
     # perform score bias
-    lowerBound = rand(900) + 400 # random between 600 and 1500
+    lowerBound = rand(900) + 200 # random between 600 and 1500
   
     # Randomly choose a user from the DB with a CSV of excluded IDs
     if networkIds.empty?
@@ -519,7 +519,7 @@ class MashController < ApplicationController
     desiredScore = desiredScore + 32
     
     # Calculate the low and high end bounds
-    bounds = calculate_bounds(desiredScore, population, 1500.0, 282.0, 500.0)
+    bounds = calculate_bounds(desiredScore, population, 1500.0, 282.0, 5000.0)
     low = bounds[0]
     high = bounds[1]
     
