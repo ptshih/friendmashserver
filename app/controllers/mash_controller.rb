@@ -540,7 +540,7 @@ class MashController < ApplicationController
       low = 600
       high = 2400
     else
-      bounds = calculate_bounds(desiredScore, population, 1500.0, 282.0, 2500.0)
+      bounds = calculate_bounds(desiredScore, 30134.0, 1500.0, 282.0, 2500.0)
       low = bounds[0] - 50
       high = bounds[1] + 50
       
