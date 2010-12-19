@@ -534,9 +534,7 @@ class MashController < ApplicationController
       standardDeviation = 28.2
     end
     
-    p population
-    p standardDeviation
-    p sampleSize
+
     
     # Calculate the low and high end bounds
     # NOTE: MAKE SURE WE ARE PASSING IN FLOATS AND NOT INTEGERS!!!!! OMGWTFBBQ
@@ -548,6 +546,12 @@ class MashController < ApplicationController
       low = bounds[0] - 50
       high = bounds[1] + 50
     end
+    
+    puts "population: #{population}"
+    puts "stdDev: #{standardDeviation}"
+    puts "sampleSize: #{sampleSize}"
+    puts "lower: #{low}"
+    puts "upper: #{high}"
     
     # if Rails.env == "production" || Rails.env == "staging"
     #   randQuery = 'RAND()'
