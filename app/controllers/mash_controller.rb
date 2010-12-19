@@ -523,7 +523,6 @@ class MashController < ApplicationController
       population = Network.where("facebook_id = #{facebookId}").count.to_f
     end
     
-    
     # Perform a score bias when finding opponent
     desiredScore = desiredScore + 32
     
@@ -541,12 +540,14 @@ class MashController < ApplicationController
       low = 600
       high = 2400
     else
-      bounds = calculate_bounds(desiredScore, population, 1500.0, standardDeviation, sampleSize)
-      low = bounds[0]
-      high = bounds[1]
+      # bounds = calculate_bounds(desiredScore, population, 1500.0, standardDeviation, sampleSize)
+      #  low = bounds[0]
+      #  high = bounds[1]
       
-      # low = desiredScore - 100
-      # high = desiredScore + 100
+      # Apply an override so that we just statically get opponents that are +/- 100 points
+      # until we figure out a better algorithm
+      low = desiredScore - 100
+      high = desiredScore + 100
     end
     
     puts "desiredScore: #{desiredScore}"
