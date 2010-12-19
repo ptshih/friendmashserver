@@ -508,7 +508,8 @@ class MashController < ApplicationController
     #
     # Need to add a count in the future that handles mode=2 social network count
     if mode == 0
-      population = User.where("gender = '#{gender}'").count # Get the total population size of the user's table for this gender
+      # population = User.where("gender = '#{gender}'").count # Get the total population size of the user's table for this gender
+      population = 5000.0
     else
       # Because we don't store gender in the network table, we can't filter on gender for now
       # population = Network.where("facebook_id = #{facebookId} AND gender = '#{gender}'").count
@@ -519,7 +520,7 @@ class MashController < ApplicationController
     desiredScore = desiredScore + 32
     
     # Calculate the low and high end bounds
-    bounds = calculate_bounds(desiredScore, 5000.0, 1500.0, 282.0, 500.0)
+    bounds = calculate_bounds(desiredScore, population, 1500.0, 282.0, 500.0)
     low = bounds[0]
     high = bounds[1]
     
