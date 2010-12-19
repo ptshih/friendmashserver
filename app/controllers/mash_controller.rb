@@ -512,11 +512,11 @@ class MashController < ApplicationController
     #
     # Need to add a count in the future that handles mode=2 social network count
     if mode == 0
-      population = User.where("gender = '#{gender}'").count.to_f # Get the total population size of the user's table for this gender
+      population = User.where("gender = '#{gender}'").count # Get the total population size of the user's table for this gender
     else
       # Because we don't store gender in the network table, we can't filter on gender for now
       # population = Network.where("facebook_id = #{facebookId} AND gender = '#{gender}'").count
-      population = Network.where("facebook_id = #{facebookId}").count.to_f
+      population = Network.where("facebook_id = #{facebookId}").count
     end
     
     # Perform a score bias when finding opponent
@@ -529,6 +529,8 @@ class MashController < ApplicationController
     if desiredScore < 1520 && desiredScore > 1480 && mode == 0
       standardDeviation = 28.2
     end
+    
+    population = population.to_f
     
     # Calculate the low and high end bounds
     # NOTE: MAKE SURE WE ARE PASSING IN FLOATS AND NOT INTEGERS!!!!! OMGWTFBBQ
