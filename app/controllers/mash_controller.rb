@@ -218,9 +218,9 @@ class MashController < ApplicationController
     adjustScoresForUsers(winner, loser, params[:mode].to_i)
     
     # Adjust judge-factor of player; only adjust if it's decisive enough for user to make a choice
-    player = User.find_by_facebook_id(params[:id].to_i)
-    outcomeChance = expected_outcome_by_score(winnerBeforeScore, loserBeforeScore)
-    judgeFactorBefore = player.judge_factor
+    # player = User.find_by_facebook_id(params[:id].to_i)
+    # outcomeChance = expected_outcome_by_score(winnerBeforeScore, loserBeforeScore)
+    # judgeFactorBefore = player.judge_factor
     # if (0.50-outcomeChance).abs > 0.03 && (winner.wins + winner.losses)>5 && (loser.wins+loser.losses)>5
     #   if winnerBeforeScore>loserBeforeScore
     #     judgeFactorAfter = judgeFactorBefore + ( 32-(1500-judgeFactorBefore).abs/15.0)
@@ -231,6 +231,7 @@ class MashController < ApplicationController
     #     :judge_factor => judgeFactorAfter
     #   )
     # end
+    judgeFactorBefore = 0
     
     # Insert a NEW record into Result table to keep track of the fight
     # If left is true, that means left side was DISCARDED
