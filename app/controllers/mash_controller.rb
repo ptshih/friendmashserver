@@ -528,7 +528,7 @@ class MashController < ApplicationController
     desiredScore = desiredScore + 32
     
     # Approx sample size
-    sampleSize = 500.0
+    sampleSize = 1000.0
     
     standardDeviation = 282.0
     if desiredScore <= 1532 && desiredScore >= 1468 && mode == 0
@@ -541,7 +541,7 @@ class MashController < ApplicationController
       low = 600
       high = 2400
     else
-      bounds = calculate_bounds(desiredScore, population, 1500.0, standardDeviation, 2500.0)
+      bounds = calculate_bounds(desiredScore, population, 1500.0, standardDeviation, sampleSize)
       low = bounds[0]
       high = bounds[1]
       
