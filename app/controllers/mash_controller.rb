@@ -534,20 +534,18 @@ class MashController < ApplicationController
       standardDeviation = 28.2
     end
     
-
-    
     # Calculate the low and high end bounds
     # NOTE: MAKE SURE WE ARE PASSING IN FLOATS AND NOT INTEGERS!!!!! OMGWTFBBQ
     if mode == 1
       low = 600
       high = 2400
     else
-      # bounds = calculate_bounds(desiredScore, population, 1500.0, 282.0, 2500.0)
-      # low = bounds[0] - 50
-      # high = bounds[1] + 50
+      bounds = calculate_bounds(desiredScore, population, 1500.0, 282.0, 2500.0)
+      low = bounds[0] - 50
+      high = bounds[1] + 50
       
-      low = desiredScore - 100
-      high = desiredScore + 100
+      # low = desiredScore - 100
+      # high = desiredScore + 100
     end
     
     puts "desiredScore: #{desiredScore}"
