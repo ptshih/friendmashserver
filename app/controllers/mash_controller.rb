@@ -523,6 +523,7 @@ class MashController < ApplicationController
       population = Network.where("facebook_id = #{facebookId}").count.to_f
     end
     
+    
     # Perform a score bias when finding opponent
     desiredScore = desiredScore + 32
     
@@ -540,7 +541,7 @@ class MashController < ApplicationController
       low = 600
       high = 2400
     else
-      bounds = calculate_bounds(desiredScore, 30134.0, 1500.0, 282.0, 2500.0)
+      bounds = calculate_bounds(desiredScore, population, 1500.0, 282.0, 2500.0)
       low = bounds[0] - 50
       high = bounds[1] + 50
       
@@ -657,11 +658,11 @@ class MashController < ApplicationController
     k_high = (1 * (sampleSize / pop))
 
     array_returns_low = (600..userScore).map { |i|
-      (k_low + Math.erf((userScore.to_f-popAverage)/(popSD*(2.0**0.5))) - Math.erf((i-popAverage)/(popSD*(2.0**0.5)))).abs
+      (k_low.to_f + Math.erf((userScore.to_f-popAverage)/(popSD*(2.0**0.5))) - Math.erf((i.to_f-popAverage)/(popSD*(2.0**0.5)))).abs
     }
 
     array_returns_high = (userScore..2400).map { |i|
-      (k_high + Math.erf((userScore.to_f-popAverage)/(popSD*(2.0**0.5))) - Math.erf((i-popAverage)/(popSD*(2.0**0.5)))).abs
+      (k_high.to_f + Math.erf((userScore.to_f-popAverage)/(popSD*(2.0**0.5))) - Math.erf((i.to_f-popAverage)/(popSD*(2.0**0.5)))).abs
     }
 
     return [(600..userScore).map[array_returns_low.index(array_returns_low.min)], (userScore..2400).map[array_returns_high.index(array_returns_high.min)]]
