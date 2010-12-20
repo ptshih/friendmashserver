@@ -69,8 +69,13 @@ class MashController < ApplicationController
       # If we are in network mode, instead of passing both excluded and IN network, we do an array diff
       # So that we only have to pass an IN network array which is IN - EXCLUDED
       networkIds = networkIds - excludedIds
-      networkString = networkIds.join(',')
-      randomUser = User.all(:conditions=>"score >= #{lowerBound} AND gender = '#{params[:gender]}' AND facebook_id IN (#{networkString})",:order=>randQuery,:select =>"facebook_id, score",:limit=>1).first
+      # if somehow we ended up with no networkIds after exclusion
+      if networkIds.empty?
+        randomUser = nil
+      else
+        networkString = networkIds.join(',')
+        randomUser = User.all(:conditions=>"score >= #{lowerBound} AND gender = '#{params[:gender]}' AND facebook_id IN (#{networkString})",:order=>randQuery,:select =>"facebook_id, score",:limit=>1).first
+      end
     end
     
     if not randomUser.nil?
