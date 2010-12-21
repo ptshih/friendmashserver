@@ -274,6 +274,18 @@ class MashController < ApplicationController
     
     user = User.select('*').where('facebook_id' => params[:id].to_i).joins(:profile).first
     
+    # if somehow this user doesn't exist...
+    if user.nil?
+      profileHash['full_name'] = "Server Error! Please logout and login again!"
+      profileHash['stats'] = []
+      
+      respond_to do |format|
+        format.xml  { render :xml => profileHash }
+        format.json  { render :json => profileHash }
+      end
+      return nil
+    end
+    
     # Section 0 in client
     profileHash['full_name'] = user['full_name']
     profileHash['votes'] = user['votes'].to_i
