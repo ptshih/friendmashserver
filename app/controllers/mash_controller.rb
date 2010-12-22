@@ -572,6 +572,7 @@ class MashController < ApplicationController
       low = bounds[0]
       high = bounds[1]
     
+      # Adding this for good measure
       if high-low<5
         high = low+5
       end
