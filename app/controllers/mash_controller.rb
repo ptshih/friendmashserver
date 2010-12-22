@@ -571,7 +571,7 @@ class MashController < ApplicationController
        bounds = calculate_bounds(desiredScore, population, 1500.0, standardDeviation, sampleSize)
         low = bounds[0]
         high = bounds[1]
-      
+        
       # Apply an override so that we just statically get opponents that are +/- 100 points
       # until we figure out a better algorithm
       #low = desiredScore - 100
@@ -595,10 +595,10 @@ class MashController < ApplicationController
     # Network only mode should only search in a restricted SET of Users
     if networkIds.empty?
       excludedString = excludedIds.join(',') # SQL string for excludedIds
-      opponent = User.all(:conditions=>"score > #{low} AND score <= #{high} AND gender = '#{gender}' AND facebook_id NOT IN (#{excludedString})",:order=>randQuery,:select =>"facebook_id",:limit=>1)
+      opponent = User.all(:conditions=>"score >= #{low} AND score <= #{high} AND gender = '#{gender}' AND facebook_id NOT IN (#{excludedString})",:order=>randQuery,:select =>"facebook_id",:limit=>1)
     else
       networkString = networkIds.join(',') 
-      opponent = User.all(:conditions=>"score > #{low} AND score <= #{high} AND gender = '#{gender}' AND facebook_id IN (#{networkString})",:order=>randQuery,:select =>"facebook_id",:limit=>1)
+      opponent = User.all(:conditions=>"score >= #{low} AND score <= #{high} AND gender = '#{gender}' AND facebook_id IN (#{networkString})",:order=>randQuery,:select =>"facebook_id",:limit=>1)
     end
   
     return opponent.first
