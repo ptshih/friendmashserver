@@ -60,6 +60,15 @@ class MashController < ApplicationController
 
     # perform score bias
     lowerBound = rand(900) + 400 # random between 600 and 1500
+    
+    # perform score bias to retain users (a/b testing at the moment, token.id odd enables biasing)
+    # condition 1: if user has less than 10 votes outside of their network, show biased+ mash
+    # condition 2: every time recent mashes is empty, show a biased+ mash
+    playerToken = Token.all(:conditions=>"facebook_id= #{params[:id]}", :select =>"id", :limit=>1).first
+    playerProfile = Profile.all(:conditions=>"facebook_id= #{params[:id]} AND votes - votes_network < 10").first
+    if (playerToken.id%2 > 0) && ( (params[:recents].empty?) || !(playerProfile.nil?))
+      lowerBound=1550
+    end
   
     # Randomly choose a user from the DB with a CSV of excluded IDs
     if networkIds.empty?
@@ -544,12 +553,14 @@ class MashController < ApplicationController
     desiredScore = desiredScore + 32
     
     # Approx sample size
-    sampleSize = 2500.0
+    sampleSize = 1000.0
     
+    # Default standard deviation
     standardDeviation = 282.0
-    if desiredScore <= 1532 && desiredScore >= 1468 && mode == 0
-      standardDeviation = 141.0
-    end
+    
+    # Override with true standard deviation; in the future calculate using query
+    # Everyone male - 31, Everyone female 52.
+    standardDeviation = 31.0
     
     # Calculate the low and high end bounds
     # NOTE: MAKE SURE WE ARE PASSING IN FLOATS AND NOT INTEGERS!!!!! OMGWTFBBQ
@@ -557,14 +568,14 @@ class MashController < ApplicationController
       low = 600
       high = 2400
     else
-      # bounds = calculate_bounds(desiredScore, population, 1500.0, standardDeviation, sampleSize)
-      #  low = bounds[0]
-      #  high = bounds[1]
+       bounds = calculate_bounds(desiredScore, population, 1500.0, standardDeviation, sampleSize)
+        low = bounds[0]
+        high = bounds[1]
       
       # Apply an override so that we just statically get opponents that are +/- 100 points
       # until we figure out a better algorithm
-      low = desiredScore - 100
-      high = desiredScore + 100
+      #low = desiredScore - 100
+      #high = desiredScore + 100
     end
     
     puts "desiredScore: #{desiredScore}"
