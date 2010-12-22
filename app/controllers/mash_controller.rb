@@ -568,10 +568,14 @@ class MashController < ApplicationController
       low = 600
       high = 2400
     else
-       bounds = calculate_bounds(desiredScore, population, 1500.0, standardDeviation, sampleSize)
-        low = bounds[0]
-        high = bounds[1]
-        
+      bounds = calculate_bounds(desiredScore, population, 1500.0, standardDeviation, sampleSize)
+      low = bounds[0]
+      high = bounds[1]
+    
+      if high-low<5
+        high = low+5
+      end
+      
       # Apply an override so that we just statically get opponents that are +/- 100 points
       # until we figure out a better algorithm
       #low = desiredScore - 100
@@ -683,15 +687,15 @@ class MashController < ApplicationController
     # Calculates the low and high bounds for selecting an opponent
     # Returns an array [low, high]
     
-    k_low = (-1 * (sampleSize / pop))
-    k_high = (1 * (sampleSize / pop))
+    k_low = (-1 * (sampleSize.to_f / pop.to_f))
+    k_high = (1 * (sampleSize.to_f / pop.to_f))
 
     array_returns_low = (600..userScore).map { |i|
-      (k_low.to_f + Math.erf((userScore.to_f-popAverage)/(popSD*(2.0**0.5))) - Math.erf((i.to_f-popAverage)/(popSD*(2.0**0.5)))).abs
+      (k_low.to_f + Math.erf((userScore.to_f-popAverage.to_f)/(popSD.to_f*(2.0**0.5))) - Math.erf((i.to_f-popAverage.to_f)/(popSD.to_f*(2.0**0.5)))).abs
     }
 
     array_returns_high = (userScore..2400).map { |i|
-      (k_high.to_f + Math.erf((userScore.to_f-popAverage)/(popSD*(2.0**0.5))) - Math.erf((i.to_f-popAverage)/(popSD*(2.0**0.5)))).abs
+      (k_high.to_f + Math.erf((userScore.to_f-popAverage.to_f)/(popSD.to_f*(2.0**0.5))) - Math.erf((i.to_f-popAverage.to_f)/(popSD.to_f*(2.0**0.5)))).abs
     }
 
     return [(600..userScore).map[array_returns_low.index(array_returns_low.min)], (userScore..2400).map[array_returns_high.index(array_returns_high.min)]]
