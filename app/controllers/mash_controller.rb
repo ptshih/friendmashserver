@@ -579,8 +579,8 @@ class MashController < ApplicationController
       
       # Apply an override so that we just statically get opponents that are +/- 100 points
       # until we figure out a better algorithm
-      #low = desiredScore - 100
-      #high = desiredScore + 100
+      low = desiredScore - 100
+      high = desiredScore + 100
     end
     
     puts "desiredScore: #{desiredScore}"
