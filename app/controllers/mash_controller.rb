@@ -595,10 +595,10 @@ class MashController < ApplicationController
     # Network only mode should only search in a restricted SET of Users
     if networkIds.empty?
       excludedString = excludedIds.join(',') # SQL string for excludedIds
-      opponent = User.all(:conditions=>"score > #{low} AND score <= #{high} AND gender = '#{gender}' AND facebook_id NOT IN (#{excludedString})",:order=>randQuery,:select =>"facebook_id",:limit=>1)
+      opponent = User.all(:conditions=>"score >= #{low} AND score <= #{high} AND gender = '#{gender}' AND facebook_id NOT IN (#{excludedString})",:order=>randQuery,:select =>"facebook_id",:limit=>1)
     else
       networkString = networkIds.join(',') 
-      opponent = User.all(:conditions=>"score > #{low} AND score <= #{high} AND gender = '#{gender}' AND facebook_id IN (#{networkString})",:order=>randQuery,:select =>"facebook_id",:limit=>1)
+      opponent = User.all(:conditions=>"score >= #{low} AND score <= #{high} AND gender = '#{gender}' AND facebook_id IN (#{networkString})",:order=>randQuery,:select =>"facebook_id",:limit=>1)
     end
   
     return opponent.first
