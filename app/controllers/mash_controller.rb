@@ -573,8 +573,8 @@ class MashController < ApplicationController
       high = bounds[1]
     
       # Adding this for good measure
-      if high-low<5
-        high = low+5
+      if high-low<50
+        high = low+50
       end
       
       # Apply an override so that we just statically get opponents that are +/- 100 points
