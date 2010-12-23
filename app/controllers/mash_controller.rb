@@ -71,7 +71,7 @@ class MashController < ApplicationController
       playerToken = Token.all(:conditions=>"facebook_id= #{params[:id]}", :select =>"id", :limit=>1).first
       playerProfile = Profile.all(:conditions=>"facebook_id= #{params[:id]} AND votes - votes_network < 10").first
       if (playerToken.id%2 > 0) && ( (params[:recents].empty?) || !(playerProfile.nil?))
-        lowerBound=1550
+        lowerBound=1600
       end
     end
   
@@ -624,12 +624,19 @@ class MashController < ApplicationController
     winnerExpected = expected_outcome(winner, loser)
     loserExpected = expected_outcome(loser, winner)
     
+    # Decrease score change factor when playing in network mode to discount favoritism for friends
+    if mode >0
+      factor = 0.25
+    else
+      factor = 0.5
+    end
+    
     # Weighs in users standard deviation (ie credibility of opponent)
     stdDiv = ( (winner[:std])**2 + (loser[:std])**2 ) ** 0.5
     #winnerNewScore = winner[:score] + (32 * (winner[:std])**2 / (stdDiv * 216.0) * (1 - winnerExpected))
     #loserNewScore = loser[:score] + (32 * (loser[:std])**2 / (stdDiv * 216.0) * (0 - loserExpected))
-    winnerNewScore = winner[:score] + ((winner[:std])**2 / (stdDiv) * (1 - winnerExpected))
-    loserNewScore = loser[:score] + ((loser[:std])**2 / (stdDiv) * (0 - loserExpected))
+    winnerNewScore = winner[:score] + factor * ((winner[:std])**2 / (stdDiv) * (1 - winnerExpected))
+    loserNewScore = loser[:score] + factor * ((loser[:std])**2 / (stdDiv) * (0 - loserExpected))
     
     # Change standard dev of scores; could be a tie game then don't change std
     # if expected result decrease std = user - (user^2 / (user^2 + opp^2)^0.5)^0.6
