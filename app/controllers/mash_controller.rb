@@ -64,10 +64,15 @@ class MashController < ApplicationController
     # perform score bias to retain users (a/b testing at the moment, token.id odd enables biasing)
     # condition 1: if user has less than 10 votes outside of their network, show biased+ mash
     # condition 2: every time recent mashes is empty, show a biased+ mash
-    playerToken = Token.all(:conditions=>"facebook_id= #{params[:id]}", :select =>"id", :limit=>1).first
-    playerProfile = Profile.all(:conditions=>"facebook_id= #{params[:id]} AND votes - votes_network < 10").first
-    if (playerToken.id%2 > 0) && ( (params[:recents].empty?) || !(playerProfile.nil?))
-      lowerBound=1550
+    
+    # NOTE:
+    # only do in Everyone Mode!!!
+    if params[:mode] == 0
+      playerToken = Token.all(:conditions=>"facebook_id= #{params[:id]}", :select =>"id", :limit=>1).first
+      playerProfile = Profile.all(:conditions=>"facebook_id= #{params[:id]} AND votes - votes_network < 10").first
+      if (playerToken.id%2 > 0) && ( (params[:recents].empty?) || !(playerProfile.nil?))
+        lowerBound=1550
+      end
     end
   
     # Randomly choose a user from the DB with a CSV of excluded IDs
