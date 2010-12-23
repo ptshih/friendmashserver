@@ -617,8 +617,10 @@ class MashController < ApplicationController
     
     # Weighs in users standard deviation (ie credibility of opponent)
     stdDiv = ( (winner[:std])**2 + (loser[:std])**2 ) ** 0.5
-    winnerNewScore = winner[:score] + (32 * (winner[:std])**2 / (stdDiv * 216.0) * (1 - winnerExpected))
-    loserNewScore = loser[:score] + (32 * (loser[:std])**2 / (stdDiv * 216.0) * (0 - loserExpected))
+    #winnerNewScore = winner[:score] + (32 * (winner[:std])**2 / (stdDiv * 216.0) * (1 - winnerExpected))
+    #loserNewScore = loser[:score] + (32 * (loser[:std])**2 / (stdDiv * 216.0) * (0 - loserExpected))
+    winnerNewScore = winner[:score] + ((winner[:std])**2 / (stdDiv) * (1 - winnerExpected))
+    loserNewScore = loser[:score] + ((loser[:std])**2 / (stdDiv) * (0 - loserExpected))
     
     # Change standard dev of scores; could be a tie game then don't change std
     # if expected result decrease std = user - (user^2 / (user^2 + opp^2)^0.5)^0.6
