@@ -609,7 +609,7 @@ class MashController < ApplicationController
     return opponent.first
   end
   
-  def adjustScoresForUsers(winner, loser, mode = 0)
+  def adjustScoresForUsers(winner, loser, mode)
     # This method calculates and adjusts the score and stats for the winner and loser
     
     winnerExpected = expected_outcome(winner, loser)
@@ -639,28 +639,28 @@ class MashController < ApplicationController
     # Adjust the winner score
     winner.update_attributes(
       :wins => (mode == 0) ? winner[:wins] + 1 : winner[:wins],
-      :wins_network => (mode == 1) ? winner[:wins_network] + 1 : winner[:wins_network],
+      :wins_network => (mode > 0) ? winner[:wins_network] + 1 : winner[:wins_network],
       :win_streak => (mode == 0) ? winner[:win_streak] + 1 : winner[:win_streak],
-      :win_streak_network => (mode == 1)? winner[:win_streak_network] + 1 : winner[:win_streak_network],
+      :win_streak_network => (mode > 0)? winner[:win_streak_network] + 1 : winner[:win_streak_network],
       :loss_streak => (mode == 0) ? 0 : winner[:loss_streak],
-      :loss_streak_network => (mode == 1) ? 0 : winner[:loss_streak_network],
+      :loss_streak_network => (mode > 0) ? 0 : winner[:loss_streak_network],
       :score => winnerNewScore,
       :win_streak_max => (mode == 0) ? ( winner[:win_streak] + 1 > winner[:win_streak_max] ? winner[:win_streak] + 1: winner[:win_streak_max] ) : winner[:win_streak_max],
-      :win_streak_max_network => (mode == 1) ? ( winner[:win_streak_network] + 1 > winner[:win_streak_max_network] ? winner[:win_streak_network] + 1 : winner[:win_streak_max_network] ) : winner[:win_streak_max_network],
+      :win_streak_max_network => (mode > 0) ? ( winner[:win_streak_network] + 1 > winner[:win_streak_max_network] ? winner[:win_streak_network] + 1 : winner[:win_streak_max_network] ) : winner[:win_streak_max_network],
       :std => winnerStd
     )
     
     # Adjust the loser score
     loser.update_attributes(
       :losses => (mode == 0) ? loser[:losses] + 1 : loser[:losses],
-      :losses_network => (mode == 1) ? loser[:losses_network] + 1 : loser[:losses_network],
+      :losses_network => (mode > 0) ? loser[:losses_network] + 1 : loser[:losses_network],
       :loss_streak => (mode == 0) ? loser[:loss_streak] + 1 : loser[:loss_streak],
-      :loss_streak_network => (mode == 1) ? loser[:loss_streak_network] + 1 : loser[:loss_streak_network],
+      :loss_streak_network => (mode > 0) ? loser[:loss_streak_network] + 1 : loser[:loss_streak_network],
       :win_streak => (mode == 0) ? 0 : loser[:win_streak],
-      :win_streak_network => (mode == 1) ? 0 : loser[:win_streak_network],
+      :win_streak_network => (mode > 0) ? 0 : loser[:win_streak_network],
       :score => loserNewScore,
       :loss_streak_max => (mode == 0) ? ( loser[:loss_streak] + 1 > loser[:loss_streak_max] ? loser[:loss_streak] + 1 : loser[:loss_streak_max] ) : loser[:loss_streak_max],
-      :loss_streak_max_network => (mode == 1) ? ( loser[:loss_streak_network]  + 1 > loser[:loss_streak_max_network] ? loser[:loss_streak_network] + 1 : loser[:loss_streak_max_network] ) : loser[:loss_streak_max_network],
+      :loss_streak_max_network => (mode > 0) ? ( loser[:loss_streak_network]  + 1 > loser[:loss_streak_max_network] ? loser[:loss_streak_network] + 1 : loser[:loss_streak_max_network] ) : loser[:loss_streak_max_network],
       :std => loserStd
     )
     
