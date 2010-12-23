@@ -119,6 +119,7 @@ class MashController < ApplicationController
         end
       else
         # did not find an opponent
+        puts "Error: Second opponent not found"
         response = {:error => "second opponent not found"}
         respond_to do |format|
           format.xml  { render :xml => response, :status => :not_implemented }
@@ -127,6 +128,7 @@ class MashController < ApplicationController
       end
     else
       # ran out of opponents!!!
+      puts "Error: First opponent not found"
       response = {:error => "first opponent not found"}
       respond_to do |format|
         format.xml  { render :xml => response, :status => :not_implemented }
