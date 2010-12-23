@@ -422,15 +422,17 @@ class MashController < ApplicationController
     
     rankings = []
     
+    # Because the client always sends mode == 0 no matter what (override)
+    # We need to combine the stats when displaying
     users.each_with_index do |user,rank|
       actualScore = user[:score]
       if params[:mode].to_i == 0
-        actualWins = user[:wins]
-        actualLosses = user[:losses]
-        actualWinStreak = user[:win_streak]
-        actualLossStreak = user[:loss_streak]
-        actualWinStreakMax = user[:win_streak_max]
-        actualLossStreakMax = user[:loss_streak_max]
+        actualWins = user[:wins] + user[:wins_network]
+        actualLosses = user[:losses] + user[:losses_network]
+        actualWinStreak = user[:win_streak] > user[:win_streak_network] ? user[:win_streak] : user[:win_streak_network]
+        actualLossStreak = user[:loss_streak] > user[:loss_streak_network] ? user[:loss_streak] : user[:loss_streak_network]
+        actualWinStreakMax = user[:win_streak_max] > user[:win_streak_max_network] ? user[:win_streak_max] : user[:win_streak_max_network]
+        actualLossStreakMax = user[:loss_streak_max] > user[:loss_streak_max_network] ? user[:loss_streak_max] : user[:loss_streak_max_network]
       else
         actualWins = user[:wins_network]
         actualLosses = user[:losses_network]
@@ -616,7 +618,7 @@ class MashController < ApplicationController
     return opponent.first
   end
   
-  def adjustScoresForUsers(winner, loser, mode)
+  def adjustScoresForUsers(winner, loser, mode = 0)
     # This method calculates and adjusts the score and stats for the winner and loser
     
     winnerExpected = expected_outcome(winner, loser)
