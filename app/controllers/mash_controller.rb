@@ -415,9 +415,9 @@ class MashController < ApplicationController
     # Active Record Join Alternative
     # users = User.select('*').all(:conditions=>"gender = '#{params[:gender]}'",:order=>"score desc",:limit=>count,:joins=>:profile)
     if networkIds.empty?
-      users = User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>"score desc",:limit=>count,:include=>:profile)
+      users = User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>"score desc,wins+losses+0.5*(wins_network+losses_network)",:limit=>count,:include=>:profile)
     else
-      users = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id IN (#{networkString})",:order=>"score desc",:limit=>count,:include=>:profile)
+      users = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id IN (#{networkString})",:order=>"score desc,wins+losses+0.5*(wins_network+losses_network)",:limit=>count,:include=>:profile)
     end
     
     rankings = []
