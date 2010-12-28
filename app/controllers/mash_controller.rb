@@ -417,9 +417,9 @@ class MashController < ApplicationController
     if networkIds.empty?
       users = User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>"score desc,wins+losses+0.5*(wins_network+losses_network)",:limit=>count,:include=>:profile)
     else
-      users = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id IN (#{networkString})",:order=>"score desc,wins+losses+0.5*(wins_network+losses_network)",:limit=>count,:include=>:profile)
       networkString = networkIds.join(',')
-      users = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id IN (#{networkString})",:order=>"score desc",:limit=>count,:include=>:profile)
+      users = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id IN (#{networkString})",:order=>"score desc,wins+losses+0.5*(wins_network+losses_network)",:limit=>count,:include=>:profile)      
+      # users = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id IN (#{networkString})",:order=>"score desc",:limit=>count,:include=>:profile)
     end
     
     rankings = []
@@ -428,21 +428,21 @@ class MashController < ApplicationController
     # We need to combine the stats when displaying
     users.each_with_index do |user,rank|
       actualScore = user[:score]
-      if params[:mode].to_i == 0
-        actualWins = user[:wins] + user[:wins_network]
-        actualLosses = user[:losses] + user[:losses_network]
-        actualWinStreak = user[:win_streak] > user[:win_streak_network] ? user[:win_streak] : user[:win_streak_network]
-        actualLossStreak = user[:loss_streak] > user[:loss_streak_network] ? user[:loss_streak] : user[:loss_streak_network]
-        actualWinStreakMax = user[:win_streak_max] > user[:win_streak_max_network] ? user[:win_streak_max] : user[:win_streak_max_network]
-        actualLossStreakMax = user[:loss_streak_max] > user[:loss_streak_max_network] ? user[:loss_streak_max] : user[:loss_streak_max_network]
-      else
-        actualWins = user[:wins_network]
-        actualLosses = user[:losses_network]
-        actualWinStreak = user[:win_streak_network]
-        actualLossStreak = user[:loss_streak_network]
-        actualWinStreakMax = user[:win_streak_max_network]
-        actualLossStreakMax = user[:loss_streak_max_network]
-      end
+      # if params[:mode].to_i == 0
+      actualWins = user[:wins] + user[:wins_network]
+      actualLosses = user[:losses] + user[:losses_network]
+      actualWinStreak = user[:win_streak] > user[:win_streak_network] ? user[:win_streak] : user[:win_streak_network]
+      actualLossStreak = user[:loss_streak] > user[:loss_streak_network] ? user[:loss_streak] : user[:loss_streak_network]
+      actualWinStreakMax = user[:win_streak_max] > user[:win_streak_max_network] ? user[:win_streak_max] : user[:win_streak_max_network]
+      actualLossStreakMax = user[:loss_streak_max] > user[:loss_streak_max_network] ? user[:loss_streak_max] : user[:loss_streak_max_network]
+      # else
+      #   actualWins = user[:wins_network]
+      #   actualLosses = user[:losses_network]
+      #   actualWinStreak = user[:win_streak_network]
+      #   actualLossStreak = user[:loss_streak_network]
+      #   actualWinStreakMax = user[:win_streak_max_network]
+      #   actualLossStreakMax = user[:loss_streak_max_network]
+      # end
       rankingsHash = {
         :facebook_id => user[:facebook_id].to_s,
         :full_name => user.profile[:full_name],
