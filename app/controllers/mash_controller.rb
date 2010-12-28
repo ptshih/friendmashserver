@@ -417,6 +417,7 @@ class MashController < ApplicationController
     if networkIds.empty?
       users = User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>"score desc",:limit=>count,:include=>:profile)
     else
+      networkString = networkIds.join(',')
       users = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id IN (#{networkString})",:order=>"score desc",:limit=>count,:include=>:profile)
     end
     
