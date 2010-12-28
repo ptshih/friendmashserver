@@ -67,7 +67,7 @@ class MashController < ApplicationController
     
     # NOTE:
     # only do in Everyone Mode!!!
-    if params[:mode] == 0
+    if params[:mode].to_i == 0
       playerToken = Token.all(:conditions=>"facebook_id= #{params[:id]}", :select =>"id", :limit=>1).first
       playerProfile = Profile.all(:conditions=>"facebook_id= #{params[:id]} AND votes - votes_network < 10").first
       if (playerToken.id%2 > 0) && ( (params[:recents].empty?) || !(playerProfile.nil?))
