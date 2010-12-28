@@ -418,6 +418,8 @@ class MashController < ApplicationController
       users = User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>"score desc,wins+losses+0.5*(wins_network+losses_network)",:limit=>count,:include=>:profile)
     else
       users = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id IN (#{networkString})",:order=>"score desc,wins+losses+0.5*(wins_network+losses_network)",:limit=>count,:include=>:profile)
+      networkString = networkIds.join(',')
+      users = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id IN (#{networkString})",:order=>"score desc",:limit=>count,:include=>:profile)
     end
     
     rankings = []
