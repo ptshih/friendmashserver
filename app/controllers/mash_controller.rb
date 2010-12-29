@@ -330,7 +330,7 @@ class MashController < ApplicationController
     from (
     select sum(case when a.winner_score>=a.loser_score and a.winner_score<>1500 and a.loser_score<>1500
       then 1 else 0 end) as accurate,
-    sum(case when a.winner_score=1500 or a.loser_score=1500 then 1 else 0 end) as unranked,
+    sum(case when a.winner_score=1500 or a.loser_score=1500 or a.winner_score is null then 1 else 0 end) as unranked,
     count(*) as total
     from results a where facebook_id = #{user['facebook_id']}) a"
     accuracyHash = ActiveRecord::Base.connection.execute(query).fetch_hash
