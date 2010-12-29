@@ -319,10 +319,16 @@ class MashController < ApplicationController
     # end
     ranksHash = ActiveRecord::Base.connection.execute(query).fetch_hash
     
+    # Number of friends also playing friendmash
+    query = "select count(*) as friendsonfriendmash from tokens where facebook_id in (select friend_id from networks where facebook_id=#{user['facebook_id']})"
+    otherStatsHash = ActiveRecord::Base.connection.execute(query).fetch_hash
+    
+    profileHash['stats'] << { :name => "Friends on Friendmash", :value => "#{otherStatsHash['friendsonfriendmash'].to_i}" }
     profileHash['stats'] << { :name => "Ranking in Friendmash", :value => "#{ranksHash['rankoftotal'].to_i + 1} / #{ranksHash['total']}" }
     profileHash['stats'] << { :name => "Ranking among Friends", :value => "#{ranksHash['rankofnetwork'].to_i + 1} / #{ranksHash['networktotal'].to_i + 1}" }
     profileHash['stats'] << { :name => "Likes Received", :value => "#{user['wins']}" }
     profileHash['stats'] << { :name => "Longest Like Streak", :value => "#{user['win_streak_max']}" }
+    
     # profileHash['stats'] << { :name => "Total Time Played", :value => "5" }
     # profileHash['stats'] << { :name => "Mashes in Last 24 Hours", :value => "1" }
     # profileHash['stats'] << { :name => "Mashes in Last 7 Days", :value => "2" }
