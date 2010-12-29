@@ -340,7 +340,7 @@ class MashController < ApplicationController
     profileHash['stats'] << { :name => "Ranking among Friends", :value => "#{ranksHash['rankofnetwork'].to_i + 1} / #{ranksHash['networktotal'].to_i + 1}" }
     profileHash['stats'] << { :name => "Likes Received", :value => "#{user['wins']}" }
     profileHash['stats'] << { :name => "Longest Like Streak", :value => "#{user['win_streak_max']}" }
-    profileHash['stats'] << { :name => "Your Mashing Accuracy (%)", :value => "#{accuracyHash['accuracy']}" }
+    profileHash['stats'] << { :name => "Choosing the correct winner (%)", :value => "#{accuracyHash['accuracy']}" }
     profileHash['stats'] << { :name => "Ranked Mashes Played", :value => "#{accuracyHash['ranked']}" }
     profileHash['stats'] << { :name => "Unranked Mashes Played", :value => "#{accuracyHash['unranked']}" }
     
