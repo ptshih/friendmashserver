@@ -58,21 +58,25 @@ class MashController < ApplicationController
     excludedIds << "#{params[:id].to_i}" # add currentId to excludedIds
     excludedIds = excludedIds.map do |ex| ex.to_i end # convert excludedIds array to store integers instead of strings
 
-    # perform score bias
-    lowerBound = rand(900) + 400 # random between 600 and 1500
-    
-    # perform score bias to retain users (a/b testing at the moment, token.id odd enables biasing)
-    # condition 1: if user has less than 10 votes outside of their network, show biased+ mash
-    # condition 2: every time recent mashes is empty, show a biased+ mash
+    # perform score bias; too many unranked profiles, don't care about terrible profile pics for now
+    lowerBound = rand(100) + 1400 # random between 1200 and 1500
     
     # NOTE:
     # only do in Everyone Mode!!!
     if params[:mode].to_i == 0
-      playerToken = Token.all(:conditions=>"facebook_id= #{params[:id]}", :select =>"id", :limit=>1).first
-      playerProfile = Profile.all(:conditions=>"facebook_id= #{params[:id]} AND votes - votes_network < 10").first
-      if (playerToken.id%2 > 0) && ( (params[:recents].empty?) || !(playerProfile.nil?))
+      # perform score bias to retain users (a/b testing at the moment, token.id odd enables biasing)
+      #       condition 1: if user has less than 10 votes outside of their network, show biased+ mash
+      #       condition 2: every time recent mashes is empty, show a biased+ mash
+      # playerToken = Token.all(:conditions=>"facebook_id= #{params[:id]}", :select =>"id", :limit=>1).first
+      #       playerProfile = Profile.all(:conditions=>"facebook_id= #{params[:id]} AND votes - votes_network < 10").first
+      #       if (playerToken.id%2 > 0) && ( (params[:recents].empty?) || !(playerProfile.nil?))
+      #         lowerBound=1600
+      #       end
+      # perform bias; first 3 mashes; then every 3rd; notice that every mash adds 2 to excluded and also 1 for player id
+      if excludedIds.length%3==1 || excludedIds.length<10
         lowerBound=1600
       end
+      
     end
   
     # Randomly choose a user from the DB with a CSV of excluded IDs
