@@ -323,11 +323,26 @@ class MashController < ApplicationController
     query = "select count(*) as friendsonfriendmash from tokens where facebook_id in (select friend_id from networks where facebook_id=#{user['facebook_id']})"
     otherStatsHash = ActiveRecord::Base.connection.execute(query).fetch_hash
     
+    # Accuracy
+    query = "select coalesce(round(accurate/(total-unranked)*100,2),'N/A') as accuracy,
+           coalesce(total-unranked, 'N/A') as ranked,
+           coalesce(unranked, 'N/A') as unranked
+    from (
+    select sum(case when a.winner_score>=a.loser_score and a.winner_score<>1500 and a.loser_score<>1500
+      then 1 else 0 end) as accurate,
+    sum(case when a.winner_score=1500 or a.loser_score=1500 then 1 else 0 end) as unranked,
+    count(*) as total
+    from results a where facebook_id = #{user['facebook_id']}) a"
+    accuracyHash = ActiveRecord::Base.connection.execute(query).fetch_hash
+        
     profileHash['stats'] << { :name => "Friends on Friendmash", :value => "#{otherStatsHash['friendsonfriendmash'].to_i}" }
-    profileHash['stats'] << { :name => "Ranking in Friendmash", :value => "#{ranksHash['rankoftotal'].to_i + 1} / #{ranksHash['total']}" }
+    profileHash['stats'] << { :name => "Ranking among Everyone", :value => "#{ranksHash['rankoftotal'].to_i + 1} / #{ranksHash['total']}" }
     profileHash['stats'] << { :name => "Ranking among Friends", :value => "#{ranksHash['rankofnetwork'].to_i + 1} / #{ranksHash['networktotal'].to_i + 1}" }
     profileHash['stats'] << { :name => "Likes Received", :value => "#{user['wins']}" }
     profileHash['stats'] << { :name => "Longest Like Streak", :value => "#{user['win_streak_max']}" }
+    profileHash['stats'] << { :name => "Your Mashing Accuracy (%)", :value => "#{accuracyHash['accuracy']}" }
+    profileHash['stats'] << { :name => "Ranked Mashes Played", :value => "#{accuracyHash['ranked']}" }
+    profileHash['stats'] << { :name => "Unranked Mashes Played", :value => "#{accuracyHash['unranked']}" }
     
     # profileHash['stats'] << { :name => "Total Time Played", :value => "5" }
     # profileHash['stats'] << { :name => "Mashes in Last 24 Hours", :value => "1" }
