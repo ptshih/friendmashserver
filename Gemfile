@@ -14,6 +14,8 @@ gem 'dalli'
 
 gem 'hoptoad_notifier'
 
+gem "activerecord-import", ">= 0.2.0"
+
 #gem 'mongo'
 
 #gem 'bson_ext'

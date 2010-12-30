@@ -21,21 +21,64 @@ class ProcessFriends < Struct.new(:facebookId)
     return nil if friends.nil? || facebookId.nil?
 
     friendIdArray = Array.new
-
+    missingGenderArray = []
+    createNewUser = []
+    createNewProfile = []
+    createNewSchool = []
+    createNewEmployer = []
     friends.each do |friend|
       # Create a User entity for each friend
-      create_user(friend)
-
+      # create_user(friend)
+      
+      # Seminew way of bulkinsert models into database
+      #createNewUser << User.new(:facebook_id=>friend['id'].to_i, :gender=>friend['gender'])
+      #createNewProfile << Profile.new(:facebook_id=>friend['id'].to_i,:first_name=>friend['first_name'],:last_name=>friend['last_name'],:full_name=>friend['name'])
+      
+      # New, faster way of bulk inserting in database
+      # Create new user
+      createNewUser << [friend['id'].to_i, friend['gender']]
+      # Create new profile
+      createNewProfile << [friend['id'].to_i, friend['first_name'], friend['last_name'], friend['name']]
+      # Create Schools for user if exists
+      friend['education'].each do |education|
+        if not education['school'].nil?
+          createNewSchool << [education['school']['id'].to_i, education['school']['name']]
+        end
+      end if not friend['education'].nil?
+      # Create Employers for user if exists
+      friend['work'].each do |work|
+        if not work['employer'].nil?
+          createNewEmployer << [work['employer']['id'].to_i, work['employer']['name']]
+        end
+      end if not friend['work'].nil?
+      
       # Insert friend into friendIdArray if not myself
       if not facebookId == friend['id']
         friendIdArray << friend['id']
       end
+      
+      # Populate gender only for nil
+      if friend['gender'].nil?
+        missingGenderArray<< friend['id']
+      end
     end
+    #User.import createNewUser
+    #Profile.import createNewProfile
+    
+    usercolumns=[:facebook_id, :gender]
+    User.import usercolumns,createNewUser, :validate => false
+    profilecolumns = [:facebook_id, :first_name, :last_name, :full_name]
+    Profile.import profilecolumns,createNewProfile, :validate => false
+    schoolcolumns = [:school_id, :school_name]
+    School.import schoolcolumns,createNewSchool, :validate => false
+    employercolumns = [:employer_id, :employer_name]
+    Employer.import employercolumns,createNewEmployer, :validate => false
+    
     # Generate first degree network for this user
     generate_network(facebookId, friendIdArray, 1)
     
     # Populate any missing genders
-    Delayed::Job.enqueue PopulateMissingGenders.new(friendIdArray)
+    Delayed::Job.enqueue PopulateMissingGenders.new(missingGenderArray)
   end
   
   def create_user(fbUser)
