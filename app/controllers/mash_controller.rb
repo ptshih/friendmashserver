@@ -427,7 +427,7 @@ class MashController < ApplicationController
     end
     
     #override count to 30
-    count=30
+    count=50
     
     # if network only is on, generate the sql string
     networkIds = []
@@ -455,14 +455,14 @@ class MashController < ApplicationController
     # This section inserts social network ranks and appends to ranking charts
     networkIds = network_cache(params[:id].to_i)
     networkString = networkIds.join(',')
-    usersNetwork = User.all(:conditions=>"gender = '#{params[:gender]}' AND wins+losses>0 AND facebook_id IN (#{networkString})",:order=>"score desc,wins+losses+0.5*(wins_network+losses_network)",:limit=>count,:include=>:profile)
+    usersNetwork = User.all(:conditions=>"gender = '#{params[:gender]}' AND wins+losses>0 AND facebook_id IN (#{networkString})",:order=>"score desc,wins+losses+0.5*(wins_network+losses_network)",:limit=>10,:include=>:profile)
     
     rankings = []
     if usersNetwork.empty?
     else   
       rankingsHash = {
         :facebook_id => 1,
-        :first_name => "** YOUR SOCIAL NETWORK (TOP 30) **",
+        :first_name => "** YOUR SOCIAL NETWORK (TOP 10) **",
         :wins => 0,
         :win_streak_max => 0,
         :rank => 0
@@ -509,7 +509,7 @@ class MashController < ApplicationController
     rank=0
     rankingsHash = {
       :facebook_id => 1,
-      :first_name => "** GLOBAL NETWORK (TOP 30) **",
+      :first_name => "** GLOBAL NETWORK (TOP 50) **",
       :wins => 0,
       :win_streak_max => 0,
       :rank => 0
