@@ -461,7 +461,7 @@ class MashController < ApplicationController
     
     rankingsHash = {
       :facebook_id => 1,
-      :first_name => "YOUR SOCIAL NETWORK (TOP 30)",
+      :first_name => "** YOUR SOCIAL NETWORK (TOP 30) **",
       :wins => 0,
       :win_streak_max => 0,
       :rank => 0
@@ -506,7 +506,7 @@ class MashController < ApplicationController
     rank=0
     rankingsHash = {
       :facebook_id => 1,
-      :first_name => "GLOBAL NETWORK (TOP 30)",
+      :first_name => "** GLOBAL NETWORK (TOP 30) **",
       :wins => 0,
       :win_streak_max => 0,
       :rank => 0
