@@ -19,7 +19,8 @@ class ProcessFriends < Struct.new(:facebookId)
   
   def process_friends(facebookId = nil, friends = nil)
     return nil if friends.nil? || facebookId.nil?
-
+    return nil if friends.empty?
+    
     friendIdArray = Array.new
     missingGenderArray = []
     createNewUser = []
