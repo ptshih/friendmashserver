@@ -43,13 +43,13 @@ class ProcessFriends < Struct.new(:facebookId)
       # Create Schools for user if exists
       friend['education'].each do |education|
         if not education['school'].nil?
-          createNewSchool << [education['school']['id'].to_i, education['school']['name']]
+          createNewSchool << [friend['id'].to_i, education['school']['id'].to_i, education['school']['name']]
         end
       end if not friend['education'].nil?
       # Create Employers for user if exists
       # friend['work'].each do |work|
       #   if not work['employer'].nil?
-      #     createNewEmployer << [work['employer']['id'].to_i, work['employer']['name']]
+      #     createNewEmployer << [friend['id'].to_i, work['employer']['id'].to_i, work['employer']['name']]
       #   end
       # end if not friend['work'].nil?
       
@@ -71,11 +71,11 @@ class ProcessFriends < Struct.new(:facebookId)
     profilecolumns = [:facebook_id, :first_name, :last_name, :full_name]
     Profile.import profilecolumns, createNewProfile, :validate => false
     if not createNewSchool.empty?
-      schoolcolumns = [:school_id, :school_name]
+      schoolcolumns = [:facebook_id, :school_id, :school_name]
       School.import schoolcolumns, createNewSchool, :validate => false
     end
     # if not createNewEmployer.empty?
-    #   employercolumns = [:employer_id, :employer_name]
+    #   employercolumns = [:facebook_id, :employer_id, :employer_name]
     #   Employer.import employercolumns, createNewEmployer, :validate => false
     # end
     
