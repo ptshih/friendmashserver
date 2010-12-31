@@ -426,9 +426,6 @@ class MashController < ApplicationController
       count = params[:count]
     end
     
-    #override count to 30
-    count=50
-    
     # if network only is on, generate the sql string
     networkIds = []
 
@@ -447,74 +444,11 @@ class MashController < ApplicationController
       users = User.all(:conditions=>"gender = '#{params[:gender]}'",:order=>"score desc,wins+losses+0.5*(wins_network+losses_network)",:limit=>count,:include=>:profile)
     else
       networkString = networkIds.join(',')
-      users = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id IN (#{networkString})",:order=>"score desc,wins+losses+0.5*(wins_network+losses_network)",:limit=>count,:include=>:profile)      
+      users = User.all(:conditions=>"gender = '#{params[:gender]}' AND wins+losses>0 AND facebook_id IN (#{networkString})",:order=>"score desc,wins+losses+0.5*(wins_network+losses_network)",:limit=>count,:include=>:profile)      
       # users = User.all(:conditions=>"gender = '#{params[:gender]}' AND facebook_id IN (#{networkString})",:order=>"score desc",:limit=>count,:include=>:profile)
     end
     
-    # By default, everything is now mode=0
-    # This section inserts social network ranks and appends to ranking charts
-    networkIds = network_cache(params[:id].to_i)
-    networkString = networkIds.join(',')
-    usersNetwork = User.all(:conditions=>"gender = '#{params[:gender]}' AND wins+losses>0 AND facebook_id IN (#{networkString})",:order=>"score desc,wins+losses+0.5*(wins_network+losses_network)",:limit=>10,:include=>:profile)
-    
     rankings = []
-    if usersNetwork.empty?
-    else   
-      rankingsHash = {
-        :facebook_id => 1,
-        :first_name => "** YOUR SOCIAL NETWORK (TOP 10) **",
-        :wins => 0,
-        :win_streak_max => 0,
-        :rank => 0
-      }
-      rankings << rankingsHash
-    
-      # Because the client always sends mode == 0 no matter what (override)
-      # We need to combine the stats when displaying
-      usersNetwork.each_with_index do |user,rank|
-        actualScore = user[:score]
-        # if params[:mode].to_i == 0
-        actualWins = user[:wins] + user[:wins_network]
-        actualLosses = user[:losses] + user[:losses_network]
-        actualWinStreak = user[:win_streak] > user[:win_streak_network] ? user[:win_streak] : user[:win_streak_network]
-        actualLossStreak = user[:loss_streak] > user[:loss_streak_network] ? user[:loss_streak] : user[:loss_streak_network]
-        actualWinStreakMax = user[:win_streak_max] > user[:win_streak_max_network] ? user[:win_streak_max] : user[:win_streak_max_network]
-        actualLossStreakMax = user[:loss_streak_max] > user[:loss_streak_max_network] ? user[:loss_streak_max] : user[:loss_streak_max_network]
-        # else
-        #   actualWins = user[:wins_network]
-        #   actualLosses = user[:losses_network]
-        #   actualWinStreak = user[:win_streak_network]
-        #   actualLossStreak = user[:loss_streak_network]
-        #   actualWinStreakMax = user[:win_streak_max_network]
-        #   actualLossStreakMax = user[:loss_streak_max_network]
-        # end
-        rankingsHash = {
-          :facebook_id => user[:facebook_id].to_s,
-          :full_name => user.profile[:full_name],
-          :first_name => user.profile[:first_name],
-          :last_name => user.profile[:last_name],
-          :score => actualScore,
-          :wins => actualWins,
-          :losses => actualLosses,
-          :win_streak => actualWinStreak,
-          :loss_streak => actualLossStreak,
-          :win_streak_max => actualWinStreakMax,
-          :loss_streak_max => actualLossStreakMax,
-          :rank => rank + 1
-        }
-        rankings << rankingsHash
-      end
-    end
-    
-    rank=0
-    rankingsHash = {
-      :facebook_id => 1,
-      :first_name => "** GLOBAL NETWORK (TOP 50) **",
-      :wins => 0,
-      :win_streak_max => 0,
-      :rank => 0
-    }
-    rankings << rankingsHash
     users.each_with_index do |user,rank|
       actualScore = user[:score]
       # if params[:mode].to_i == 0
