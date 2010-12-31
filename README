@@ -15,8 +15,30 @@ ProcessFriends.new(575814173).perform
 ###
 
 
+### SQL QUERIES FOR DEBUGGING ###
 
+# check for dupes in profiles and users table; if any rows returned, those are the dupes
+# replace 'profiles' with 'users' to check users table
+select facebook_id, count(*)
+from profiles group by facebook_id having count(*)>1;
 
+# check for dupes in schools table; if any rows returned, those are the dupes
+# school is unique on combo of facebook_id and school_id
+select facebook_id, school_id, count(*) from schools
+group by 1,2 having count(*)>1;
+
+### SQL QUERIES FOR STATS ###
+
+# show the last 50 users who signed-in to friendmash
+# show their first name, last name, and how many seconds it took to do their first vote (since signing-in)
+select a.id, a.facebook_id, d.first_name, d.last_name, a.created_at as 'signup date',
+    votes,  votes_network,TIME_TO_SEC(TIMEDIFF(min(e.created_at),a.created_at)) as 'timeToFirstVote'
+from tokens a
+join profiles d on a.facebook_id = d.facebook_id
+left join results e on e.facebook_id = a.facebook_id
+where a.id > (select max(id)-50 from tokens)
+group by 1,2,3
+order by a.created_at desc;
 
 == TODO ==
 Add a security consumer-key to protect APIs
