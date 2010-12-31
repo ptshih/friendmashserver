@@ -1,3 +1,23 @@
+### PROCESS FRIENDS CONSOLE COMMANDS ###
+
+# needed when localhost
+require 'process_friends'
+
+# find last N users that signed up
+tokenIdArray = Token.limit(5).order("created_at DESC").select('facebook_id').map do |t| t.facebook_id end
+
+# Create delayed jobs and process friends for an array of userIds
+tokenIdArray.each do |t| Delayed::Job.enqueue ProcessFriends.new(t) end
+
+# Call process_friends on an individual user
+ProcessFriends.new(575814173).perform
+
+###
+
+
+
+
+
 == TODO ==
 Add a security consumer-key to protect APIs
 
@@ -65,25 +85,9 @@ New Game Types:
 Pass metrics data in HTTP HEADERS
 - current user id
 - current app version
-- current device uuid
-- send in HTTP HEADERS how long it took a user to make a decision
+SCRIPTS CONSOLE
 
-Add a security HTTP-HEADER to all requests to protect API
 
-hash map of all my friends, mark the value as one (keyed of userid)
-traverse every friend and try to insert into hash map
-if a 2nd degree friend already exists in hash map, ignore
-if a 2nd degree friend does not exist, insert into hash map with a value of 2
-
-Add work history and school history
-
-Remove game-mode that keeps a user around
-
-Add a Rematch/Remash button
-
-If a network request fails, automatically call Remash
-
-Cancel all network requests when leaving facemashviewcontroller (back to launcher)
 
 == Notes ==
 # Achievement icon/badges go into profile page
