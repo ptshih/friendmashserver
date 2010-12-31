@@ -24,8 +24,8 @@ GEM
       activesupport (= 3.0.3)
       arel (~> 2.0.2)
       tzinfo (~> 0.3.23)
-    activerecord-import (0.2.2)
-      activerecord (~> 3.0.0rc)
+    activerecord-import (0.2.3)
+      activerecord (~> 3.0.0)
     activeresource (3.0.3)
       activemodel (= 3.0.3)
       activesupport (= 3.0.3)
@@ -42,10 +42,10 @@ GEM
     hoptoad_notifier (2.3.12)
       activesupport
       builder
-    httpclient (2.1.5.2)
+    httpclient (2.1.6)
     i18n (0.5.0)
     json (1.4.6)
-    mail (2.2.12)
+    mail (2.2.13)
       activesupport (>= 2.3.6)
       i18n (>= 0.4.0)
       mime-types (~> 1.16)
