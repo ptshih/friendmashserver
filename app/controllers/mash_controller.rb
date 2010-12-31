@@ -1041,11 +1041,12 @@ class MashController < ApplicationController
       mysqlresults = ActiveRecord::Base.connection.execute(query)    
 
       while mysqlresult = mysqlresults.fetch_hash do
-       response << mysqlresult['stat']
+        response << mysqlresult['stat']
       end
       mysqlresults.free
 
-
+      response << "If you like friendmash, let us know by rating us on iTunes!"
+      
       globalstats = dc.set('globalstats', response)
     else
       response = globalstats
