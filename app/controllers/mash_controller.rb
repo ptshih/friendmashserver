@@ -42,6 +42,8 @@ class MashController < ApplicationController
       
     elsif params[:mode].to_i == 2
       networkIds = network_cache(params[:id].to_i)
+    elsif params[:mode].to_i == 3
+      networkIds = classmate_cache(params[:id].to_i)
     end
     
     # MySQL uses RAND, SQLLite uses RANDOM
@@ -436,6 +438,8 @@ class MashController < ApplicationController
       networkString = networkIds.join(',')
     elsif params[:mode].to_i == 2
       networkIds = network_cache(params[:id].to_i)
+    elsif params[:mode].to_i == 3
+      networkIds = classmate_cache(params[:id].to_i)
     end
     
     # Active Record Join Alternative
@@ -544,6 +548,29 @@ class MashController < ApplicationController
     # p friendIdArray
     
     return friendIdArray
+  end
+  
+  def classmate_cache(facebookId)
+    classmateIdArray = []
+    
+    cache = ClassmateCache.where("facebook_id = #{facebookId} AND expires_at > ?", Time.now).first
+    
+    if cache.nil?
+      schoolIdArray = User.find_by_facebook_id(facebookId).schools.select('school_id').map do |s| s.school_id end
+      classmateIdArray = User.select('DISTINCT(users.facebook_id)').where("school_id IN (#{schoolIdArray.join(',')})").joins(:schools,:profile).map do |u| u.facebook_id end
+      classmateIdArray.delete(facebookId) # remove own facebookId
+        
+      # create or update cache
+      cache = ClassmateCache.find_or_initialize_by_facebook_id(facebookId)
+      cache.classmates = classmateIdArray.join(',')
+      cache.expires_at = Time.now + 1.days
+      cache.save
+      
+    else
+      classmateIdArray = cache[:classmates].split(',')
+    end
+    
+    return classmateIdArray
   end
   
   def find_opponent(desiredScore, gender, excludedIds = [], networkIds = [], facebookId = nil, mode = 0)

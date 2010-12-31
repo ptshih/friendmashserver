@@ -51,6 +51,13 @@ ActiveRecord::Schema.define(:version => 20101215032201) do
     t.datetime "expires_at"
   end
 
+  create_table "classmate_caches", :id => false, :force => true do |t|
+    t.integer  "id",          :limit => 8,                         :null => false
+    t.integer  "facebook_id", :limit => 8,          :default => 0, :null => false
+    t.text     "classmates",     :limit => 2147483647
+    t.datetime "expires_at"
+  end
+
   create_table "networks", :force => true do |t|
     t.integer "facebook_id", :limit => 8, :default => 0
     t.integer "friend_id",   :limit => 8, :default => 0
