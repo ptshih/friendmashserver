@@ -557,8 +557,12 @@ class MashController < ApplicationController
     
     if cache.nil?
       schoolIdArray = User.find_by_facebook_id(facebookId).schools.select('school_id').map do |s| s.school_id end
-      classmateIdArray = User.select('DISTINCT(users.facebook_id)').where("school_id IN (#{schoolIdArray.join(',')})").joins(:schools,:profile).map do |u| u.facebook_id end
-      classmateIdArray.delete(facebookId) # remove own facebookId
+      if schoolIdArray.empty?
+        classmateIdArray = network_cache(facebookId)
+      else
+        classmateIdArray = User.select('DISTINCT(users.facebook_id)').where("school_id IN (#{schoolIdArray.join(',')})").joins(:schools,:profile).map do |u| u.facebook_id end
+        classmateIdArray.delete(facebookId) # remove own facebookId
+      end
         
       # create or update cache
       cache = ClassmateCache.find_or_initialize_by_facebook_id(facebookId)
