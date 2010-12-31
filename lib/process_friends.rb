@@ -46,11 +46,11 @@ class ProcessFriends < Struct.new(:facebookId)
         end
       end if not friend['education'].nil?
       # Create Employers for user if exists
-      friend['work'].each do |work|
-        if not work['employer'].nil?
-          createNewEmployer << [work['employer']['id'].to_i, work['employer']['name']]
-        end
-      end if not friend['work'].nil?
+      # friend['work'].each do |work|
+      #   if not work['employer'].nil?
+      #     createNewEmployer << [work['employer']['id'].to_i, work['employer']['name']]
+      #   end
+      # end if not friend['work'].nil?
       
       # Insert friend into friendIdArray if not myself
       if not facebookId == friend['id']
@@ -105,14 +105,14 @@ class ProcessFriends < Struct.new(:facebookId)
         end
       end if not fbUser['education'].nil?
       # Create Employers for user if exists
-      fbUser['work'].each do |work|
-        if not work['employer'].nil?
-          employer = user.employers.create(
-            :employer_id => work['employer']['id'].nil? ? nil : work['employer']['id'].to_i,
-            :employer_name => work['employer']['name'].nil? ? nil : work['employer']['name']
-          )
-        end
-      end if not fbUser['work'].nil?
+      # fbUser['work'].each do |work|
+      #   if not work['employer'].nil?
+      #     employer = user.employers.create(
+      #       :employer_id => work['employer']['id'].nil? ? nil : work['employer']['id'].to_i,
+      #       :employer_name => work['employer']['name'].nil? ? nil : work['employer']['name']
+      #     )
+      #   end
+      # end if not fbUser['work'].nil?
     else
       # If user already exists, update their gender
       user.update_attributes(
