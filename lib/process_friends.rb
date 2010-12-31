@@ -10,7 +10,7 @@ class ProcessFriends < Struct.new(:facebookId)
     
     # Get first degree friends from FB
     fields = Hash.new
-    fields["fields"] = "id,first_name,last_name,name,gender,education,work,locale"
+    fields["fields"] = "id,first_name,last_name,name,gender,education,locale"
     firstDegreeFriends = user.friends(fields)
     
     # insert the first degree friends into the DB as degree 1
@@ -25,7 +25,7 @@ class ProcessFriends < Struct.new(:facebookId)
     createNewUser = []
     createNewProfile = []
     createNewSchool = []
-    createNewEmployer = []
+    # createNewEmployer = []
     friends.each do |friend|
       # Create a User entity for each friend
       # create_user(friend)
@@ -59,20 +59,24 @@ class ProcessFriends < Struct.new(:facebookId)
       
       # Populate gender only for nil
       if friend['gender'].nil?
-        missingGenderArray<< friend['id']
+        missingGenderArray << friend['id']
       end
     end
     #User.import createNewUser
     #Profile.import createNewProfile
     
-    usercolumns=[:facebook_id, :gender]
-    User.import usercolumns,createNewUser, :validate => false
+    usercolumns = [:facebook_id, :gender]
+    User.import usercolumns, createNewUser, :validate => false
     profilecolumns = [:facebook_id, :first_name, :last_name, :full_name]
-    Profile.import profilecolumns,createNewProfile, :validate => false
-    schoolcolumns = [:school_id, :school_name]
-    School.import schoolcolumns,createNewSchool, :validate => false
-    employercolumns = [:employer_id, :employer_name]
-    Employer.import employercolumns,createNewEmployer, :validate => false
+    Profile.import profilecolumns, createNewProfile, :validate => false
+    if not createNewSchool.empty?
+      schoolcolumns = [:school_id, :school_name]
+      School.import schoolcolumns, createNewSchool, :validate => false
+    end
+    # if not createNewEmployer.empty?
+    #   employercolumns = [:employer_id, :employer_name]
+    #   Employer.import employercolumns, createNewEmployer, :validate => false
+    # end
     
     # Generate first degree network for this user
     generate_network(facebookId, friendIdArray, 1)
