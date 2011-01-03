@@ -40,6 +40,29 @@ where a.id > (select max(id)-50 from tokens)
 group by 1,2,3
 order by a.created_at desc;
 
+# metric to see user retention
+# shows who have been voting on a given particular day
+# broken down by user group "same day signup", "signup 1-3 days ago", "signup >3 days ago"
+select date(a.created_at),
+sum(case when datediff(date(a.created_at),date(b.created_at))=0 then 1 else 0 end),
+sum(case when datediff(date(a.created_at),date(b.created_at)) between 1 and 3 then 1 else 0 end),
+sum(case when datediff(date(a.created_at),date(b.created_at)) > 3 then 1 else 0 end),
+count(*)
+from results a
+join tokens b on a.facebook_id = b.facebook_id and b.id>50
+group by 1 order by 1;
+
+# shows distribution by score of ...
+# ... wins+losses (ie voting)
+# ... user counts in each score bucket
+# ... avg votes/user in each score bucket
+select round(score/25)*25, sum(wins+losses), count(*),
+sum(wins+losses)/count(*)
+from users where gender = 'female'
+and wins+losses>0
+group by 1 order by 1 desc;
+
+
 == TODO ==
 Add a security consumer-key to protect APIs
 
