@@ -40,7 +40,7 @@ BEGIN
   	select 5 as id, 'Female mashes played' as name, timeFrame, femaleMashes as 'value';
 
  	insert delayed into temp_statistic_summary
-  	select 6 as id, 'Visit our Facebook fan page. Search "FriendMash" and checkout the photos and updates!' as name, timeFrame, null as 'value';
+  	select 6 as id, '0 Visit our Facebook fan page. Search "FriendMash" and checkout the photos and updates!' as name, timeFrame, 0 as 'value';
 
 	-- create table statistic_summary
 	-- idx, name, timeframe, value
