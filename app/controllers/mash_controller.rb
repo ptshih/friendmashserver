@@ -542,15 +542,25 @@ class MashController < ApplicationController
       or facebook_id in (#{facebookId})"
       friendIdArray = ActiveRecord::Base.connection.select_values(query)      
 
-      #       
-      # Create or update cache
-      cache = NetworkCache.find_or_initialize_by_facebook_id(facebookId)
-      cache.network = friendIdArray.join(',')
-      cache.expires_at = Time.now + 1.days
-      cache.save
-      
+      # check for empty network array
+      if friendIdArray.empty?
+        # try to get first degree connections for now
+        # don't cache it
+        friendIdArray = Network.where("facebook_id = #{facebookId}").map do |friend| friend.friend_id end
+      else
+        # Create or update cache
+        cache = NetworkCache.find_or_initialize_by_facebook_id(facebookId)
+        cache.network = friendIdArray.join(',')
+        cache.expires_at = Time.now + 1.days
+        cache.save
+      end
     else
       puts "Cache hit"
+      # check for an empty cache
+      if cache[:network].empty?
+        cache.expires_at = Time.now - 1.days # force expire it
+        cache.save
+      end
       friendIdArray = cache[:network].split(',')
     end
     
@@ -573,14 +583,24 @@ class MashController < ApplicationController
         classmateIdArray = User.select('DISTINCT(users.facebook_id)').where("school_id IN (#{schoolIdArray.join(',')})").joins(:schools,:profile).map do |u| u.facebook_id end
         classmateIdArray.delete(facebookId) # remove own facebookId
       end
-        
-      # create or update cache
-      cache = ClassmateCache.find_or_initialize_by_facebook_id(facebookId)
-      cache.classmates = classmateIdArray.join(',')
-      cache.expires_at = Time.now + 1.days
-      cache.save
       
+      # check for empty classmate array
+      if classmateIdArray.empty?
+        # try to get first degree connections for now
+        # don't cache it
+        classmateIdArray = Network.where("facebook_id = #{facebookId}").map do |friend| friend.friend_id end
+      else
+        # create or update cache
+        cache = ClassmateCache.find_or_initialize_by_facebook_id(facebookId)
+        cache.classmates = classmateIdArray.join(',')
+        cache.expires_at = Time.now + 1.days
+        cache.save
+      end
     else
+      if cache[:classmates].empty?
+        cache.expires_at = Time.now - 1.days # force expire it
+        cache.save
+      end
       classmateIdArray = cache[:classmates].split(',')
     end
     
