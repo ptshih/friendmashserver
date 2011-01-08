@@ -322,7 +322,11 @@ class MashController < ApplicationController
     # Section 1 in client
     profileHash['stats'] = []
     
-    query = "select sum(case when a.score>b.score then 1 else 0 end) as rankoftotal, sum(case when a.score>b.score AND c.friend_id is not null then 1 else 0 end) as rankofnetwork, sum(case when c.friend_id is not null then 1 else 0 end) as networktotal, count(*) as total from users a left join users b on 1=1 and b.facebook_id='#{user['facebook_id']}' left join networks c on c.friend_id = a.facebook_id and c.facebook_id=b.facebook_id where a.gender = b.gender"
+    query = "select sum(case when a.score>b.score then 1 else 0 end) as rankoftotal,
+     sum(case when a.score>b.score AND c.friend_id is not null then 1 else 0 end) as rankofnetwork,
+      sum(case when c.friend_id is not null then 1 else 0 end) as networktotal,
+       count(*) as total from users a left join users b on 1=1 and b.facebook_id='#{user['facebook_id']}'
+        left join networks c on c.friend_id = a.facebook_id and c.facebook_id=b.facebook_id where a.gender = b.gender"
     
     # if Rails.env == "production" || Rails.env == "staging"
     #   ranksHash = ActiveRecord::Base.connection.execute(query).fetch_hash
@@ -534,7 +538,7 @@ class MashController < ApplicationController
       puts "Cache miss"
   
       query = "select distinct friend_id
-      from networks where facebook_id in (select friend_id from networks where facebooK_id=#{facebookId})
+      from networks where facebook_id in (select friend_id from networks where facebook_id=#{facebookId})
       or facebook_id in (#{facebookId})"
       friendIdArray = ActiveRecord::Base.connection.select_values(query)      
 
