@@ -1057,6 +1057,8 @@ class MashController < ApplicationController
 
       response << "If you like friendmash, let us know by rating us on iTunes!"
       
+      response << "Search 'FriendMash' on Facebook and checkout the photos+updates!"
+      
       globalstats = dc.set('globalstats', response)
     else
       response = globalstats
