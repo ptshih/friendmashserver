@@ -210,14 +210,16 @@ class MashController < ApplicationController
     ProcessFriends.new.create_user(params)
     
     # Process friends of the current user in a delayed job
-    Delayed::Job.enqueue ProcessFriends.new(params["id"].to_i)
+    ProcessFriends.new(params["id"].to_i).perform # do it synchronously
+    
+    # Delayed::Job.enqueue ProcessFriends.new(params["id"].to_i)
     
     respond_to do |format|
       format.xml  { render :xml => {:success => "true"} }
       format.json  { render :json => {:success => "true"} }
     end
   end
-    
+
   def result
     # This API will calculate the result of a mash and adjust scores for winner and loser
     # It will also fire a delayed job to insert a record into the Results table
