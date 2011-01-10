@@ -1093,4 +1093,15 @@ class MashController < ApplicationController
 
   end
 
+  # def logging
+  #   Rails.logger.info request.query_parameters.inspect
+  # end
+
+  def logging(request, actiontype)
+    request.env["HTTP_X_APP_VERSION"]
+    request.env["HTTP_X_APP_VERSION"]
+    request.env["HTTP_X_APP_VERSION"]
+    request.env["HTTP_X_APP_VERSION"]  
+  end
+
 end
