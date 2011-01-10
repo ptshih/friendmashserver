@@ -1125,7 +1125,7 @@ class MashController < ApplicationController
     
     logs = Logs.create(
       :event_timestamp => Time.now,
-      :session_starttime => request.env["HTTP_X_SESSION_KEY"].nil? ? '1900-01-01' : request.env["HTTP_X_SESSION_KEY"],
+      :session_starttime => request.env["HTTP_X_SESSION_KEY"].nil? ? '1900-01-01' : Time.at(request.env["HTTP_X_SESSION_KEY"].to_i),
       :udid => request.env["HTTP_X_UDID"].nil? ? nil: request.env["HTTP_X_UDID"],
       :device_model => request.env["HTTP_X_DEVICE_MODEL"].nil? ? nil: request.env["HTTP_X_DEVICE_MODEL"],
       :system_name => request.env["HTTP_X_SYSTEM_NAME"].nil? ? nil: request.env["HTTP_X_SYSTEM_NAME"],
