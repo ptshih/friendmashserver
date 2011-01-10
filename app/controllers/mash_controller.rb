@@ -16,7 +16,10 @@ class MashController < ApplicationController
     # 0 - ALL
     # 1 - NETWORK
     
-    Rails.logger.info request.query_parameters.inspect
+    
+    
+    # LOGGING TO DATABASE
+    logging(request, "random")
     
     if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
       respond_to do |format|
@@ -182,6 +185,9 @@ class MashController < ApplicationController
     
     # Rails.logger.info request.query_parameters.inspect
     
+    # LOGGING TO DATABASE
+    logging(request, "token")
+    
     if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
       respond_to do |format|
         format.xml  { render :xml => {:error => "access denied"} }
@@ -226,6 +232,9 @@ class MashController < ApplicationController
     # Response is a simple JSON "success" => "true" that is ignored by the client
     
     Rails.logger.info request.query_parameters.inspect
+    
+    # LOGGING TO DATABASE
+    logging(request, "result")
     
     if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
       respond_to do |format|
@@ -290,6 +299,9 @@ class MashController < ApplicationController
     # Return a hash of a given user's profile
     
     Rails.logger.info request.query_parameters.inspect
+    
+    # LOGGING TO DATABASE
+    logging(request, "profile")
     
     if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
       respond_to do |format|
@@ -379,6 +391,9 @@ class MashController < ApplicationController
     
     Rails.logger.info request.query_parameters.inspect
     
+    # LOGGING TO DATABASE
+    logging(request, "topplayers")
+    
     if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
       respond_to do |format|
         format.xml  { render :xml => {:error => "access denied"} }
@@ -424,6 +439,9 @@ class MashController < ApplicationController
     
     Rails.logger.info request.query_parameters.inspect
     # Rails.logger.info request.env.inspect
+    
+    # LOGGING TO DATABASE
+    logging(request, "rankings")
     
     if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
       respond_to do |format|
@@ -1060,9 +1078,11 @@ class MashController < ApplicationController
 
   def globalstats
 
-    dc = Dalli::Client.new('127.0.0.1:11211',{:expires_in=>15.minutes})
+    # LOGGING TO DATABASE
+    logging(request, "globalstats")
 
-    globalstats = dc.get('globalstats')
+    #dc = Dalli::Client.new('127.0.0.1:11211',{:expires_in=>15.minutes})
+    globalstats = Rails.cache.read("globalstats")
     response = []
 
     if globalstats == nil
@@ -1078,10 +1098,11 @@ class MashController < ApplicationController
       mysqlresults.free
 
       response << "If you like friendmash, let us know by rating us on iTunes!"
-      
       response << "Search 'FriendMash' on Facebook and check out the photos+updates!"
       
-      globalstats = dc.set('globalstats', response)
+      if Rails.cache.read("globalstats").nil?
+        globalstats = Rails.cache.write('globalstats', response)
+      end
     else
       response = globalstats
     end
@@ -1093,15 +1114,32 @@ class MashController < ApplicationController
 
   end
 
-  # def logging
-  #   Rails.logger.info request.query_parameters.inspect
-  # end
-
+  # General purpose logging
   def logging(request, actiontype)
-    request.env["HTTP_X_APP_VERSION"]
-    request.env["HTTP_X_APP_VERSION"]
-    request.env["HTTP_X_APP_VERSION"]
-    request.env["HTTP_X_APP_VERSION"]  
+    
+    if request.env["HTTP_X_USER_ID"].nil?
+      facebook_id =  params[:id]
+    else
+      facebook_id = request.env["HTTP_X_USER_ID"]
+    end
+    
+    logs = Logs.create(
+      :event_timestamp => Time.now,
+      :session_starttime => request.env["HTTP_X_SESSION_KEY"].nil? ? '1900-01-01' : request.env["HTTP_X_SESSION_KEY"],
+      :udid => request.env["HTTP_X_UDID"].nil? ? nil: request.env["HTTP_X_UDID"],
+      :device_model => request.env["HTTP_X_DEVICE_MODEL"].nil? ? nil: request.env["HTTP_X_DEVICE_MODEL"],
+      :system_name => request.env["HTTP_X_SYSTEM_NAME"].nil? ? nil: request.env["HTTP_X_SYSTEM_NAME"],
+      :system_version => request.env["HTTP_X_SYSTEM_VERSION"].nil? ? nil: request.env["HTTP_X_SYSTEM_VERSION"],
+      :app_version => request.env["HTTP_X_APP_VERSION"].nil? ? nil: request.env["HTTP_X_APP_VERSION"],
+      :facebook_id => facebook_id.nil? ? nil: facebook_id,
+      :connection_type => request.env["HTTP_X_CONNECTION_TYPE"].nil? ? nil: request.env["HTTP_X_CONNECTION_TYPE"],
+      :language => request.env["HTTP_X_USER_LANGUAGE"].nil? ? nil: request.env["HTTP_X_USER_LANGUAGE"],
+      :locale => request.env["HTTP_X_USER_LOCALE"].nil? ? nil: request.env["HTTP_X_USER_LOCALE"],
+      :action_type => actiontype.nil? ? nil: actiontype,
+      :var1 => request.env["HTTP_X_VAR1"].nil? ? nil: request.env["HTTP_X_VAR1"],
+      :var2 =>request.env["HTTP_X_VAR2"].nil? ? nil: request.env["HTTP_X_VAR2"]
+    )
+    
   end
 
 end
