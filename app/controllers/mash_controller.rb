@@ -19,7 +19,7 @@ class MashController < ApplicationController
     
     
     # LOGGING TO DATABASE
-    logging(request, "random")
+    logging(request, "random", params[:mode].to_i)
     
     if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
       respond_to do |format|
@@ -234,7 +234,7 @@ class MashController < ApplicationController
     Rails.logger.info request.query_parameters.inspect
     
     # LOGGING TO DATABASE
-    logging(request, "result")
+    logging(request, "result", params[:mode].to_i)
     
     if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
       respond_to do |format|
@@ -441,7 +441,7 @@ class MashController < ApplicationController
     # Rails.logger.info request.env.inspect
     
     # LOGGING TO DATABASE
-    logging(request, "rankings")
+    logging(request, "rankings", params[:mode].to_i, params[:gender])
     
     if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
       respond_to do |format|
@@ -1115,12 +1115,22 @@ class MashController < ApplicationController
   end
 
   # General purpose logging
-  def logging(request, actiontype)
+  def logging(request, actiontype, var1=nil, var2=nil)
     
     if request.env["HTTP_X_USER_ID"].nil?
       facebook_id =  params[:id]
     else
       facebook_id = request.env["HTTP_X_USER_ID"]
+    end
+    
+    if request.env["HTTP_X_VAR1"].nil?
+    else
+      var1 = request.env["HTTP_X_VAR1"]
+    end    
+
+    if request.env["HTTP_X_VAR2"].nil?
+    else
+      var2 = request.env["HTTP_X_VAR2"]
     end
     
     logs = Logs.create(
@@ -1136,8 +1146,8 @@ class MashController < ApplicationController
       :language => request.env["HTTP_X_USER_LANGUAGE"].nil? ? nil: request.env["HTTP_X_USER_LANGUAGE"],
       :locale => request.env["HTTP_X_USER_LOCALE"].nil? ? nil: request.env["HTTP_X_USER_LOCALE"],
       :action_type => actiontype.nil? ? nil: actiontype,
-      :var1 => request.env["HTTP_X_VAR1"].nil? ? nil: request.env["HTTP_X_VAR1"],
-      :var2 =>request.env["HTTP_X_VAR2"].nil? ? nil: request.env["HTTP_X_VAR2"]
+      :var1 => var1.nil? ? nil: var1,
+      :var2 => var2.nil? ? nil: var2
     )
     
   end
