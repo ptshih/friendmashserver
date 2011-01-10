@@ -49,6 +49,6 @@ Facemash::Application.configure do
   
   config.action_controller.logger = Logger.new(STDOUT)
   
-  config.cache_store = :dalli_store
+  config.cache_store = :dalli_store, 'localhost:11211'
 
 end
