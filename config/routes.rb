@@ -6,6 +6,7 @@ Facemash::Application.routes.draw do
     scope :protocol => 'https://', :constraints => { :protocol => 'https://' } do
       match 'mash/random/:id' => 'mash#random', :via => :get, :constraints => { :protocol => "https" }
       match 'mash/token/:id' => 'mash#token', :via => :post, :constraints => { :protocol => 'https' }
+      match 'mash/remash/:id' => 'mash#remash', :via => :post, :constraints => { :protocol => "https" }
       match 'mash/result/:id' => 'mash#result', :via => :post, :constraints => { :protocol => 'https' }
       match 'mash/profile/:id' => 'mash#profile', :via => :get, :constraints => { :protocol => 'https' }
       match 'mash/topplayers/:id' => 'mash#topplayers', :via => :get, :constraints => { :protocol => 'https' }
@@ -19,6 +20,7 @@ Facemash::Application.routes.draw do
   else
     match 'mash/random/:id' => 'mash#random', :via => :get
     match 'mash/token/:id' => 'mash#token', :via => :post
+    match 'mash/remash/:id' => 'mash#remash', :via => :post
     match 'mash/result/:id' => 'mash#result', :via => :post
     match 'mash/profile/:id' => 'mash#profile', :via => :get
     match 'mash/topplayers/:id' => 'mash#topplayers', :via => :get

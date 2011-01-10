@@ -225,6 +225,26 @@ class MashController < ApplicationController
       format.json  { render :json => {:success => "true"} }
     end
   end
+  
+  def remash
+    Rails.logger.info request.query_parameters.inspect
+    
+    # LOGGING TO DATABASE
+    logging(request, "remash", params[:mode].to_i)
+    
+    if request.env["HTTP_X_FRIENDMASH_SECRET"] != FRIENDMASH_SECRET
+      respond_to do |format|
+        format.xml  { render :xml => {:error => "access denied"} }
+        format.json  { render :json => {:error => "access denied"} }
+      end
+      return nil
+    end
+    
+    respond_to do |format|
+      format.xml  { render :xml => {:success => "true"} }
+      format.json  { render :json => {:success => "true"} }
+    end
+  end
 
   def result
     # This API will calculate the result of a mash and adjust scores for winner and loser
