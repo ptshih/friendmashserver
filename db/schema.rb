@@ -175,5 +175,44 @@ ActiveRecord::Schema.define(:version => 20101215032201) do
 
   add_index "users", ["facebook_id"], :name => "idx_users_facebook_id", :unique => true
   add_index "users", ["gender"], :name => "index_users_on_gender"
+  
+  create_table "logs", :force => true do |t|
+    t.datetime  "event_timestamp"
+    t.datetime  "session_starttime"
+    t.string    "udid"
+    t.string    "device_model"
+    t.string    "system_name"
+    t.string    "system_version"
+    t.string    "app_version"
+    t.integer   "facebook_id"
+    t.integer   "connection_type"
+    t.string    "language"
+    t.string    "locale"
+    t.string    "action_type"
+    t.string    "var1"
+    t.string    "var2"
+  end
 
+  create_table "sessions_app", :force => true do |t|
+    t.datetime  "event_timestamp"
+    t.datetime  "session_starttime"
+    t.datetime  "session_endtime"
+    t.string    "udid"
+    t.string    "device_model"
+    t.string    "system_name"
+    t.string    "system_version"
+    t.string    "app_version"
+    t.integer   "facebook_id"
+    t.integer   "connection_type"
+    t.string    "language"
+    t.string    "locale"
+  end  
+
+  create_table "sessions_mash", :force => true do |t|
+    t.integer   "session_id"
+    t.integer   "facebook_id"
+    t.datetime  "sessionmash_starttime"
+    t.datetime  "sessionmash_endtime"
+    t.integer   "mashes"
+  end
 end
