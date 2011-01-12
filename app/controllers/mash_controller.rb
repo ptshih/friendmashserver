@@ -1120,9 +1120,8 @@ class MashController < ApplicationController
       response << "If you like friendmash, let us know by rating us on iTunes!"
       response << "Search 'FriendMash' on Facebook and become a fan!"
       
-      if Rails.cache.read("globalstats").nil?
-        globalstats = Rails.cache.write('globalstats', response)
-      end
+      globalstats = Rails.cache.write('globalstats', response, :expire_in => 1.minutes)
+      
     else
       response = globalstats
     end
