@@ -842,7 +842,7 @@ class MashController < ApplicationController
       (k_high.to_f + Math.erf((userScore.to_f-popAverage.to_f)/(popSD.to_f*(2.0**0.5))) - Math.erf((i.to_f-popAverage.to_f)/(popSD.to_f*(2.0**0.5)))).abs
     }
 
-    return [(600..userScore).map[array_returns_low.index(array_returns_low.min)], (userScore..2400).map[array_returns_high.index(array_returns_high.min)]]
+    return [(600..userScore).to_a[array_returns_low.index(array_returns_low.min)], (userScore..2400).to_a[array_returns_high.index(array_returns_high.min)]]
   end
   
   def calculate_range(score)

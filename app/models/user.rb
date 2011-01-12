@@ -135,9 +135,10 @@ class User < ActiveRecord::Base
       
       # p response.content
       # contentType = response.contenttype
-      encoding = response.header["Content-Encoding"].to_s
+      encoding = response.header["Content-Encoding"]
+      puts "Encoding: #{encoding}"
       
-      if encoding == "gzip"
+      if encoding.include? "gzip"
         puts "found gzip response"
         parsedResponse = JSON.parse(Zlib::GzipReader.new(StringIO.new(response.content)).read)
         puts "done parsing"
@@ -147,7 +148,8 @@ class User < ActiveRecord::Base
       end
       
       return parsedResponse
-    rescue
+    rescue => ex
+      puts ex
       puts "found invalid token!!! #{path} #{params}"
     end
   end
