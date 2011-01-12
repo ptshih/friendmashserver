@@ -1101,7 +1101,7 @@ class MashController < ApplicationController
     logging(request, "globalstats")
 
     #dc = Dalli::Client.new('127.0.0.1:11211',{:expires_in=>15.minutes})
-    globalstats = Rails.cache.fetch("globalstats_new", :expire_in => 1.minute)
+    globalstats = Rails.cache.read("globalstats")
     response = []
     
     if globalstats == nil
@@ -1118,7 +1118,7 @@ class MashController < ApplicationController
       response << "If you like friendmash, let us know by rating us on iTunes!"
       # response << "Search 'FriendMash' on Facebook and become a fan!"
       
-      globalstats = Rails.cache.write('globalstats_new', response)
+      globalstats = Rails.cache.write('globalstats', response, :expires_in => 15.minutes)
       
     else
       response = globalstats
