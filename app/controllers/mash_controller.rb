@@ -1097,19 +1097,14 @@ class MashController < ApplicationController
   # end
 
   def globalstats
-
-    
     # LOGGING TO DATABASE
     logging(request, "globalstats")
 
     #dc = Dalli::Client.new('127.0.0.1:11211',{:expires_in=>15.minutes})
-    globalstats = Rails.cache.read("globalstats")
+    globalstats = Rails.cache.fetch("globalstats", :expire_in => 1.minute)
     response = []
     
-    Rails.logger.info globalstats.inspect
-    
     if globalstats == nil
-      puts "Global Stats Cache Miss"
       updateStatisticSummary
 
       query = "select concat(name,' : ', cast(format(value,0) as char)) as stat from statistic_summary;"
@@ -1123,7 +1118,7 @@ class MashController < ApplicationController
       response << "If you like friendmash, let us know by rating us on iTunes!"
       # response << "Search 'FriendMash' on Facebook and become a fan!"
       
-      globalstats = Rails.cache.write('globalstats', response, :expire_in => 1.minutes)
+      globalstats = Rails.cache.write('globalstats', response)
       
     else
       response = globalstats
