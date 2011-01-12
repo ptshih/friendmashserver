@@ -698,7 +698,7 @@ class MashController < ApplicationController
     
     # Calculate the low and high end bounds
     # NOTE: MAKE SURE WE ARE PASSING IN FLOATS AND NOT INTEGERS!!!!! OMGWTFBBQ
-    if mode == 1
+    if mode > 0
       low = 600
       high = 2400
     else
