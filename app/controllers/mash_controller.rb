@@ -1118,7 +1118,7 @@ class MashController < ApplicationController
       mysqlresults.free
 
       response << "If you like friendmash, let us know by rating us on iTunes!"
-      response << "Search 'FriendMash' on Facebook and become a fan!"
+      # response << "Search 'FriendMash' on Facebook and become a fan!"
       
       globalstats = Rails.cache.write('globalstats', response, :expire_in => 1.minutes)
       
