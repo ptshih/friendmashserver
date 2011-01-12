@@ -141,15 +141,13 @@ class User < ActiveRecord::Base
       if encoding.include? "gzip"
         puts "found gzip response"
         parsedResponse = JSON.parse(Zlib::GzipReader.new(StringIO.new(response.content)).read)
-        puts "done parsing"
       else
         puts "found text response"
         parsedResponse = JSON.parse(response.content)
       end
       
       return parsedResponse
-    rescue => ex
-      puts ex
+    rescue
       puts "found invalid token!!! #{path} #{params}"
     end
   end
