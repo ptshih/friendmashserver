@@ -1098,13 +1098,16 @@ class MashController < ApplicationController
 
   def globalstats
 
+    
     # LOGGING TO DATABASE
     logging(request, "globalstats")
 
     #dc = Dalli::Client.new('127.0.0.1:11211',{:expires_in=>15.minutes})
     globalstats = Rails.cache.read("globalstats")
     response = []
-
+    
+    Rails.logger.info globalstats.inspect
+    
     if globalstats == nil
       puts "Global Stats Cache Miss"
       updateStatisticSummary
