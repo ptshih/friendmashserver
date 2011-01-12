@@ -1106,7 +1106,7 @@ class MashController < ApplicationController
     response = []
 
     if globalstats == nil
-
+      puts "Global Stats Cache Miss"
       updateStatisticSummary
 
       query = "select concat(name,' : ', cast(format(value,0) as char)) as stat from statistic_summary;"
