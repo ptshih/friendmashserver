@@ -1,5 +1,6 @@
 ### PROCESS FRIENDS CONSOLE COMMANDS ###
 
+
 # needed when localhost
 require 'process_friends'
 
