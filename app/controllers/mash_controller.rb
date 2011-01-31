@@ -431,7 +431,7 @@ class MashController < ApplicationController
     if params[:count].nil?
       count = 99
     else
-      count = params[:count]
+      count = params[:count].to_i
     end
     
     # Only show players who have more than 0 mashes
@@ -480,7 +480,7 @@ class MashController < ApplicationController
     if params[:count].nil?
       count = 99
     else
-      count = params[:count]
+      count = params[:count].to_i
     end
     
     # if network only is on, generate the sql string
@@ -899,7 +899,7 @@ class MashController < ApplicationController
     if params[:count].nil?
       count = 50
     else
-      count = params[:count]
+      count = params[:count].to_i
     end
     
     if params[:filter].nil? || params[:filter] == "false"
