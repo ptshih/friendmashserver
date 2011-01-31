@@ -267,11 +267,17 @@ class MashController < ApplicationController
     # puts request.env["HTTP_X_USER_ID"]
     # puts request.env["HTTP_X_UDID"]
     
+    # check to see if current player exists
+    player = User.find_by_facebook_id(params[:id].to_i)
+    
     # Increment vote count for current user
     # If network only mode, increment votes_network also
-    Profile.increment_counter('votes',Profile.find_by_facebook_id(params[:id].to_i).id)
-    if params[:mode].to_i > 0
-      Profile.increment_counter('votes_network',Profile.find_by_facebook_id(params[:id].to_i).id)
+    
+    if not player.nil?
+      Profile.increment_counter('votes',Profile.find_by_facebook_id(params[:id].to_i).id)
+      if params[:mode].to_i > 0
+        Profile.increment_counter('votes_network',Profile.find_by_facebook_id(params[:id].to_i).id)
+      end
     end
     
     winner = User.find_by_facebook_id(params[:w].to_i)
@@ -285,8 +291,7 @@ class MashController < ApplicationController
     # Adjust scores for winner/loser for this mash
     adjustScoresForUsers(winner, loser, params[:mode].to_i)
     
-    # Adjust judge-factor of player; only adjust if it's decisive enough for user to make a choice
-    player = User.find_by_facebook_id(params[:id].to_i)
+    # Adjust judge-factor of player; only adjust if it's decisive enough for user to make a choice    
     if not player.nil?
       outcomeChance = expected_outcome_by_score(winnerBeforeScore, loserBeforeScore)
       judgeFactorBefore = player.judge_factor
