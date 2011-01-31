@@ -7,7 +7,7 @@
 #   timeout: 5000
   
 development:
-  adapter: mysql2
+  adapter: mysql
   encoding: utf8
   database: friendmash
   pool: 5
@@ -36,7 +36,7 @@ test:
 # facemash.clhyg7sm4xmb.us-east-1.rds.amazonaws.com
 
 production:
-  adapter: mysql2
+  adapter: mysql
   host: friendmash-production.clhyg7sm4xmb.us-east-1.rds.amazonaws.com
   reconnect: true
   database: friendmash
@@ -46,7 +46,7 @@ production:
   collation: utf8_general_ci
   
 staging:
-  adapter: mysql2
+  adapter: mysql
   host: friendmash-staging.clhyg7sm4xmb.us-east-1.rds.amazonaws.com
   reconnect: true
   database: friendmash
