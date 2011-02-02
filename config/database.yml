@@ -7,7 +7,7 @@
 #   timeout: 5000
   
 development:
-  adapter: mysql2
+  adapter: mysql
   encoding: utf8
   database: friendmash
   pool: 5
